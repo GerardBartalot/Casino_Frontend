@@ -12,16 +12,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.casinoapp.viewModel.RemoteViewModel
 import com.example.casinoapp.screen.LoginScreen
-import com.example.casinoapp.screen.NurseApp
 import com.example.casinoapp.screen.RegisterScreen
 import com.example.casinoapp.screen.SearchScreen
-import com.example.casinoapp.ui.theme.HospitalAppTheme
+import com.example.casinoapp.ui.theme.CasinoAppTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            HospitalAppTheme {
+            CasinoAppTheme {
                 AppNavigation()
             }
         }
@@ -44,16 +43,17 @@ fun AppNavigation() {
                 LoginScreen(
                     remoteViewModel = remoteViewModel,
                     onNavigateToRegister = { navController.navigate("register") },
-                    onNavigateToSearch = { navController.navigate("search") }
-                )
-            }
-
-            composable("getAll") {
-                NurseApp(
-                    remoteViewModel = remoteViewModel,
+                    onNavigateToSearch = { navController.navigate("search") },
                     onBackPressed = { navController.popBackStack() }
                 )
             }
+
+            /*composable("getAll") {
+                GetAllScreen(
+                    remoteViewModel = remoteViewModel,
+                    onBackPressed = { navController.popBackStack() }
+                )
+            }*/
             composable("findByName") {
                 SearchScreen(
                     remoteViewModel = remoteViewModel,

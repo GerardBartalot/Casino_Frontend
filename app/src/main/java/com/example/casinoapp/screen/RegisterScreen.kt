@@ -44,7 +44,7 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(100.dp))
             Text(
-                text = "Hospital Application",
+                text = "Casino Application",
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier
                     .padding(bottom = 50.dp)
@@ -96,7 +96,7 @@ fun RegisterScreen(
 
             Button(onClick = {
                 val user =
-                    User(nurse_id = 0, name = name, username = username, password = password)
+                    User(userId = 0, name = name, username = username, password = password)
                 remoteViewModel.registerUser(user) { resultMessage ->
                 if (resultMessage == "Registro exitoso") {
                         onNavigateToLogin()

@@ -11,12 +11,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.HospitalApp"
+        android:theme="@style/Theme.CasinoApp"
         tools:targetApi="31">
         <activity
             android:name=".classes.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.HospitalApp">
+            android:theme="@style/Theme.CasinoApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
