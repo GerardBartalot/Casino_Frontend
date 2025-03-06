@@ -1,4 +1,4 @@
-package com.example.hospitalapp.classes
+package com.example.casinoapp.screen
 
 import android.util.Log
 import androidx.compose.foundation.layout.*
@@ -9,6 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.casinoapp.viewModel.LoginMessageUiState
+import com.example.casinoapp.viewModel.RemoteViewModel
 
 @Composable
 fun LoginScreen(

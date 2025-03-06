@@ -1,4 +1,4 @@
-package com.example.hospitalapp
+package com.example.casinoapp
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

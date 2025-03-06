@@ -1,4 +1,4 @@
-package com.example.hospitalapp.classes
+package com.example.casinoapp.screen
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +14,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,17 +22,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.casinoapp.viewModel.User
+import com.example.casinoapp.viewModel.RemoteMessageUiState
+import com.example.casinoapp.viewModel.RemoteViewModel
 
 @Composable
 fun SearchScreen(remoteViewModel: RemoteViewModel, onBackPressed: () -> Unit) {
     var query by remember { mutableStateOf("") }
-    var foundNurse by remember { mutableStateOf<Nurse?>(null) }
+    var foundUser by remember { mutableStateOf<User?>(null) }
     var isSearchPerformed by remember { mutableStateOf(false) }
 
     val remoteMessageUiState = remoteViewModel.remoteMessageUiState
 
     LaunchedEffect(Unit) {
-        remoteViewModel.getAllNurses()
+        remoteViewModel.getAllUsers()
     }
 
     Column(
@@ -56,7 +58,7 @@ fun SearchScreen(remoteViewModel: RemoteViewModel, onBackPressed: () -> Unit) {
         TextField(
             value = query,
             onValueChange = { query = it },
-            label = { Text("Search Nurse") },
+            label = { Text("Search User") },
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(16.dp))
@@ -64,13 +66,13 @@ fun SearchScreen(remoteViewModel: RemoteViewModel, onBackPressed: () -> Unit) {
             isSearchPerformed = true
             when (remoteMessageUiState) {
                 is RemoteMessageUiState.Success -> {
-                    foundNurse = (remoteMessageUiState as RemoteMessageUiState.Success).remoteMessage.find { nurse ->
-                        nurse.name.contains(query, ignoreCase = true) ||
-                                nurse.username.contains(query, ignoreCase = true) ||
-                                nurse.nurse_id.toString() == query
+                    foundUser = (remoteMessageUiState as RemoteMessageUiState.Success).remoteMessage.find { user ->
+                        user.name.contains(query, ignoreCase = true) ||
+                                user.username.contains(query, ignoreCase = true) ||
+                                user.toString() == query
                     }
                 }
-                else -> foundNurse = null
+                else -> foundUser = null
             }
         }) {
             Text(text = "Search")
@@ -89,12 +91,12 @@ fun SearchScreen(remoteViewModel: RemoteViewModel, onBackPressed: () -> Unit) {
                 )
             }
             is RemoteMessageUiState.Success -> {
-                foundNurse?.let {
-                    NurseCard(nurse = it)
+                foundUser?.let {
+                    UserCard(user = it)
                 } ?: run {
                     if (isSearchPerformed && query.isNotEmpty()) {
                         Text(
-                            text = "Nurse not found.",
+                            text = "User not found.",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

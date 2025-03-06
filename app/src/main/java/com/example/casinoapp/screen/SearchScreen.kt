@@ -1,4 +1,4 @@
-package com.example.hospitalapp.classes
+package com.example.casinoapp.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -44,7 +44,7 @@ fun SearchScreen(navController: NavHostController) {
             modifier = Modifier
                 .fillMaxWidth(0.9f)
         ) {
-            Text("Get All Nurses")
+            Text("Get All User")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(

@@ -1,4 +1,4 @@
-package com.example.hospitalapp.classes
+package com.example.casinoapp.screen
 
 import android.util.Log
 import androidx.compose.foundation.layout.*
@@ -9,6 +9,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import com.example.casinoapp.viewModel.User
+import com.example.casinoapp.viewModel.RegisterMessageUiState
+import com.example.casinoapp.viewModel.RemoteViewModel
 
 data class User(
     val name: String,
@@ -92,8 +95,9 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(onClick = {
-                val nurse = Nurse(nurse_id = 0, name = name, username = username, password = password)
-                remoteViewModel.registerUser(nurse) { resultMessage ->
+                val user =
+                    User(nurse_id = 0, name = name, username = username, password = password)
+                remoteViewModel.registerUser(user) { resultMessage ->
                 if (resultMessage == "Registro exitoso") {
                         onNavigateToLogin()
                     } else {

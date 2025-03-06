@@ -1,4 +1,4 @@
-package com.example.hospitalapp
+package com.example.casinoapp
 
 import org.junit.Test
 
