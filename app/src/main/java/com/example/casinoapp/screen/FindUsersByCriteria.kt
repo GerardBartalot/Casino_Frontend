@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.example.casinoapp.viewModel.User
 import com.example.casinoapp.viewModel.RemoteMessageUiState
 import com.example.casinoapp.viewModel.RemoteViewModel
-
+/*
 @Composable
 fun SearchScreen(remoteViewModel: RemoteViewModel, onBackPressed: () -> Unit) {
     var query by remember { mutableStateOf("") }
@@ -115,4 +115,4 @@ fun PreviewFindByNameScreen() {
         remoteViewModel = remoteViewModel,
         onBackPressed = {}
     )
-}
+}*/
