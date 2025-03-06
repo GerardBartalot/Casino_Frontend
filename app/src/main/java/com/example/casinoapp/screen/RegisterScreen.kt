@@ -9,6 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.casinoapp.viewModel.User
 import com.example.casinoapp.viewModel.RegisterMessageUiState
 import com.example.casinoapp.viewModel.RemoteViewModel
@@ -22,7 +23,7 @@ data class User(
 @Composable
 fun RegisterScreen(
     remoteViewModel: RemoteViewModel,
-    onNavigateToLogin: () -> Unit
+    navController: NavHostController,
 ) {
 
     val registerMessageUiState by remoteViewModel.registerMessageUiState.collectAsState()
@@ -97,7 +98,7 @@ fun RegisterScreen(
             Button(onClick = {
                 val user =
                     User(userId = 0, name = name, username = username, password = password)
-                remoteViewModel.registerUser(user) { resultMessage ->
+                remoteViewModel.register(user) { resultMessage ->
                 if (resultMessage == "Registro exitoso") {
                         onNavigateToLogin()
                     } else {

@@ -1,22 +1,18 @@
 package com.example.casinoapp.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.example.casinoapp.viewModel.RemoteViewModel
-import java.lang.reflect.Modifier
-
-
+/*
 @Composable
 fun ProfileScreen(createUsers: RemoteViewModel, onBackPressed: () -> Unit) {
     val user = createUsers.users.find { it.id == 1 } ?: return
-
 
     Column(
         modifier = Modifier
@@ -27,7 +23,7 @@ fun ProfileScreen(createUsers: RemoteViewModel, onBackPressed: () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 0.dp, top = 30.dp),
+                .padding(top = 30.dp),
             contentAlignment = Alignment.TopStart
         ) {
             Button(onClick = onBackPressed) {
@@ -85,18 +81,13 @@ fun ProfileScreen(createUsers: RemoteViewModel, onBackPressed: () -> Unit) {
     }
 }
 
-@Composable
-fun Row(
-    modifier: fillMaxWidth,
-    horizontalArrangement: SpaceEvenly,
-    content: @Composable () -> Button
-) {
-    TODO("Not yet implemented")
-}
-
 @Preview(showBackground = true)
 @Composable
 fun ProfileScreenPreview() {
-    val createUsers = RemoteViewModel()
-    ProfileScreen(createUsers = createUsers, onBackPressed = {})
-}
+    val fakeViewModel = RemoteViewModel().apply {
+        users = listOf(
+            User(id = 1, name = "John Doe", username = "johnd", password = "1234")
+        )
+    }
+    ProfileScreen(createUsers = fakeViewModel, onBackPressed = {})
+}*/

@@ -11,7 +11,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 
 @Composable
-fun SearchScreen(navController: NavHostController) {
+fun HomeScreen(navController: NavHostController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -70,7 +70,7 @@ fun SearchScreen(navController: NavHostController) {
 fun PreviewSearchScreen() {
     val navController = rememberNavController()
 
-    SearchScreen(
+    HomeScreen(
         navController = navController
     )
 }
