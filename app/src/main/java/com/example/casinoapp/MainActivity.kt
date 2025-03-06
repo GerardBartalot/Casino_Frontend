@@ -1,4 +1,4 @@
-package com.sejuma.hospitalapplication
+package com.example.casinoapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,14 +18,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
             MaterialTheme {
-                NavHost(navController = navController, startDestination = "nurseLoginScreen") {
-                    composable("nurseLoginScreen") {
+                NavHost(navController = navController, startDestination = "LoginScreen") {
+                    composable("LoginScreen") {
                         LoginScreen(navController = navController, remoteViewModel = viewModel())
                     }
-                    composable("homeScreen") {
+                    composable("HomeScreen") {
                         HomeScreen(navController = navController)
                     }
-                    composable("registerScreen") {
+                    composable("RegisterScreen") {
                         RegisterScreen(navController = navController, remoteViewModel = viewModel())
                     }
                 }

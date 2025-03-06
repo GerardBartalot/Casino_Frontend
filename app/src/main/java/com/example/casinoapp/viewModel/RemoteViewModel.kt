@@ -28,7 +28,6 @@ sealed interface RemoteMessageUiState {
 
 sealed interface LoginMessageUiState {
     data class Success(val loginMessage: User) : LoginMessageUiState
-
     object Error : LoginMessageUiState
     object Loading : LoginMessageUiState
 }
@@ -38,7 +37,6 @@ sealed interface GetUserMessageUiState {
     data class Success(val getUserMessage: User) : GetUserMessageUiState, RemoteMessageUiState
     object Error : GetUserMessageUiState, RemoteMessageUiState
 }
-
 
 sealed interface DeleteMessageUiState {
     object Loading : DeleteMessageUiState, RemoteMessageUiState
@@ -99,22 +97,6 @@ class RemoteViewModel : ViewModel() {
         .build()
 
     private val remoteService = connection.create(RemoteUserInterface::class.java)
-
-    // Get all Users
-    fun getRemoteUsers() {
-        viewModelScope.launch {
-            _remoteMessageUiState.value = RemoteMessageUiState.Loading
-            try {
-                Log.d("GetUsers", "Fetching users from server...")
-                val response = remoteService.getRemoteUsers()
-                Log.d("GetUsers", "Successfully fetched users: $response")
-                _remoteMessageUiState.value = RemoteMessageUiState.Success(response)
-            } catch (e: Exception) {
-                Log.e("GetUsers", "Error fetching users: ${e.message}", e)
-                _remoteMessageUiState.value = RemoteMessageUiState.Error
-            }
-        }
-    }
 
     // Login
     fun login(username: String, password: String, context: Context) {
@@ -180,6 +162,21 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
+    // Get all Users
+    fun getAllUsers() {
+        viewModelScope.launch {
+            _remoteMessageUiState.value = RemoteMessageUiState.Loading
+            try {
+                Log.d("GetUsers", "Fetching users from server...")
+                val response = remoteService.getRemoteUsers()
+                Log.d("GetUsers", "Successfully fetched users: $response")
+                _remoteMessageUiState.value = RemoteMessageUiState.Success(response)
+            } catch (e: Exception) {
+                Log.e("GetUsers", "Error fetching users: ${e.message}", e)
+                _remoteMessageUiState.value = RemoteMessageUiState.Error
+            }
+        }
+    }
 
     fun getUserById(userId: Int) {
         viewModelScope.launch {
