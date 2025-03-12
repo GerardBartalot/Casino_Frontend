@@ -9,10 +9,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
+import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
 import retrofit2.http.DELETE
+import retrofit2.http.Field
+import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -54,12 +57,18 @@ interface RemoteUserInterface {
     @GET("user/index")
     suspend fun getRemoteUsers(): List<User>
 
-    @POST("user/login")
-    suspend fun login(@Body loginRequest: LoginRequest): User
+    //@POST("user/login")
+    //suspend fun login(@Body loginRequest: LoginRequest): User
+
+    @FormUrlEncoded
+    @POST("/user/login")
+    suspend fun login(
+        @Field("username") username: String,
+        @Field("password") password: String
+    ): Response<User>
 
     @POST("user/new")
     suspend fun register(@Body registerRequest: RegisterRequest): User
-
 
     @DELETE("user/{userId}")
     suspend fun deleteUser(@Path("userId") id: Int): Boolean
@@ -103,19 +112,24 @@ class RemoteViewModel : ViewModel() {
         viewModelScope.launch {
             _loginMessageUiState.value = LoginMessageUiState.Loading
             try {
-                Log.d("Login", "Attempting to log in user: $username")
-                val loginRequest = LoginRequest(username = username, password = password)
-                val user = remoteService.login(loginRequest)
-
-                // Guardar el ID del usuario en SharedPreferences
-                val sharedPref = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
-                with(sharedPref.edit()) {
-                    putInt("user_id", user.userId)
-                    apply()
+                val response = remoteService.login(username, password)
+                if (response.isSuccessful) {
+                    val user = response.body()
+                    if (user != null) {
+                        val sharedPref = context.getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+                        with(sharedPref.edit()) {
+                            putInt("user_id", user.userId)
+                            apply()
+                        }
+                        _loginMessageUiState.value = LoginMessageUiState.Success(user)
+                    } else {
+                        Log.e("Login", "Invalid username or password")
+                        _loginMessageUiState.value = LoginMessageUiState.Error
+                    }
+                } else {
+                    Log.e("Login", "HTTP error: ${response.code()} - ${response.message()}")
+                    _loginMessageUiState.value = LoginMessageUiState.Error
                 }
-
-                Log.d("Login", "Login successful: $user")
-                _loginMessageUiState.value = LoginMessageUiState.Success(user)
             } catch (e: HttpException) {
                 Log.e("Login", "HTTP error: ${e.code()} - ${e.message}", e)
                 _loginMessageUiState.value = LoginMessageUiState.Error
