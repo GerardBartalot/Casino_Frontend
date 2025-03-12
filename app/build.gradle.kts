@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.fondo.casinoapp"
+    namespace = "com.example.casinoapp"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.fondo.casinoapp"
+        applicationId = "com.example.casinoapp"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
