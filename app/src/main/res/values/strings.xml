@@ -1,12 +1,3 @@
 <resources>
-    <string name="app_name">CasinoApp</string>
-    <string name="profileButton">Profile</string>
-    <string name="nurseLoginButton">Login Nurse</string>
-    <string name="showNursesButton">Show Nurses</string>
-    <string name="backToMenuButton">Back to Menu</string>
-    <string name="registerButton">Register</string>
-    <string name="loginButton">Login</string>
-    <string name="logoutButton">LogOut</string>
-    <string name="deleteButton">Delete</string>
-    <string name="updateButton">Update</string>
+    <string name="app_name">FondoCasinoApp</string>
 </resources>
