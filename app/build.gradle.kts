@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.hospitalapp"
+    namespace = "com.example.casinoapp"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.hospitalapp"
+        applicationId = "com.example.casinoapp"
         minSdk = 24
         targetSdk = 35
         versionCode = 1

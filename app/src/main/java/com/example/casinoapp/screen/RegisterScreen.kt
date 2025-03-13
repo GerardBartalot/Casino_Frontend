@@ -1,6 +1,5 @@
 package com.example.casinoapp.screen
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,26 +12,18 @@ import com.example.casinoapp.viewModel.User
 import com.example.casinoapp.viewModel.RegisterMessageUiState
 import com.example.casinoapp.viewModel.RemoteViewModel
 
-data class User(
-    val name: String,
-    val username: String,
-    val password: String
-)
-
 @Composable
 fun RegisterScreen(
     remoteViewModel: RemoteViewModel,
-    onNavigateToLogin: () -> Unit
+    onNavigateToLogin: () -> Unit,
+    onNavigateToHome: () -> Unit
 ) {
-
     val registerMessageUiState by remoteViewModel.registerMessageUiState.collectAsState()
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
-    var surname by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -44,12 +35,18 @@ fun RegisterScreen(
         ) {
             Spacer(modifier = Modifier.height(100.dp))
             Text(
-                text = "Hospital Application",
+                text = "Fondo Casino Royale",
                 style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier
-                    .padding(bottom = 50.dp)
+                modifier = Modifier.padding(bottom = 50.dp)
             )
 
+            TextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Name") },
+                modifier = Modifier.fillMaxWidth(0.8f)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
             TextField(
                 value = username,
                 onValueChange = { username = it },
@@ -64,44 +61,16 @@ fun RegisterScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(0.8f)
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            TextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth(0.8f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            TextField(
-                value = surname,
-                onValueChange = { surname = it },
-                label = { Text("Surname") },
-                modifier = Modifier.fillMaxWidth(0.8f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            TextField(
-                value = address,
-                onValueChange = { address = it },
-                label = { Text("Address") },
-                modifier = Modifier.fillMaxWidth(0.8f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            TextField(
-                value = phone,
-                onValueChange = { phone = it },
-                label = { Text("Phone") },
-                modifier = Modifier.fillMaxWidth(0.8f)
-            )
+
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(onClick = {
-                val user =
-                    User(nurse_id = 0, name = name, username = username, password = password)
-                remoteViewModel.registerUser(user) { resultMessage ->
-                if (resultMessage == "Registro exitoso") {
-                        onNavigateToLogin()
+                val user = User(userId = 0, name = name, username = username, password = password)
+                remoteViewModel.register(user) { resultMessage ->
+                    if (resultMessage == "Registro exitoso") {
+                        onNavigateToHome()
                     } else {
-                        Log.e("RegisterScreen", "Error en el registro: $resultMessage")
+                        errorMessage = resultMessage
                     }
                 }
             }) {
@@ -109,16 +78,20 @@ fun RegisterScreen(
             }
 
             Spacer(modifier = Modifier.height(25.dp))
-             when (registerMessageUiState) {
+
+            when (registerMessageUiState) {
                 is RegisterMessageUiState.Loading -> {
                 }
                 is RegisterMessageUiState.Success -> {
-                    Text("User successfully registered", color = Color.Green)
+                    LaunchedEffect(Unit) {
+                        onNavigateToHome()
+                    }
                 }
                 is RegisterMessageUiState.Error -> {
-                    Text("User is already registered", color = Color.Red)
+                    Text("User could not be registered", color = Color.Red)
                 }
             }
+
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,

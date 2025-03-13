@@ -15,9 +15,8 @@ import com.example.casinoapp.viewModel.RemoteViewModel
 @Composable
 fun LoginScreen(
     remoteViewModel: RemoteViewModel,
-    onBackPressed: () -> Unit,
     onNavigateToRegister: () -> Unit,
-    onNavigateToSearch: () -> Unit
+    onNavigateToHome: () -> Unit
 ) {
 
     val loginMessageUiState by remoteViewModel.loginMessageUiState.collectAsState()
@@ -53,10 +52,9 @@ fun LoginScreen(
             )
             Spacer(modifier = Modifier.height(32.dp))
             Button(onClick = {
-                remoteViewModel.loginUser(username, password) { resultMessage ->
+                remoteViewModel.login(username, password) { resultMessage ->
                     if (resultMessage == "Login exitoso") {
-                        Log.d("LoginScreen", "Login exitoso, navegando a SearchScreen")
-                        onNavigateToSearch()
+                        onNavigateToHome()
                     } else {
                         Log.e("LoginScreen", "Error en login: $resultMessage")
                     }
@@ -66,17 +64,17 @@ fun LoginScreen(
             }
 
             Spacer(modifier = Modifier.height(25.dp))
+
             when (loginMessageUiState) {
-                is LoginMessageUiState.Loading -> {
-                }
                 is LoginMessageUiState.Success -> {
-                    Text("Login successful", color = Color.Green)
-                    Log.d("LoginScreen", "Inicio de sesión exitoso")
-                        onNavigateToSearch()
+                    LaunchedEffect(Unit) {
+                        onNavigateToHome()
+                    }
                 }
                 is LoginMessageUiState.Error -> {
                     Text("Incorrect username or password", color = Color.Red)
-                    Log.e("LoginScreen", "Usuario o contraseña incorrectos")
+                }
+                is LoginMessageUiState.Loading -> {
                 }
             }
 

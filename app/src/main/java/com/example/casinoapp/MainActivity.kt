@@ -1,73 +1,48 @@
 package com.example.casinoapp
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.material3.MaterialTheme
+import androidx.activity.ComponentActivity
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.casinoapp.viewModel.RemoteViewModel
+import com.example.casinoapp.screen.HomeScreen
 import com.example.casinoapp.screen.LoginScreen
-import com.example.casinoapp.screen.NurseApp
 import com.example.casinoapp.screen.RegisterScreen
-import com.example.casinoapp.screen.SearchScreen
-import com.example.casinoapp.ui.theme.HospitalAppTheme
+import com.example.casinoapp.viewModel.RemoteViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            HospitalAppTheme {
-                AppNavigation()
+            val navController = rememberNavController()
+            val remoteViewModel: RemoteViewModel = viewModel()
+            MaterialTheme {
+                NavHost(navController = navController, startDestination = "loginScreen") {
+                    composable("loginScreen") {
+                        LoginScreen(
+                            remoteViewModel = remoteViewModel,
+                            onNavigateToRegister = { navController.navigate("registerScreen") },
+                            onNavigateToHome = { navController.navigate("homeScreen") }
+                        )
+                    }
+                    composable("homeScreen") {
+                        HomeScreen(
+                            navController = navController,
+                            remoteViewModel = remoteViewModel
+                        )
+                    }
+                    composable("registerScreen") {
+                        RegisterScreen(
+                            remoteViewModel = remoteViewModel,
+                            onNavigateToLogin = { navController.navigate("loginScreen") },
+                            onNavigateToHome = { navController.navigate("homeScreen") }
+                        )
+                    }
+                }
             }
-        }
-    }
-}
-
-@Composable
-fun AppNavigation() {
-    val navController = rememberNavController()
-    val  remoteViewModel = RemoteViewModel()
-    Surface(modifier = Modifier.fillMaxSize()) {
-        NavHost(navController = navController, startDestination = "login") {
-            composable("register") {
-                RegisterScreen(
-                    remoteViewModel = remoteViewModel,
-                    onNavigateToLogin = { navController.navigate("login") }
-                )
-            }
-            composable("login") {
-                LoginScreen(
-                    remoteViewModel = remoteViewModel,
-                    onNavigateToRegister = { navController.navigate("register") },
-                    onNavigateToSearch = { navController.navigate("search") }
-                )
-            }
-
-            composable("getAll") {
-                NurseApp(
-                    remoteViewModel = remoteViewModel,
-                    onBackPressed = { navController.popBackStack() }
-                )
-            }
-            composable("findByName") {
-                SearchScreen(
-                    remoteViewModel = remoteViewModel,
-                    onBackPressed = { navController.popBackStack() }
-                )
-            }
-            composable("search") {
-                SearchScreen(navController = navController)
-            }
-            /*composable("profile") {
-                ProfileScreen(
-                    createNurses = RemoteViewModel(),
-                    onBackPressed = { navController.popBackStack() })
-            }*/
         }
     }
 }

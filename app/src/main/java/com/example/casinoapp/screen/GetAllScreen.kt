@@ -1,4 +1,5 @@
 package com.example.casinoapp.screen
+/*
 
 import android.util.Log
 import androidx.compose.foundation.layout.*
@@ -88,4 +89,4 @@ fun UserCard(user: User) {
             Text(text = "Username: ${user.username}", fontSize = 14.sp)
         }
     }
-}
+}*/

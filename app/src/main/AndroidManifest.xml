@@ -14,7 +14,7 @@
         android:theme="@style/Theme.HospitalApp"
         tools:targetApi="31">
         <activity
-            android:name=".classes.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:theme="@style/Theme.HospitalApp">
             <intent-filter>

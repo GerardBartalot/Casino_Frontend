@@ -3,7 +3,6 @@ package com.example.casinoapp.viewModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.casinoapp.screen.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -17,7 +16,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 
 sealed interface RemoteMessageUiState {
-    data class Success(val remoteMessage: List<com.example.casinoapp.viewModel.User>) : RemoteMessageUiState
+    data class Success(val remoteMessage: List<User>) : RemoteMessageUiState
     object Loading : RemoteMessageUiState
     object Error : RemoteMessageUiState
 
@@ -31,7 +30,7 @@ sealed interface LoginMessageUiState {
 }
 
 sealed interface RegisterMessageUiState {
-    data class Success(val user: com.example.casinoapp.viewModel.User?) : RegisterMessageUiState
+    data class Success(val user: User) : RegisterMessageUiState
     object Loading : RegisterMessageUiState
     object Error : RegisterMessageUiState
 }
@@ -39,7 +38,7 @@ sealed interface RegisterMessageUiState {
 interface RemoteUserInterface {
 
     @GET("/user/index")
-    suspend fun getAllUsers(): List<com.example.casinoapp.viewModel.User>
+    suspend fun getAllUsers(): List<User>
 
     @FormUrlEncoded
     @POST("/user/login")
@@ -48,8 +47,8 @@ interface RemoteUserInterface {
         @Field("password") password: String
     ): Response<User>
 
-    @POST("/user/create")
-    suspend fun registerUser(@Body user: com.example.casinoapp.viewModel.User): Response<com.example.casinoapp.viewModel.User>
+    @POST("/user/register")
+    suspend fun registerUser(@Body user: User): Response<User>
 
 }
 
@@ -84,7 +83,7 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
-    fun loginUser(username: String, password: String, onResult: (String) -> Unit) {
+    fun login(username: String, password: String, onResult: (String) -> Unit) {
         viewModelScope.launch {
             _loginMessageUiState.value = LoginMessageUiState.Loading
             try {
@@ -107,7 +106,7 @@ class RemoteViewModel : ViewModel() {
                     }
                 } else {
                     _loginMessageUiState.value = LoginMessageUiState.Error
-                    onResult("Error: Credenciales incorrectas")
+                    onResult("Error: Credenciales incorrectas. Datos recibidos: $response")
                 }
             } catch (e: Exception) {
                 _loginMessageUiState.value = LoginMessageUiState.Error
@@ -116,8 +115,8 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
-    fun registerUser(user: com.example.casinoapp.viewModel.User, onResult: (String) -> Unit) {
-        viewModelScope.launch {
+    fun register(user: User, function: (String) -> Unit) {
+    viewModelScope.launch {
             _registerMessageUiState.value = RegisterMessageUiState.Loading
             try {
                 Log.d("RemoteViewModel", "Intentando registrar usuario: ${user.username}")
@@ -137,24 +136,23 @@ class RemoteViewModel : ViewModel() {
                     if (responseBody != null) {
                         _registerMessageUiState.value = RegisterMessageUiState.Success(responseBody)
                         Log.d("RemoteViewModel", "Registro exitoso para usuario: ${user.username}")
-                        onResult("Registro exitoso")
                     } else {
                         _registerMessageUiState.value = RegisterMessageUiState.Error
                         Log.e("RemoteViewModel", "Registro fallido: respuesta vacía")
-                        onResult("Error: Datos no recibidos")
                     }
                 } else {
                     _registerMessageUiState.value = RegisterMessageUiState.Error
                     val errorMessage = response.errorBody()?.string() ?: "Error desconocido"
                     Log.e("RemoteViewModel", "Error en registro: $errorMessage")
-                    onResult("Error: $errorMessage")
                 }
             } catch (e: Exception) {
                 _registerMessageUiState.value = RegisterMessageUiState.Error
                 Log.e("RemoteViewModel", "Excepción durante el registro: ${e.localizedMessage}", e)
-                onResult("Error: Problema de conexión")
             }
         }
     }
 
+    fun logout() {
+        _loginMessageUiState.value = LoginMessageUiState.Loading
+    }
 }
