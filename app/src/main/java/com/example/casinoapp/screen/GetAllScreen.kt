@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.sp
 import com.example.casinoapp.viewModel.User
 import com.example.casinoapp.viewModel.RemoteMessageUiState
 import com.example.casinoapp.viewModel.RemoteViewModel
-
+/*
 @Composable
 fun CasinoApp(remoteViewModel: RemoteViewModel, onBackPressed: () -> Unit) {
     //val state = viewModel.remoteMessageUiState
