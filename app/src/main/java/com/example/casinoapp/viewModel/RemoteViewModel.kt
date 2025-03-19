@@ -63,25 +63,8 @@ class RemoteViewModel : ViewModel() {
     private val _registerMessageUiState = MutableStateFlow<RegisterMessageUiState>(RegisterMessageUiState.Loading)
     val registerMessageUiState: StateFlow<RegisterMessageUiState> = _registerMessageUiState
 
-    fun getAllUsers() {
-        viewModelScope.launch {
-            _remoteMessageUiState.value = RemoteMessageUiState.Loading
-            try {
-                Log.d("RemoteViewModel", "Iniciando conexión Retrofit con base URL: http://10.0.2.2:8080")
-                val connection = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8080")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                val endpoint = connection.create(RemoteUserInterface::class.java)
-                val response = endpoint.getAllUsers()
-                Log.d("RemoteViewModel", "Datos recibidos: $response")
-                _remoteMessageUiState.value = RemoteMessageUiState.Success(response)
-            } catch (e: Exception) {
-                Log.e("RemoteViewModel", "Error en la conexión o procesamiento: ${e.message}", e)
-                _remoteMessageUiState.value = RemoteMessageUiState.Error
-            }
-        }
-    }
+    private val _loggedInUser = MutableStateFlow<User?>(null)
+    val loggedInUser: StateFlow<User?> = _loggedInUser
 
     fun login(username: String, password: String, onResult: (String) -> Unit) {
         viewModelScope.launch {
@@ -97,6 +80,7 @@ class RemoteViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     val responseBody = response.body()
                     if (responseBody != null) {
+                        _loggedInUser.value = responseBody
                         _loginMessageUiState.value = LoginMessageUiState.Success(responseBody)
                         Log.d("RemoteViewModel", "Login exitoso. Datos recibidos: $responseBody")
                         onResult("Login exitoso")
@@ -154,5 +138,25 @@ class RemoteViewModel : ViewModel() {
 
     fun logout() {
         _loginMessageUiState.value = LoginMessageUiState.Loading
+    }
+
+    fun getAllUsers() {
+        viewModelScope.launch {
+            _remoteMessageUiState.value = RemoteMessageUiState.Loading
+            try {
+                Log.d("RemoteViewModel", "Iniciando conexión Retrofit con base URL: http://10.0.2.2:8080")
+                val connection = Retrofit.Builder()
+                    .baseUrl("http://10.0.2.2:8080")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                val endpoint = connection.create(RemoteUserInterface::class.java)
+                val response = endpoint.getAllUsers()
+                Log.d("RemoteViewModel", "Datos recibidos: $response")
+                _remoteMessageUiState.value = RemoteMessageUiState.Success(response)
+            } catch (e: Exception) {
+                Log.e("RemoteViewModel", "Error en la conexión o procesamiento: ${e.message}", e)
+                _remoteMessageUiState.value = RemoteMessageUiState.Error
+            }
+        }
     }
 }

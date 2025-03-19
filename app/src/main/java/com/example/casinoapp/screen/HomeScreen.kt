@@ -10,20 +10,28 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.casinoapp.viewModel.LoginMessageUiState
 import com.example.casinoapp.viewModel.RemoteViewModel
-
 
 @Composable
 fun HomeScreen(
     navController: NavHostController,
     remoteViewModel: RemoteViewModel
     ) {
+
+    val loginState = remoteViewModel.loginMessageUiState.collectAsState().value
+
+    val fondocoins = when (loginState) {
+        is LoginMessageUiState.Success -> loginState.loginMessage?.fondocoins ?: 0
+        else -> 0
+    }
 
     Column(
         modifier = Modifier
@@ -39,12 +47,17 @@ fun HomeScreen(
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 32.dp)
         )
+        Text(
+            text = "Tus Fondocoins: $fondocoins",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
         Button(
             onClick = { navController.navigate("getAll") },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
         ) {
-            Text("Get All Nurses")
+            Text("Get All Users")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
@@ -52,7 +65,15 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxWidth(0.9f)
         ) {
-            Text("Find Nurses by Criteria")
+            Text("Find Users by Criteria")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = { navController.navigate("slotMachine") },
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+        ) {
+            Text("Slot Machine Game")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(

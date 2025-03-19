@@ -1,9 +1,9 @@
 package com.example.casinoapp
 
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
-import androidx.activity.ComponentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.casinoapp.screen.HomeScreen
 import com.example.casinoapp.screen.LoginScreen
 import com.example.casinoapp.screen.RegisterScreen
+import com.example.casinoapp.screen.SlotMachineScreen
 import com.example.casinoapp.viewModel.RemoteViewModel
 
 class MainActivity : ComponentActivity() {
@@ -40,6 +41,9 @@ class MainActivity : ComponentActivity() {
                             onNavigateToLogin = { navController.navigate("loginScreen") },
                             onNavigateToHome = { navController.navigate("homeScreen") }
                         )
+                    }
+                    composable("slotMachine") {
+                        SlotMachineScreen(navController)
                     }
                 }
             }
