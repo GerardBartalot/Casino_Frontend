@@ -1,5 +1,5 @@
 package com.example.casinoapp.screen
-
+/*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.example.casinoapp.viewModel.User
 import com.example.casinoapp.viewModel.RemoteMessageUiState
 import com.example.casinoapp.viewModel.RemoteViewModel
-/*
+
 @Composable
 fun SearchScreen(remoteViewModel: RemoteViewModel, onBackPressed: () -> Unit) {
     var query by remember { mutableStateOf("") }
@@ -115,4 +115,5 @@ fun PreviewFindByNameScreen() {
         remoteViewModel = remoteViewModel,
         onBackPressed = {}
     )
-}*/
+}
+*/

@@ -5,6 +5,9 @@ data class User(
     val name: String,
     val username: String,
     val password: String,
+    val fondocoins: Int,
+    val experiencePoints: Int,
+    val profilePicture: String?,
 )
 
 data class LoginRequest(

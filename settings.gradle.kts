@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CasinoApp"
+rootProject.name = "FondoCasinoApp"
 include(":app")
