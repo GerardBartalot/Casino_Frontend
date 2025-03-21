@@ -62,6 +62,14 @@ fun HomeScreen(navController: NavHostController) {
         ) {
             Text("Profile")
         }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = { navController.navigate("roulette") },
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+        ) {
+            Text("Roulette")
+        }
     }
 }
 

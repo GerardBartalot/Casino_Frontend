@@ -1,4 +1,4 @@
-package com.sejuma.hospitalapplication
+package com.example.casinoapp
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
