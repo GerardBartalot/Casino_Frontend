@@ -65,7 +65,15 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(onClick = {
-                val user = User(userId = 0, name = name, username = username, password = password)
+                val user = User(
+                    userId = 0,
+                    name = name,
+                    username = username,
+                    password = password,
+                    fondocoins = 500,
+                    experiencePoints = 0,
+                    profilePicture = null
+                )
                 remoteViewModel.register(user) { resultMessage ->
                     if (resultMessage == "Registro exitoso") {
                         onNavigateToHome()

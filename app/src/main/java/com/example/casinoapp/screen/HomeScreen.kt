@@ -10,6 +10,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
@@ -22,8 +24,15 @@ import com.example.casinoapp.viewModel.RemoteViewModel
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    remoteViewModel: RemoteViewModel
-    ) {
+    remoteViewModel: RemoteViewModel,
+    onNavigateToRoulette: () -> Unit,
+    onNavigateToSlotMachine: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+) {
+
+    val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
+    val fondocoins = loggedInUser?.fondocoins ?: 0
+
 
     Column(
         modifier = Modifier
@@ -39,24 +48,30 @@ fun HomeScreen(
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 32.dp)
         )
+        Text(
+            text = "Tus Fondocoins: $fondocoins",
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { navController.navigate("getAll") },
+            onClick = { onNavigateToSlotMachine() },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
         ) {
-            Text("Get All Nurses")
+            Text("Slot Machine Game")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { navController.navigate("findByName") },
+            onClick = { onNavigateToRoulette() },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
         ) {
-            Text("Find Nurses by Criteria")
+            Text("Roulette Game")
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { navController.navigate("profile") },
+            onClick = { onNavigateToProfile() },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
         ) {
@@ -65,7 +80,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(100.dp))
 
-        // Button to logout
         Button(onClick = {
             remoteViewModel.logout()
             navController.navigate("loginScreen") {

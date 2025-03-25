@@ -18,14 +18,19 @@ fun LoginScreen(
     onNavigateToRegister: () -> Unit,
     onNavigateToHome: () -> Unit
 ) {
-
     val loginMessageUiState by remoteViewModel.loginMessageUiState.collectAsState()
+    val loggedInUser by remoteViewModel.loggedInUser.collectAsState(initial = null)
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    LaunchedEffect(loggedInUser) {
+        loggedInUser?.let {
+            onNavigateToHome()
+        }
+    }
 
+    Box(modifier = Modifier.fillMaxSize()) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
@@ -54,7 +59,6 @@ fun LoginScreen(
             Button(onClick = {
                 remoteViewModel.login(username, password) { resultMessage ->
                     if (resultMessage == "Login exitoso") {
-                        onNavigateToHome()
                     } else {
                         Log.e("LoginScreen", "Error en login: $resultMessage")
                     }
@@ -67,9 +71,6 @@ fun LoginScreen(
 
             when (loginMessageUiState) {
                 is LoginMessageUiState.Success -> {
-                    LaunchedEffect(Unit) {
-                        onNavigateToHome()
-                    }
                 }
                 is LoginMessageUiState.Error -> {
                     Text("Incorrect username or password", color = Color.Red)
