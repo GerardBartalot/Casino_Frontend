@@ -10,11 +10,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.casinoapp.screen.HomeScreen
 import com.example.casinoapp.screen.LoginScreen
-import com.example.casinoapp.screen.ProfileScreen
 import com.example.casinoapp.screen.RegisterScreen
 import com.example.casinoapp.screen.RouletteScreen
 import com.example.casinoapp.screen.SlotMachineScreen
 import com.example.casinoapp.screen.SplashScreen
+import com.example.casinoapp.ui.screens.ProfileScreen
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 
@@ -25,7 +25,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             val remoteViewModel: RemoteViewModel = viewModel()
             val gameViewModel: GameViewModel = viewModel()
-            val userId = null
+
             MaterialTheme {
                 NavHost(navController = navController, startDestination = "splashScreen") {
                     composable("splashScreen") {
@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
                             remoteViewModel = remoteViewModel,
                             onNavigateToRoulette = { navController.navigate("rouletteScreen") },
                             onNavigateToSlotMachine = { navController.navigate("slotMachineScreen") },
-                            onNavigateToProfile = { navController.navigate("profile") },
+                            onNavigateToProfile = { navController.navigate("profileScreen") },
                         )
                     }
                     composable("registerScreen") {
@@ -61,7 +61,6 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("rouletteScreen") {
-
                         RouletteScreen(
                             navController,
                             gameViewModel = gameViewModel,
@@ -70,7 +69,8 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("profileScreen") {
                         ProfileScreen(
-                            navController
+                            remoteViewModel = remoteViewModel,
+                            navController = navController
                         )
                     }
                 }
