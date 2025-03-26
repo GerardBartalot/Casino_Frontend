@@ -1,5 +1,6 @@
 package com.example.casinoapp.viewModel
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -66,7 +67,7 @@ class RemoteViewModel : ViewModel() {
     private val _loggedInUser = MutableStateFlow<User?>(null)
     val loggedInUser: StateFlow<User?> = _loggedInUser
 
-    fun login(username: String, password: String, onResult: (String) -> Unit) {
+    fun login(username: String, password: String, onResult: Context) {
         viewModelScope.launch {
             _loginMessageUiState.value = LoginMessageUiState.Loading
             try {
