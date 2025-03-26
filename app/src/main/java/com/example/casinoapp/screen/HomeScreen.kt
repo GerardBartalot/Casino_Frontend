@@ -11,29 +11,28 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
-import com.example.casinoapp.viewModel.LoginMessageUiState
 import com.example.casinoapp.viewModel.RemoteViewModel
+
 
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    remoteViewModel: RemoteViewModel
-    ) {
+    remoteViewModel: RemoteViewModel,
+    onNavigateToRoulette: () -> Unit,
+    onNavigateToSlotMachine: () -> Unit,
+    onNavigateToProfile: () -> Unit,
+) {
 
-    val loginState = remoteViewModel.loginMessageUiState.collectAsState().value
+    val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
+    val fondocoins = loggedInUser?.fondocoins ?: 0
 
-    val fondocoins = when (loginState) {
-        is LoginMessageUiState.Success -> loginState.loginMessage?.fondocoins ?: 0
-        else -> 0
-    }
 
     Column(
         modifier = Modifier
@@ -54,24 +53,9 @@ fun HomeScreen(
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-        Button(
-            onClick = { navController.navigate("getAll") },
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-        ) {
-            Text("Get All Users")
-        }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { navController.navigate("findByName") },
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-        ) {
-            Text("Find Users by Criteria")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { navController.navigate("slotMachine") },
+            onClick = { onNavigateToSlotMachine() },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
         ) {
@@ -79,7 +63,15 @@ fun HomeScreen(
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(
-            onClick = { navController.navigate("profile") },
+            onClick = { onNavigateToRoulette() },
+            modifier = Modifier
+                .fillMaxWidth(0.9f)
+        ) {
+            Text("Roulette Game")
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            onClick = { onNavigateToProfile() },
             modifier = Modifier
                 .fillMaxWidth(0.9f)
         ) {
@@ -88,7 +80,6 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(100.dp))
 
-        // Button to logout
         Button(onClick = {
             remoteViewModel.logout()
             navController.navigate("loginScreen") {
@@ -103,12 +94,4 @@ fun HomeScreen(
             )
         }
     }
-}
-@Preview(showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    HomeScreen(
-        navController = rememberNavController(),
-        remoteViewModel = RemoteViewModel()
-    )
 }

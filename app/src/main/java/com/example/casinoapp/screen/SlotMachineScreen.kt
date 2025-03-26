@@ -15,7 +15,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,110 +24,111 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToLong
 import kotlin.random.Random
 import com.example.casinoapp.R
+import com.example.casinoapp.viewModel.RemoteViewModel
 
 @Composable
 fun SlotMachineScreen(
-    navController: NavController
+    navController: NavController,
+    remoteViewModel: RemoteViewModel,
 ) {
     val symbols = listOf("bar", "diamond", "heart", "seven", "watermelon", "horseshoe")
     var targetSymbols by remember { mutableStateOf(List(3) { symbols.random() }) }
     var isAnimating by remember { mutableStateOf(false) }
     var startAnimation by remember { mutableStateOf(false) }
-    var completedAnimations by remember { mutableStateOf(0) }
+    var completedAnimations by remember { mutableIntStateOf(0) }
 
-    // Puntuación inicial de 100 para pruebas
-    var score by remember { mutableIntStateOf(10) }
+    val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
+    var fondocoins by remember { mutableIntStateOf(loggedInUser?.fondocoins ?: 0) }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // Flecha para regresar al Home
-        IconButton(
-            onClick = { navController.navigate("homeScreen") }, modifier = Modifier
-                .padding(16.dp)
-                .align(Alignment.TopStart)
-                .size(40.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.ArrowBack,
-                contentDescription = "Back",
-                modifier = Modifier.size(40.dp),
-                tint = Color.Black
-            )
-        }
-
         Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-
-            Text(
-                text = "Puntuación: $score",
-                style = MaterialTheme.typography.headlineMedium,
-                color = Color.Black,
-                modifier = Modifier.padding(16.dp)
-            )
-
-            // Frame image
-            Box(
-                modifier = Modifier
-                    .size(320.dp, 160.dp)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Fondo del marco
-                Image(
-                    painter = painterResource(id = R.drawable.frame),
-                    contentDescription = "Frame",
-                    modifier = Modifier.fillMaxSize()
-                )
-
-                // Slots dentro del marco
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(20.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.align(Alignment.Center)
-                ) {
-                    targetSymbols.forEach { target ->
-                        SlotMachine(
-                            targetSymbol = target,
-                            textStyle = MaterialTheme.typography.headlineMedium,
-                            startAnimation = startAnimation,
-                            onAnimationComplete = {
-                                completedAnimations++
-                                if (completedAnimations == 3) {
-                                    isAnimating = false
-                                    completedAnimations = 0
-                                }
-                            }
-                        )
-                    }
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        imageVector = Icons.Filled.ArrowBack,
+                        contentDescription = "Volver atrás",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
                 }
+                Text("Fondo Coins: $fondocoins", style = MaterialTheme.typography.bodyLarge)
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Botón para girar
-            Button(
-                onClick = {
-                    // Solo permitir jugar si el usuario tiene 10 fondopoints
-                    if (!isAnimating && score >= 10) {
-                        isAnimating = true
-                        startAnimation = true
-                        // Restar 10 fondopoints por tirada
-                        score -= 10
-                        targetSymbols = List(3) { symbols.random() }
-                    }
-                },
-                // Deshabilitar el botón si el usuario no tiene fondopoints
-                enabled = score >= 10
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
             ) {
-                Text("JUEGA (Cuesta 10 fondopoints)")
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Frame image
+                    Box(
+                        modifier = Modifier
+                            .size(320.dp, 160.dp)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.frame),
+                            contentDescription = "Frame",
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        // Slots dentro del marco
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(20.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.align(Alignment.Center)
+                        ) {
+                            targetSymbols.forEach { target ->
+                                SlotMachine(
+                                    targetSymbol = target,
+                                    textStyle = MaterialTheme.typography.headlineMedium,
+                                    startAnimation = startAnimation,
+                                    onAnimationComplete = {
+                                        completedAnimations++
+                                        if (completedAnimations == 3) {
+                                            isAnimating = false
+                                            completedAnimations = 0
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Botón para girar
+                    Button(
+                        onClick = {
+                            if (!isAnimating && fondocoins >= 10) {
+                                isAnimating = true
+                                startAnimation = true
+                                fondocoins -= 10
+                                targetSymbols = List(3) { symbols.random() }
+                            }
+                        },
+                        enabled = fondocoins >= 10
+                    ) {
+                        Text("JUEGA (Cuesta 10 fondopoints)")
+                    }
+                }
             }
         }
     }
 
     LaunchedEffect(isAnimating) {
         if (!isAnimating && startAnimation) {
-            score += calculateScore(targetSymbols)
+            fondocoins += calculateScore(targetSymbols)
             startAnimation = false
         }
     }
@@ -215,14 +215,6 @@ private fun getSymbolImageResource(symbol: String): Int {
         "seven" -> R.drawable.seven
         "watermelon" -> R.drawable.watermelon
         "horseshoe" -> R.drawable.horseshoe
-        else -> R.drawable.bar // Default case
+        else -> R.drawable.bar
     }
-}
-
-@Preview
-@Composable
-fun SlotMachinePreview() {
-    SlotMachineScreen(
-        navController = TODO()
-    )
 }
