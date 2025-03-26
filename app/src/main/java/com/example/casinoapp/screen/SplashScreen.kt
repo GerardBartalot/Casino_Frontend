@@ -27,7 +27,7 @@ fun SplashScreen(navController: NavHostController) {
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = Color(0xFFE1F5FE)
+        color = Color(0xFF000000)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -39,15 +39,10 @@ fun SplashScreen(navController: NavHostController) {
                 contentDescription = "App Logo",
                 modifier = Modifier.size(200.dp)
             )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Fondo Casino Royale",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF2376A8)
-            )
             Spacer(modifier = Modifier.height(20.dp))
-            CircularProgressIndicator(color = Color(0xFF448AFF))
+            CircularProgressIndicator(
+                color = Color(0xFFFFFFFF)
+            )
             Spacer(modifier = Modifier.height(20.dp))
         }
     }
