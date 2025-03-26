@@ -159,4 +159,9 @@ class RemoteViewModel : ViewModel() {
             }
         }
     }
+
+    // En RemoteViewModel.kt
+    fun updateLoggedInUserFondocoins(newFondoCoins: Int) {
+        _loggedInUser.value = _loggedInUser.value?.copy(fondocoins = newFondoCoins)
+    }
 }

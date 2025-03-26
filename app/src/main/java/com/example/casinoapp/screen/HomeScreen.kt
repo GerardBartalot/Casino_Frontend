@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -18,6 +19,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 
 
@@ -25,14 +27,20 @@ import com.example.casinoapp.viewModel.RemoteViewModel
 fun HomeScreen(
     navController: NavHostController,
     remoteViewModel: RemoteViewModel,
+    gameViewModel: GameViewModel,
     onNavigateToRoulette: () -> Unit,
     onNavigateToSlotMachine: () -> Unit,
     onNavigateToProfile: () -> Unit,
 ) {
 
     val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
-    val fondocoins = loggedInUser?.fondocoins ?: 0
+    val vmFondocoins by gameViewModel.fondocoins.collectAsState()
 
+    LaunchedEffect(loggedInUser) {
+        loggedInUser?.userId?.let {
+            gameViewModel.getUserFondoCoins(it.toInt())
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -49,7 +57,7 @@ fun HomeScreen(
             modifier = Modifier.padding(bottom = 32.dp)
         )
         Text(
-            text = "Tus Fondocoins: $fondocoins",
+            text = "Tus Fondocoins: $vmFondocoins",
             style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.padding(bottom = 16.dp)
         )
@@ -76,22 +84,6 @@ fun HomeScreen(
                 .fillMaxWidth(0.9f)
         ) {
             Text("Profile")
-        }
-
-        Spacer(modifier = Modifier.height(100.dp))
-
-        Button(onClick = {
-            remoteViewModel.logout()
-            navController.navigate("loginScreen") {
-                popUpTo("homeScreen") { inclusive = true }
-            }
-        }) {
-            Text(
-                text = "Logout",
-                style = TextStyle(
-                    fontSize = 14.sp
-                )
-            )
         }
     }
 }

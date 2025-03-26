@@ -23,29 +23,51 @@ interface RemoteGameInterface {
 
     @PUT("/user/{id}/fondocoins")
     suspend fun updateUserFondoCoins(
-        @Path("userId") userId: Int,
-        @Body fondoCoinsRequest: FondoCoinsRequest
+        @Path("id") id: Int,
+        @Body newFondoCoins: Int
     ): Response<Map<String, String>>
 }
 
 class GameViewModel : ViewModel() {
     private val _fondocoins = MutableStateFlow(0)
+    val fondocoins: StateFlow<Int> get() = _fondocoins
+
+    fun updateLocalFondocoins(newValue: Int) {
+        _fondocoins.value = newValue
+    }
+
+    // Modificar las funciones existentes para trabajar con el estado local
+    fun placeBet(betAmount: Int): Boolean {
+        return if (_fondocoins.value >= betAmount) {
+            _fondocoins.value -= betAmount
+            true
+        } else {
+            false
+        }
+    }
+
+    fun addWinnings(amount: Int) {
+        _fondocoins.value += amount
+    }
+
+    private val retrofit: Retrofit = Retrofit.Builder()
+        .baseUrl("http://10.0.2.2:8080")
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    private val endpoint: RemoteGameInterface = retrofit.create(RemoteGameInterface::class.java)
 
     fun getUserFondoCoins(userId: Int) {
         viewModelScope.launch {
             try {
-                val connection = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8080")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                val endpoint = connection.create(RemoteGameInterface::class.java)
                 val response = endpoint.getUserFondoCoins(userId)
-
                 if (response.isSuccessful) {
                     _fondocoins.value = response.body() ?: 0
+                } else {
+                    Log.e("GameViewModel", "Error en la respuesta: ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error obteniendo fondocoins: ${e.message}")
+                Log.e("GameViewModel", "Error obteniendo fondocoins: ${e.message}", e)
             }
         }
     }
@@ -53,24 +75,18 @@ class GameViewModel : ViewModel() {
     fun updateUserFondoCoins(userId: Int, newFondoCoins: Int) {
         viewModelScope.launch {
             try {
-                val connection = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8080")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-
-                val endpoint = connection.create(RemoteGameInterface::class.java)
-                val fondoCoinsRequest = FondoCoinsRequest(newFondoCoins)
-                val response = endpoint.updateUserFondoCoins(userId, fondoCoinsRequest)
+                val response = endpoint.updateUserFondoCoins(userId, newFondoCoins)
 
                 if (response.isSuccessful) {
                     _fondocoins.value = newFondoCoins
+
+                    getUserFondoCoins(userId)
                 } else {
                     Log.e("GameViewModel", "Error actualizando fondocoins: ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error actualizando fondocoins: ${e.message}")
+                Log.e("GameViewModel", "Error actualizando fondocoins: ${e.message}", e)
             }
         }
     }
-
 }

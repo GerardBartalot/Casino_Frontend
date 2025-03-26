@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
                         HomeScreen(
                             navController = navController,
                             remoteViewModel = remoteViewModel,
+                            gameViewModel = gameViewModel,
                             onNavigateToRoulette = { navController.navigate("rouletteScreen") },
                             onNavigateToSlotMachine = { navController.navigate("slotMachineScreen") },
                             onNavigateToProfile = { navController.navigate("profile") },
@@ -58,6 +59,7 @@ class MainActivity : ComponentActivity() {
                         SlotMachineScreen(
                             navController,
                             remoteViewModel = remoteViewModel,
+                            gameViewModel = gameViewModel,
                         )
                     }
                     composable("rouletteScreen") {

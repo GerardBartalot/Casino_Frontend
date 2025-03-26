@@ -24,21 +24,34 @@ import kotlinx.coroutines.delay
 import kotlin.math.roundToLong
 import kotlin.random.Random
 import com.example.casinoapp.R
+import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 @Composable
 fun SlotMachineScreen(
     navController: NavController,
     remoteViewModel: RemoteViewModel,
+    gameViewModel: GameViewModel,
 ) {
     val symbols = listOf("bar", "diamond", "heart", "seven", "watermelon", "horseshoe")
     var targetSymbols by remember { mutableStateOf(List(3) { symbols.random() }) }
     var isAnimating by remember { mutableStateOf(false) }
     var startAnimation by remember { mutableStateOf(false) }
     var completedAnimations by remember { mutableIntStateOf(0) }
-
     val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
-    var fondocoins by remember { mutableIntStateOf(loggedInUser?.fondocoins ?: 0) }
+    val vmFondocoins by gameViewModel.fondocoins.collectAsState()
+    var userId by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
+    var scoreMessage by remember { mutableStateOf("") }
+
+    LaunchedEffect(loggedInUser) {
+        loggedInUser?.userId?.let {
+            userId = it.toString()
+            gameViewModel.getUserFondoCoins(it.toInt())
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -52,14 +65,23 @@ fun SlotMachineScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { navController.popBackStack() }) {
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            userId.toIntOrNull()?.let { id ->
+                                gameViewModel.updateUserFondoCoins(id, vmFondocoins)
+                                navController.popBackStack()
+                            }
+                        }
+                    }
+                ) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
                         contentDescription = "Volver atrás",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                Text("Fondo Coins: $fondocoins", style = MaterialTheme.typography.bodyLarge)
+                Text("Fondo Coins: $vmFondocoins", style = MaterialTheme.typography.bodyLarge)
             }
 
             Box(
@@ -71,6 +93,13 @@ fun SlotMachineScreen(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // Mostrar el mensaje de ganancias o pérdidas
+                    Text(
+                        text = scoreMessage,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(16.dp)
+                    )
+
                     // Frame image
                     Box(
                         modifier = Modifier
@@ -107,17 +136,16 @@ fun SlotMachineScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Botón para girar
                     Button(
                         onClick = {
-                            if (!isAnimating && fondocoins >= 10) {
+                            if (!isAnimating && gameViewModel.placeBet(10)) {
+                                scoreMessage = ""
                                 isAnimating = true
                                 startAnimation = true
-                                fondocoins -= 10
                                 targetSymbols = List(3) { symbols.random() }
                             }
                         },
-                        enabled = fondocoins >= 10
+                        enabled = vmFondocoins >= 10
                     ) {
                         Text("JUEGA (Cuesta 10 fondopoints)")
                     }
@@ -128,7 +156,15 @@ fun SlotMachineScreen(
 
     LaunchedEffect(isAnimating) {
         if (!isAnimating && startAnimation) {
-            fondocoins += calculateScore(targetSymbols)
+            val score = calculateScore(targetSymbols)
+            gameViewModel.addWinnings(score)
+            scoreMessage = if (score > 0) {
+                "¡Ganaste $score fondocoins!"
+            } else if (score < 0) {
+                "Perdiste ${-score} fondocoins"
+            } else {
+                "¡No ganaste nada!"
+            }
             startAnimation = false
         }
     }

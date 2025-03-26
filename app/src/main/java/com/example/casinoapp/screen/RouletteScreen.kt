@@ -1,5 +1,6 @@
 package com.example.casinoapp.screen
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -45,9 +46,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.casinoapp.R
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
@@ -56,7 +59,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun RouletteScreen(
     navController: NavController,
-    gameViewModel: GameViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    gameViewModel: GameViewModel,
     remoteViewModel: RemoteViewModel,
 )
 {
@@ -71,14 +74,14 @@ fun RouletteScreen(
     var resultMessage by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
     val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
-    var fondocoins by remember { mutableIntStateOf(loggedInUser?.fondocoins ?: 0) }
-    var initialFondocoins by remember { mutableIntStateOf(loggedInUser?.fondocoins ?: 0) }
+    val vmFondocoins by gameViewModel.fondocoins.collectAsState()
+    var userId by remember { mutableStateOf("") }
 
-    var userId by remember { mutableStateOf(loggedInUser?.userId ?: "") }
-
-    LaunchedEffect(Unit) {
-        userId = loggedInUser?.userId ?: ""
-        gameViewModel.getUserFondoCoins(userId as Int)
+    LaunchedEffect(loggedInUser) {
+        loggedInUser?.userId?.let {
+            userId = it.toString()
+            gameViewModel.getUserFondoCoins(it.toInt())
+        }
     }
 
     fun checkBetResult(number: Int, betValue: Int): Int {
@@ -105,12 +108,12 @@ fun RouletteScreen(
         if (!isSpinning) {
             val betValue = betAmount.text.toIntOrNull() ?: 0
 
-            if (betValue <= 0 || betValue > fondocoins || (selectedNumbers.isEmpty() && selectedColor == null && selectedEven == null)) {
+            if (betValue <= 0 || !gameViewModel.placeBet(betValue) ||
+                (selectedNumbers.isEmpty() && selectedColor == null && selectedEven == null)) {
                 resultMessage = "Apuesta inválida."
                 return
             }
 
-            fondocoins -= betValue
             isSpinning = true
             resultNumber = null
             resultMessage = ""
@@ -128,7 +131,7 @@ fun RouletteScreen(
                 isSpinning = false
 
                 val winnings = checkBetResult(winningNumber, betValue)
-                fondocoins += winnings
+                gameViewModel.addWinnings(winnings)
 
                 resultMessage = if (winnings > 0)
                     "¡Ganaste! Número: $winningNumber (+$winnings)"
@@ -147,20 +150,23 @@ fun RouletteScreen(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = {
-                if (fondocoins != initialFondocoins) {
-                    gameViewModel.updateUserFondoCoins(userId as Int, fondocoins)
-                    gameViewModel.getUserFondoCoins((userId as Int))
+            IconButton(
+                onClick = {
+                    coroutineScope.launch {
+                        userId.toIntOrNull()?.let { id ->
+                            gameViewModel.updateUserFondoCoins(id, vmFondocoins)
+                            navController.popBackStack()
+                        }
+                    }
                 }
-                navController.popBackStack()
-            }) {
+            ) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
                     contentDescription = "Volver atrás",
                     tint = MaterialTheme.colorScheme.onSurface
                 )
             }
-            Text("Fondo Coins: $fondocoins", style = MaterialTheme.typography.bodyLarge)
+            Text("Fondo Coins: $vmFondocoins", style = MaterialTheme.typography.bodyLarge)
         }
 
         Spacer(modifier = Modifier.height(30.dp))
@@ -196,23 +202,38 @@ fun RouletteScreen(
                         .padding(10.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    BasicTextField(
-                        value = betAmount.text,
-                        onValueChange = { betAmount = TextFieldValue(it) },
-                        textStyle = TextStyle(fontSize = 18.sp, color = Color.Black, textAlign = TextAlign.Center),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        decorationBox = { innerTextField ->
-                            if (betAmount.text.isEmpty()) {
-                                Text(
-                                    text = "Cantidad a apostar",
-                                    fontSize = 18.sp,
-                                    color = Color.Gray,
-                                    textAlign = TextAlign.Center
-                                )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        BasicTextField(
+                            value = betAmount.text,
+                            onValueChange = { betAmount = TextFieldValue(it) },
+                            textStyle = TextStyle(
+                                fontSize = 18.sp,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            ),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.fillMaxWidth(),
+                            decorationBox = { innerTextField ->
+                                Box(
+                                    contentAlignment = Alignment.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    if (betAmount.text.isEmpty()) {
+                                        Text(
+                                            text = "Apuesta",
+                                            fontSize = 18.sp,
+                                            color = Color.Gray,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                    innerTextField()
+                                }
                             }
-                            innerTextField()
-                        }
-                    )
+                        )
+                    }
                 }
             }
 
@@ -445,4 +466,14 @@ fun EvenOddTable(selectedEven: Boolean?, onEvenOddSelected: (Boolean) -> Unit) {
             Text(text = "Número Impar", color = Color.White)
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewRouletteScreen() {
+    RouletteScreen(
+        navController = rememberNavController(),
+        remoteViewModel = RemoteViewModel(),
+        gameViewModel = GameViewModel()
+    )
 }
