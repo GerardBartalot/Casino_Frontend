@@ -142,7 +142,10 @@ fun RouletteScreen(
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFF228B22))
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
@@ -466,14 +469,4 @@ fun EvenOddTable(selectedEven: Boolean?, onEvenOddSelected: (Boolean) -> Unit) {
             Text(text = "Número Impar", color = Color.White)
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewRouletteScreen() {
-    RouletteScreen(
-        navController = rememberNavController(),
-        remoteViewModel = RemoteViewModel(),
-        gameViewModel = GameViewModel()
-    )
 }

@@ -1,4 +1,4 @@
-package com.example.casinoapp.viewModel
+package com.example.casinoapp.entity
 
 data class User(
     val userId: Int,

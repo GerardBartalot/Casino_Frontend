@@ -1,12 +1,15 @@
 package com.example.casinoapp.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -15,17 +18,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 
-
 @Composable
 fun HomeScreen(
-    navController: NavHostController,
     remoteViewModel: RemoteViewModel,
     gameViewModel: GameViewModel,
     onNavigateToRoulette: () -> Unit,
@@ -45,6 +45,7 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color(0xFF228B22))
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -57,33 +58,36 @@ fun HomeScreen(
             modifier = Modifier.padding(bottom = 32.dp)
         )
         Text(
-            text = "Tus Fondocoins: $vmFondocoins",
+            text = "Fondocoins: $vmFondocoins",
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.padding(bottom = 30.dp)
         )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { onNavigateToSlotMachine() },
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-        ) {
-            Text("Slot Machine Game")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { onNavigateToRoulette() },
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-        ) {
-            Text("Roulette Game")
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(
-            onClick = { onNavigateToProfile() },
-            modifier = Modifier
-                .fillMaxWidth(0.9f)
-        ) {
-            Text("Profile")
-        }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        HomeButton("Slot Machine") { onNavigateToSlotMachine() }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        HomeButton("Roulette") { onNavigateToRoulette() }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        HomeButton("Profile") { onNavigateToProfile() }
+    }
+}
+
+@Composable
+fun HomeButton(text: String, onNavigate: () -> Unit) {
+    Button(
+        onClick = onNavigate,
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)),
+        modifier = Modifier
+            .fillMaxWidth(0.8f)
+            .height(50.dp)
+            .padding(vertical = 5.dp),
+        shape = RoundedCornerShape(10.dp)
+    ) {
+        Text(text = text, color = Color.Black, fontSize = 16.sp)
     }
 }

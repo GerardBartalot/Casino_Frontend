@@ -3,6 +3,7 @@ package com.example.casinoapp.viewModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.casinoapp.entity.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -19,14 +20,12 @@ sealed interface RemoteMessageUiState {
     data class Success(val remoteMessage: List<User>) : RemoteMessageUiState
     object Loading : RemoteMessageUiState
     object Error : RemoteMessageUiState
-
 }
 
 sealed interface LoginMessageUiState {
     data class Success(val loginMessage: User?) : LoginMessageUiState
     object Loading : LoginMessageUiState
     object Error : LoginMessageUiState
-
 }
 
 sealed interface RegisterMessageUiState {
@@ -136,8 +135,16 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
-    fun logout() {
-        _loginMessageUiState.value = LoginMessageUiState.Loading
+    fun logout(onResult: (String) -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                _loggedInUser.value = null
+                _loginMessageUiState.value = LoginMessageUiState.Loading
+                onResult("Sesión cerrada exitosamente")
+            } catch (e: Exception) {
+                onResult("Error al cerrar sesión: ${e.message}")
+            }
+        }
     }
 
     fun getAllUsers() {
