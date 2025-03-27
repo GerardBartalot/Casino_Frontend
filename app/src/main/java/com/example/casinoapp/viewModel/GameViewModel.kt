@@ -14,8 +14,6 @@ import retrofit2.http.GET
 import retrofit2.http.PUT
 import retrofit2.http.Path
 
-data class FondoCoinsRequest(val fondocoins: Int)
-
 interface RemoteGameInterface {
 
     @GET("/user/{id}/fondocoins")
@@ -32,14 +30,17 @@ class GameViewModel : ViewModel() {
     private val _fondocoins = MutableStateFlow(0)
     val fondocoins: StateFlow<Int> get() = _fondocoins
 
-    fun updateLocalFondocoins(newValue: Int) {
-        _fondocoins.value = newValue
+    private var userId: Int = 0
+
+    fun setUserId(id: Int) {
+        userId = id
     }
 
     // Modificar las funciones existentes para trabajar con el estado local
     fun placeBet(betAmount: Int): Boolean {
         return if (_fondocoins.value >= betAmount) {
             _fondocoins.value -= betAmount
+            updateUserFondoCoins(userId, _fondocoins.value)
             true
         } else {
             false
@@ -48,6 +49,7 @@ class GameViewModel : ViewModel() {
 
     fun addWinnings(amount: Int) {
         _fondocoins.value += amount
+        updateUserFondoCoins(userId, _fondocoins.value)
     }
 
     private val retrofit: Retrofit = Retrofit.Builder()
@@ -76,11 +78,8 @@ class GameViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = endpoint.updateUserFondoCoins(userId, newFondoCoins)
-
                 if (response.isSuccessful) {
                     _fondocoins.value = newFondoCoins
-
-                    getUserFondoCoins(userId)
                 } else {
                     Log.e("GameViewModel", "Error actualizando fondocoins: ${response.message()}")
                 }
