@@ -66,7 +66,7 @@ class RemoteViewModel : ViewModel() {
     private val _loggedInUser = MutableStateFlow<User?>(null)
     val loggedInUser: StateFlow<User?> = _loggedInUser
 
-    fun login(username: String, password: String, onResult: Context) {
+    fun login(username: String, password: String, onResult: (String) -> Unit) {
         viewModelScope.launch {
             _loginMessageUiState.value = LoginMessageUiState.Loading
             try {
