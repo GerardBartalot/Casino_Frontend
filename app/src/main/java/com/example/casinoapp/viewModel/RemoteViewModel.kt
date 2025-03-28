@@ -1,6 +1,5 @@
 package com.example.casinoapp.viewModel
 
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -66,7 +65,7 @@ class RemoteViewModel : ViewModel() {
     private val _loggedInUser = MutableStateFlow<User?>(null)
     val loggedInUser: StateFlow<User?> = _loggedInUser
 
-    fun login(username: String, password: String, onResult: Context) {
+    fun login(username: String, password: String, onResult: (Any) -> Any) {
         viewModelScope.launch {
             _loginMessageUiState.value = LoginMessageUiState.Loading
             try {
@@ -99,8 +98,8 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
-    fun register(user: User, function: (String) -> Unit) {
-    viewModelScope.launch {
+    fun register(user: User, onResult: (String) -> Unit) {
+        viewModelScope.launch {
             _registerMessageUiState.value = RegisterMessageUiState.Loading
             try {
                 Log.d("RemoteViewModel", "Intentando registrar usuario: ${user.username}")
@@ -118,23 +117,29 @@ class RemoteViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     val responseBody = response.body()
                     if (responseBody != null) {
+                        _loggedInUser.value = responseBody  // 🔥 ACTUALIZAMOS EL USUARIO LOGUEADO
                         _registerMessageUiState.value = RegisterMessageUiState.Success(responseBody)
                         Log.d("RemoteViewModel", "Registro exitoso para usuario: ${user.username}")
+                        onResult("Registro exitoso")
                     } else {
                         _registerMessageUiState.value = RegisterMessageUiState.Error
                         Log.e("RemoteViewModel", "Registro fallido: respuesta vacía")
+                        onResult("Error: Respuesta vacía")
                     }
                 } else {
                     _registerMessageUiState.value = RegisterMessageUiState.Error
                     val errorMessage = response.errorBody()?.string() ?: "Error desconocido"
                     Log.e("RemoteViewModel", "Error en registro: $errorMessage")
+                    onResult("Error: $errorMessage")
                 }
             } catch (e: Exception) {
                 _registerMessageUiState.value = RegisterMessageUiState.Error
                 Log.e("RemoteViewModel", "Excepción durante el registro: ${e.localizedMessage}", e)
+                onResult("Error: Problema de conexión")
             }
         }
     }
+
 
     fun logout(onResult: (String) -> Unit = {}) {
         viewModelScope.launch {
