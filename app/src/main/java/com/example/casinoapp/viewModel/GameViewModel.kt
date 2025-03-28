@@ -24,6 +24,15 @@ interface RemoteGameInterface {
         @Path("id") id: Int,
         @Body newFondoCoins: Int
     ): Response<Map<String, String>>
+
+    @GET("/user/{id}/experience")
+    suspend fun getUserExperience(@Path("id") id: Int): Response<Int>
+
+    @PUT("/user/{id}/experience")
+    suspend fun updateUserExperience(
+        @Path("id") id: Int,
+        @Body newExperience: Int
+    ): Response<Map<String, String>>
 }
 
 class GameViewModel : ViewModel() {
@@ -36,7 +45,6 @@ class GameViewModel : ViewModel() {
         userId = id
     }
 
-    // Modificar las funciones existentes para trabajar con el estado local
     fun placeBet(betAmount: Int): Boolean {
         return if (_fondocoins.value >= betAmount) {
             _fondocoins.value -= betAmount
@@ -85,6 +93,62 @@ class GameViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("GameViewModel", "Error actualizando fondocoins: ${e.message}", e)
+            }
+        }
+    }
+
+
+    private val _experience = MutableStateFlow(0)
+    val experience: StateFlow<Int> get() = _experience
+
+    fun addSlotExperience(winMultiplier: Int) {
+        val experienceToAdd = when (winMultiplier) {
+            10 -> 15  // 3 símbolos iguales
+            2 -> 5     // 2 símbolos iguales
+            else -> 0  // Sin premio
+        }
+
+        if (experienceToAdd > 0) {
+            _experience.value += experienceToAdd
+            updateUserExperience(userId, _experience.value)
+        }
+    }
+
+    fun addRouletteExperience(isWin: Boolean) {
+        val experienceToAdd = if (isWin) 50 else 0
+
+        if (experienceToAdd > 0) {
+            _experience.value += experienceToAdd
+            updateUserExperience(userId, _experience.value)
+        }
+    }
+
+    fun getUserExperience(userId: Int) {
+        viewModelScope.launch {
+            try {
+                val response = endpoint.getUserExperience(userId)
+                if (response.isSuccessful) {
+                    _experience.value = response.body() ?: 0
+                } else {
+                    Log.e("GameViewModel", "Error en la respuesta: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("GameViewModel", "Error obteniendo experiencia: ${e.message}", e)
+            }
+        }
+    }
+
+    fun updateUserExperience(userId: Int, newExperience: Int) {
+        viewModelScope.launch {
+            try {
+                val response = endpoint.updateUserExperience(userId, newExperience)
+                if (response.isSuccessful) {
+                    _experience.value = newExperience
+                } else {
+                    Log.e("GameViewModel", "Error actualizando experiencia: ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e("GameViewModel", "Error actualizando experiencia: ${e.message}", e)
             }
         }
     }
