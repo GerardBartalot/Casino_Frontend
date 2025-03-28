@@ -30,6 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,20 +78,23 @@ fun RouletteScreen(
     val coroutineScope = rememberCoroutineScope()
     val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
     val vmFondocoins by gameViewModel.fondocoins.collectAsState()
+    val vmExperience by gameViewModel.experience.collectAsState()
     var userId by remember { mutableStateOf("") }
+    val isWin = remember { mutableStateOf(false) }
 
     LaunchedEffect(loggedInUser) {
         loggedInUser?.userId?.let {
             userId = it.toString()
             gameViewModel.getUserFondoCoins(it.toInt())
+            gameViewModel.getUserExperience(it.toInt())
         }
     }
 
-    val isWin = remember { mutableStateOf(false) }
+    val diamondXP by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.diamond_xp))
 
     // Lottie Composition for the coin rain animation
     val lottieComposition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(R.raw.lluvia_monedas)
+        spec = LottieCompositionSpec.RawRes(R.raw.lluvia_monedas1)
     )
 
     fun checkBetResult(number: Int, betValue: Int): Int {
@@ -141,7 +145,10 @@ fun RouletteScreen(
                 isSpinning = false
 
                 val winnings = checkBetResult(winningNumber, betValue)
+                val hasWon = winnings > 0
+
                 gameViewModel.addWinnings(winnings)
+                gameViewModel.addRouletteExperience(hasWon)
 
                 userId.toIntOrNull()?.let { id ->
                     gameViewModel.updateUserFondoCoins(id, vmFondocoins)
@@ -159,6 +166,13 @@ fun RouletteScreen(
                     isWin.value = false
                 }
             }
+        }
+    }
+
+    val isBetValid = remember {
+        derivedStateOf {
+            betAmount.text.toIntOrNull()?.let { it > 0 } ?: false &&
+                    (selectedNumbers.isNotEmpty() || selectedColor != null || selectedEven != null)
         }
     }
 
@@ -186,10 +200,41 @@ fun RouletteScreen(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                Text("Fondo Coins: $vmFondocoins", style = MaterialTheme.typography.bodyLarge)
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Fondocoins
+                Image(
+                    painter = painterResource(id = R.drawable.fondocoin),
+                    contentDescription = "Fondocoin",
+                    modifier = Modifier.size(70.dp)
+                )
+                Text(
+                    "$vmFondocoins",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 30.sp),
+                    modifier = Modifier.padding(start = 4.dp, end = 16.dp)
+                )
+
+                // Experiencia
+                LottieAnimation(
+                    composition = diamondXP,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier.size(70.dp)
+                )
+                Text(
+                    "$vmExperience",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 30.sp),
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             Box(contentAlignment = Alignment.Center, modifier = Modifier.size(250.dp)) {
                 Image(
@@ -259,15 +304,18 @@ fun RouletteScreen(
 
                 Spacer(modifier = Modifier.width(4.dp))
 
-                Button(onClick = {
-                    lastBetType = when {
-                        selectedNumbers.isNotEmpty() -> "Número"
-                        selectedColor != null -> "Color"
-                        selectedEven != null -> "ParImpar"
-                        else -> null
-                    }
-                    spinRoulette()
-                }) {
+                Button(
+                    onClick = {
+                        lastBetType = when {
+                            selectedNumbers.isNotEmpty() -> "Número"
+                            selectedColor != null -> "Color"
+                            selectedEven != null -> "ParImpar"
+                            else -> null
+                        }
+                        spinRoulette()
+                    },
+                    enabled = isBetValid.value && !isSpinning
+                ) {
                     Text("GIRA!")
                 }
             }
@@ -303,10 +351,10 @@ fun RouletteScreen(
                 }
 
                 val resultText = when (lastBetType) {
-                    "Número" -> if (isWin) "¡Ganaste! Número ganador: $number" else "¡Perdiste! Número ganador: $number"
-                    "Color" -> if (isWin) "¡Ganaste! Color ganador: $colorWinner" else "¡Perdiste! Color ganador: $colorWinner"
-                    "ParImpar" -> if (isWin) "¡Ganaste! Evento ganador: $evenOddWinner" else "¡Perdiste! Evento ganador: $evenOddWinner"
-                    else -> "¡Perdiste! Número ganador: $number"
+                    "Número" -> if (isWin) "¡Ganaste! Número: $number (+50 XP)" else "¡Perdiste! Número: $number"
+                    "Color" -> if (isWin) "¡Ganaste! Color: $colorWinner (+50 XP)" else "¡Perdiste! Color: $colorWinner"
+                    "ParImpar" -> if (isWin) "¡Ganaste! Evento: $evenOddWinner (+50 XP)" else "¡Perdiste! Evento: $evenOddWinner"
+                    else -> if (isWin) "¡Ganaste! (+50 XP)" else "¡Perdiste!"
                 }
 
                 Text(

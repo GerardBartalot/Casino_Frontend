@@ -43,6 +43,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -70,12 +71,15 @@ fun SlotMachineScreen(
     var completedAnimations by remember { mutableIntStateOf(0) }
     val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
     val vmFondocoins by gameViewModel.fondocoins.collectAsState()
+    val vmExperience by gameViewModel.experience.collectAsState()
     var userId by remember { mutableStateOf("") }
     var scoreMessage by remember { mutableStateOf("") }
     var currentBet by remember { mutableIntStateOf(0) }
 
+    val diamondXP by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.diamond_xp))
+
     // Lottie Composition for the coin rain animation
-    val lottieComposition by rememberLottieComposition(
+    val coinsRain by rememberLottieComposition(
         spec = LottieCompositionSpec.RawRes(R.raw.lluvia_monedas)
     )
 
@@ -86,6 +90,7 @@ fun SlotMachineScreen(
             userId = it.toString()
             gameViewModel.setUserId(it.toInt())
             gameViewModel.getUserFondoCoins(it.toInt())
+            gameViewModel.getUserExperience(it.toInt())
         }
     }
 
@@ -118,7 +123,6 @@ fun SlotMachineScreen(
                         tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
-                Text("Fondo Coins: $vmFondocoins", style = MaterialTheme.typography.bodyLarge)
             }
 
             Box(
@@ -131,6 +135,38 @@ fun SlotMachineScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top,
                 ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Fondocoins
+                        Image(
+                            painter = painterResource(id = R.drawable.fondocoin),
+                            contentDescription = "Fondocoin",
+                            modifier = Modifier.size(70.dp)
+                        )
+                        Text(
+                            "$vmFondocoins",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 30.sp),
+                            modifier = Modifier.padding(start = 4.dp, end = 16.dp)
+                        )
+
+                        // Experiencia
+                        LottieAnimation(
+                            composition = diamondXP,
+                            iterations = LottieConstants.IterateForever,
+                            modifier = Modifier.size(70.dp)
+                        )
+                        Text(
+                            "$vmExperience",
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 30.sp),
+                            modifier = Modifier.padding(start = 4.dp)
+                        )
+                    }
+
                     Text(
                         text = scoreMessage,
                         style = MaterialTheme.typography.bodyMedium,
@@ -248,7 +284,7 @@ fun SlotMachineScreen(
                 .zIndex(1f)
             ) {
                 LottieAnimation(
-                    composition = lottieComposition,
+                    composition = coinsRain,
                     modifier = Modifier.fillMaxSize().zIndex(1f),
                     iterations = LottieConstants.IterateForever,
                     speed = 0.5f
@@ -264,10 +300,11 @@ fun SlotMachineScreen(
             val netWin = winAmount - currentBet
 
             gameViewModel.addWinnings(winAmount)
+            gameViewModel.addSlotExperience(winMultiplier)
 
             scoreMessage = when (winMultiplier) {
-                10 -> "¡Gran premio! Ganaste ${netWin * 10} fondocoins!"
-                2 -> "¡Ganaste ${netWin * 2} fondocoins!"
+                10 -> "¡Gran premio! Ganaste ${netWin * 10} fondocoins y 15 de experiencia!"
+                2 -> "¡Ganaste ${netWin * 2} fondocoins y 5 de experiencia!"
                 else -> "Sin premio"
             }
 
