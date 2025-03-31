@@ -1,6 +1,7 @@
 package com.example.casinoapp.screen
 
 import android.annotation.SuppressLint
+import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
@@ -55,6 +56,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.casinoapp.R
+import com.example.casinoapp.entity.GameSession
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 import kotlinx.coroutines.delay
@@ -86,7 +88,26 @@ fun SlotMachineScreen(
     var localExperience by remember { mutableIntStateOf(0) }
     val isWin = remember { mutableStateOf(false) }
     val diamondXP by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.diamond_xp))
-    var experienceToAdd by remember { mutableIntStateOf(0) }
+    var roundsPlayed by remember { mutableIntStateOf(0) }
+    var fondocoinsSpent by remember { mutableIntStateOf(0) }
+    var fondocoinsEarned by remember { mutableIntStateOf(0) }
+    var experienceEarned by remember { mutableIntStateOf(0) }
+
+    fun saveGameSession() {
+        loggedInUser?.let { user ->
+            val gameSession = GameSession(
+                user = user,
+                gameName = "Slot Machine",
+                rounds = roundsPlayed,
+                experienceEarned = experienceEarned,
+                fondocoinsSpent = fondocoinsSpent,
+                fondocoinsEarned = fondocoinsEarned
+            )
+            remoteViewModel.saveGameSession(gameSession) { result ->
+                Log.d("SlotMachineScreen", "Game session save result: $result")
+            }
+        }
+    }
 
     // Lottie Composition for the coin rain animation
     val coinsRain by rememberLottieComposition(
@@ -126,6 +147,7 @@ fun SlotMachineScreen(
                             gameViewModel.updateUserFondoCoins(id, localFondocoins)
                             gameViewModel.updateUserExperience(id, localExperience)
                         }
+                        saveGameSession()
                         navController.popBackStack()
                     }
                 ) {
@@ -377,13 +399,13 @@ fun SlotMachineScreen(
             val winAmount = currentBet * winMultiplier
             val netWin = winAmount - currentBet
 
-            userId.toIntOrNull()?.let { id ->
-                gameViewModel.updateUserFondoCoins(id, localFondocoins + winAmount)
-                gameViewModel.updateUserExperience(id, localExperience + calculateSlotExperience(winMultiplier))
-            }
-
             localFondocoins = vmFondocoins
             localExperience = vmExperience
+
+            roundsPlayed++
+            fondocoinsSpent += currentBet
+            fondocoinsEarned += winAmount
+            experienceEarned += calculateSlotExperience(winMultiplier)
 
             scoreMessage = when (winMultiplier) {
                 10 -> "¡Gran premio! Ganaste ${netWin * 10} fondocoins y 15 de experiencia!"

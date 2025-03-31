@@ -3,6 +3,7 @@ package com.example.casinoapp.viewModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.casinoapp.entity.GameSession
 import com.example.casinoapp.entity.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,6 +51,9 @@ interface RemoteUserInterface {
 
     @POST("/user/register")
     suspend fun registerUser(@Body user: User): Response<User>
+
+    @POST("/sessionGame/save")
+    suspend fun saveGameSession(@Body gameSession: GameSession): Response<GameSession>
 
     @PUT("/user/update/{id}")
     suspend fun updateUser(
@@ -109,8 +113,6 @@ class RemoteViewModel : ViewModel() {
         viewModelScope.launch {
             _registerMessageUiState.value = RegisterMessageUiState.Loading
             try {
-                Log.d("RemoteViewModel", "Intentando registrar usuario: ${user.username}")
-
                 val connection = Retrofit.Builder()
                     .baseUrl("http://10.0.2.2:8080")
                     .addConverterFactory(GsonConverterFactory.create())
@@ -118,35 +120,27 @@ class RemoteViewModel : ViewModel() {
                 val endpoint = connection.create(RemoteUserInterface::class.java)
                 val response = endpoint.registerUser(user)
 
-                Log.d("RemoteViewModel", "Código de respuesta: ${response.code()}")
-                Log.d("RemoteViewModel", "Mensaje de respuesta: ${response.message()}")
-
                 if (response.isSuccessful) {
                     val responseBody = response.body()
                     if (responseBody != null) {
-                        _loggedInUser.value = responseBody  // 🔥 ACTUALIZAMOS EL USUARIO LOGUEADO
+                        _loggedInUser.value = responseBody
                         _registerMessageUiState.value = RegisterMessageUiState.Success(responseBody)
-                        Log.d("RemoteViewModel", "Registro exitoso para usuario: ${user.username}")
                         onResult("Registro exitoso")
                     } else {
                         _registerMessageUiState.value = RegisterMessageUiState.Error
-                        Log.e("RemoteViewModel", "Registro fallido: respuesta vacía")
                         onResult("Error: Respuesta vacía")
                     }
                 } else {
                     _registerMessageUiState.value = RegisterMessageUiState.Error
                     val errorMessage = response.errorBody()?.string() ?: "Error desconocido"
-                    Log.e("RemoteViewModel", "Error en registro: $errorMessage")
                     onResult("Error: $errorMessage")
                 }
             } catch (e: Exception) {
                 _registerMessageUiState.value = RegisterMessageUiState.Error
-                Log.e("RemoteViewModel", "Excepción durante el registro: ${e.localizedMessage}", e)
                 onResult("Error: Problema de conexión")
             }
         }
     }
-
 
     fun logout(onResult: (String) -> Unit = {}) {
         viewModelScope.launch {
@@ -160,33 +154,34 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
-    fun getAllUsers() {
+    fun saveGameSession(gameSession: GameSession, onResult: (String) -> Unit) {
         viewModelScope.launch {
-            _remoteMessageUiState.value = RemoteMessageUiState.Loading
             try {
-                Log.d("RemoteViewModel", "Iniciando conexión Retrofit con base URL: http://10.0.2.2:8080")
                 val connection = Retrofit.Builder()
                     .baseUrl("http://10.0.2.2:8080")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                 val endpoint = connection.create(RemoteUserInterface::class.java)
-                val response = endpoint.getAllUsers()
-                Log.d("RemoteViewModel", "Datos recibidos: $response")
-                _remoteMessageUiState.value = RemoteMessageUiState.Success(response)
+                val response = endpoint.saveGameSession(gameSession)
+
+                if (response.isSuccessful) {
+                    val responseBody = response.body()
+                    if (responseBody != null) {
+                        onResult("Sesión de juego guardada exitosamente")
+                    } else {
+                        onResult("Error: Respuesta vacía del servidor")
+                    }
+                } else {
+                    val errorMessage = response.errorBody()?.string() ?: "Error desconocido"
+                    onResult("Error: $errorMessage")
+                }
             } catch (e: Exception) {
-                Log.e("RemoteViewModel", "Error en la conexión o procesamiento: ${e.message}", e)
-                _remoteMessageUiState.value = RemoteMessageUiState.Error
+                Log.e("RemoteViewModel", "Error al guardar la sesión de juego: ${e.message}", e)
+                onResult("Error: Problema de conexión")
             }
         }
     }
 
-    // En RemoteViewModel.kt
-    fun updateLoggedInUserFondocoins(newFondoCoins: Int) {
-        _loggedInUser.value = _loggedInUser.value?.copy(fondocoins = newFondoCoins)
-    }
-
-
-    //Update User
     fun updateUser(user: User, onResult: (String) -> Unit) {
         viewModelScope.launch {
             try {
