@@ -15,6 +15,7 @@ import com.example.casinoapp.screen.RouletteScreen
 import com.example.casinoapp.screen.SlotMachineScreen
 import com.example.casinoapp.screen.SplashScreen
 import com.example.casinoapp.screen.ProfileScreen
+import com.example.casinoapp.screen.ScratchCardScreen
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 
@@ -44,6 +45,7 @@ class MainActivity : ComponentActivity() {
                             onNavigateToRoulette = { navController.navigate("rouletteScreen") },
                             onNavigateToSlotMachine = { navController.navigate("slotMachineScreen") },
                             onNavigateToProfile = { navController.navigate("profileScreen") },
+                            onNavigateToScratchCard = { navController.navigate("scratchCardScreen") },
                         )
                     }
                     composable("registerScreen") {
@@ -62,6 +64,13 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("rouletteScreen") {
                         RouletteScreen(
+                            navController,
+                            gameViewModel = gameViewModel,
+                            remoteViewModel = remoteViewModel,
+                        )
+                    }
+                    composable("scratchCardScreen") {
+                        ScratchCardScreen(
                             navController,
                             gameViewModel = gameViewModel,
                             remoteViewModel = remoteViewModel,

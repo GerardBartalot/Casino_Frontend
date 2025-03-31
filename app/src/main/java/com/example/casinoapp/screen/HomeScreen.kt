@@ -41,6 +41,7 @@ fun HomeScreen(
     onNavigateToRoulette: () -> Unit,
     onNavigateToSlotMachine: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToScratchCard: () -> Unit,
 ) {
 
     val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
@@ -110,6 +111,10 @@ fun HomeScreen(
         Spacer(modifier = Modifier.height(30.dp))
 
         HomeButton("Roulette", enabled = vmExperience >= 100) { onNavigateToRoulette() }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        HomeButton("Scratch Cards", enabled = vmExperience >= 100) { onNavigateToScratchCard() }
 
         Spacer(modifier = Modifier.height(30.dp))
 

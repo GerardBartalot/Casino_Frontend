@@ -1,5 +1,6 @@
 package com.example.casinoapp.screen
 
+import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -55,6 +56,7 @@ import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.casinoapp.R
+import com.example.casinoapp.entity.GameSession
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 import kotlinx.coroutines.delay
@@ -85,6 +87,27 @@ fun RouletteScreen(
     var userId by remember { mutableStateOf("") }
     val isWin = remember { mutableStateOf(false) }
     var experienceToAdd by remember { mutableIntStateOf(0) }
+    val diamondXP by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.diamond_xp))
+    var roundsPlayed by remember { mutableIntStateOf(0) }
+    var fondocoinsSpent by remember { mutableIntStateOf(0) }
+    var fondocoinsEarned by remember { mutableIntStateOf(0) }
+    var experienceEarned by remember { mutableIntStateOf(0) }
+
+    fun saveGameSession() {
+        loggedInUser?.let { user ->
+            val gameSession = GameSession(
+                user = user,
+                gameName = "Roulette",
+                rounds = roundsPlayed,
+                experienceEarned = experienceEarned,
+                fondocoinsSpent = fondocoinsSpent,
+                fondocoinsEarned = fondocoinsEarned
+            )
+            remoteViewModel.saveGameSession(gameSession) { result ->
+                Log.d("RouletteScreen", "Game session save result: $result")
+            }
+        }
+    }
 
     LaunchedEffect(Unit) {
         loggedInUser?.userId?.let {
@@ -99,9 +122,6 @@ fun RouletteScreen(
         localExperience = vmExperience
     }
 
-    val diamondXP by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.diamond_xp))
-
-    // Lottie Composition for the coin rain animation
     val lottieComposition by rememberLottieComposition(
         spec = LottieCompositionSpec.RawRes(R.raw.lluvia_monedas1)
     )
@@ -157,11 +177,14 @@ fun RouletteScreen(
                 val hasWon = winnings > 0
                 experienceToAdd = if (hasWon) 50 else 0
 
-                userId.toIntOrNull()?.let { id ->
-                    gameViewModel.updateUserFondoCoins(id, vmFondocoins + winnings - betValue)
-                    if (hasWon) {
-                        gameViewModel.updateUserExperience(id, vmExperience + experienceToAdd)
-                    }
+                roundsPlayed++
+                fondocoinsSpent += betValue
+
+                if (hasWon) {
+                    localFondocoins += winnings
+                    localExperience += experienceToAdd
+                    fondocoinsEarned += winnings
+                    experienceEarned += experienceToAdd
                 }
 
                 resultMessage = if (winnings > 0) {
@@ -205,6 +228,7 @@ fun RouletteScreen(
                             gameViewModel.updateUserFondoCoins(id, localFondocoins)
                             gameViewModel.updateUserExperience(id, localExperience)
                             navController.popBackStack()
+                            saveGameSession()
                         }
                     }
                 ) {
@@ -230,7 +254,7 @@ fun RouletteScreen(
                     modifier = Modifier.size(70.dp)
                 )
                 Text(
-                    "$vmFondocoins",
+                    "$localFondocoins",
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 30.sp),
                     modifier = Modifier.padding(start = 4.dp, end = 16.dp)
                 )
@@ -242,7 +266,7 @@ fun RouletteScreen(
                     modifier = Modifier.size(70.dp)
                 )
                 Text(
-                    "$vmExperience",
+                    "$localExperience",
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 30.sp),
                     modifier = Modifier.padding(start = 4.dp)
                 )
@@ -417,7 +441,7 @@ fun RouletteScreen(
                 LottieAnimation(
                     composition = lottieComposition,
                     modifier = Modifier.fillMaxSize().zIndex(1f),
-                    iterations = LottieConstants.IterateForever,
+                    iterations = 1,
                     speed = 0.5f
                 )
             }

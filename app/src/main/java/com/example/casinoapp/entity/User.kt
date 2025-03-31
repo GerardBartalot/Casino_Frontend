@@ -9,14 +9,3 @@ data class User(
     val experiencePoints: Int,
     val profilePicture: String?,
 )
-
-data class LoginRequest(
-    val username: String,
-    val password: String
-)
-
-data class RegisterRequest(
-    val name: String,
-    val username: String,
-    val password: String,
-)
