@@ -75,23 +75,28 @@ fun SlotMachineScreen(
     var userId by remember { mutableStateOf("") }
     var scoreMessage by remember { mutableStateOf("") }
     var currentBet by remember { mutableIntStateOf(0) }
-
+    var localFondocoins by remember { mutableIntStateOf(0) }
+    var localExperience by remember { mutableIntStateOf(0) }
+    val isWin = remember { mutableStateOf(false) }
     val diamondXP by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.diamond_xp))
+    var experienceToAdd by remember { mutableIntStateOf(0) }
 
     // Lottie Composition for the coin rain animation
     val coinsRain by rememberLottieComposition(
         spec = LottieCompositionSpec.RawRes(R.raw.lluvia_monedas)
     )
 
-    val isWin = remember { mutableStateOf(false) }
-
-    LaunchedEffect(loggedInUser) {
-        loggedInUser?.userId?.let {
+    LaunchedEffect(Unit) {
+        loggedInUser?.userId?.toInt()?.let {
             userId = it.toString()
-            gameViewModel.setUserId(it.toInt())
-            gameViewModel.getUserFondoCoins(it.toInt())
-            gameViewModel.getUserExperience(it.toInt())
+            gameViewModel.getUserFondoCoins(it)
+            gameViewModel.getUserExperience(it)
         }
+    }
+
+    LaunchedEffect(vmFondocoins, vmExperience) {
+        localFondocoins = vmFondocoins
+        localExperience = vmExperience
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -111,10 +116,10 @@ fun SlotMachineScreen(
                 IconButton(
                     onClick = {
                         userId.toIntOrNull()?.let { id ->
-                            gameViewModel.updateUserFondoCoins(id, vmFondocoins)
-                            navController.popBackStack()
+                            gameViewModel.updateUserFondoCoins(id, localFondocoins)
+                            gameViewModel.updateUserExperience(id, localExperience)
                         }
-
+                        navController.popBackStack()
                     }
                 ) {
                     Icon(
@@ -149,7 +154,7 @@ fun SlotMachineScreen(
                             modifier = Modifier.size(70.dp)
                         )
                         Text(
-                            "$vmFondocoins",
+                            "$localFondocoins",
                             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 30.sp),
                             modifier = Modifier.padding(start = 4.dp, end = 16.dp)
                         )
@@ -161,7 +166,7 @@ fun SlotMachineScreen(
                             modifier = Modifier.size(70.dp)
                         )
                         Text(
-                            "$vmExperience",
+                            "$localExperience",
                             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 30.sp),
                             modifier = Modifier.padding(start = 4.dp)
                         )
@@ -218,14 +223,15 @@ fun SlotMachineScreen(
                         Button(
                             onClick = {
                                 currentBet = 10
-                                if (!isAnimating && gameViewModel.placeBet(10)) {
+                                if (gameViewModel.placeBet(10)) {
+                                    localFondocoins = vmFondocoins
                                     scoreMessage = ""
                                     isAnimating = true
                                     startAnimation = true
                                     targetSymbols = List(3) { symbols.random() }
                                 }
                             },
-                            enabled = vmFondocoins >= 10 && !isAnimating,
+                            enabled = localFondocoins >= 10 && !isAnimating,
                             modifier = Modifier.size(80.dp, 50.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
@@ -238,14 +244,15 @@ fun SlotMachineScreen(
                         Button(
                             onClick = {
                                 currentBet = 20
-                                if (!isAnimating && gameViewModel.placeBet(20)) {
+                                if (gameViewModel.placeBet(20)) {
+                                    localFondocoins = vmFondocoins
                                     scoreMessage = ""
                                     isAnimating = true
                                     startAnimation = true
                                     targetSymbols = List(3) { symbols.random() }
                                 }
                             },
-                            enabled = vmFondocoins >= 20 && !isAnimating,
+                            enabled = localFondocoins >= 20 && !isAnimating,
                             modifier = Modifier.size(80.dp, 50.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
@@ -258,14 +265,15 @@ fun SlotMachineScreen(
                         Button(
                             onClick = {
                                 currentBet = 50
-                                if (!isAnimating && gameViewModel.placeBet(50)) {
+                                if (gameViewModel.placeBet(50)) {
+                                    localFondocoins = vmFondocoins
                                     scoreMessage = ""
                                     isAnimating = true
                                     startAnimation = true
                                     targetSymbols = List(3) { symbols.random() }
                                 }
                             },
-                            enabled = vmFondocoins >= 50 && !isAnimating,
+                            enabled = localFondocoins >= 50 && !isAnimating,
                             modifier = Modifier.size(80.dp, 50.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
@@ -299,8 +307,13 @@ fun SlotMachineScreen(
             val winAmount = currentBet * winMultiplier
             val netWin = winAmount - currentBet
 
-            gameViewModel.addWinnings(winAmount)
-            gameViewModel.addSlotExperience(winMultiplier)
+            userId.toIntOrNull()?.let { id ->
+                gameViewModel.updateUserFondoCoins(id, localFondocoins + winAmount)
+                gameViewModel.updateUserExperience(id, localExperience + calculateSlotExperience(winMultiplier))
+            }
+
+            localFondocoins = vmFondocoins
+            localExperience = vmExperience
 
             scoreMessage = when (winMultiplier) {
                 10 -> "¡Gran premio! Ganaste ${netWin * 10} fondocoins y 15 de experiencia!"
@@ -317,6 +330,15 @@ fun SlotMachineScreen(
             currentBet = 0
         }
     }
+}
+
+fun calculateSlotExperience(winMultiplier: Int): Int {
+    val experienceToAdd = when (winMultiplier) {
+        10 -> 15
+        2 -> 5
+        else -> 0
+    }
+    return experienceToAdd
 }
 
 @SuppressLint("UnusedContentLambdaTargetStateParameter")

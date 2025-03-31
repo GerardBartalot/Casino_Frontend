@@ -32,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -79,15 +80,23 @@ fun RouletteScreen(
     val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
     val vmFondocoins by gameViewModel.fondocoins.collectAsState()
     val vmExperience by gameViewModel.experience.collectAsState()
+    var localFondocoins by remember { mutableIntStateOf(0) }
+    var localExperience by remember { mutableIntStateOf(0) }
     var userId by remember { mutableStateOf("") }
     val isWin = remember { mutableStateOf(false) }
+    var experienceToAdd by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(loggedInUser) {
+    LaunchedEffect(Unit) {
         loggedInUser?.userId?.let {
             userId = it.toString()
             gameViewModel.getUserFondoCoins(it.toInt())
             gameViewModel.getUserExperience(it.toInt())
         }
+    }
+
+    LaunchedEffect(vmFondocoins, vmExperience) {
+        localFondocoins = vmFondocoins
+        localExperience = vmExperience
     }
 
     val diamondXP by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.diamond_xp))
@@ -119,7 +128,7 @@ fun RouletteScreen(
 
     fun spinRoulette() {
         if (!isSpinning) {
-            val betValue = betAmount.text.toIntOrNull() ?: 0
+            var betValue = betAmount.text.toIntOrNull() ?: 0
 
             if (betValue <= 0 || !gameViewModel.placeBet(betValue) ||
                 (selectedNumbers.isEmpty() && selectedColor == null && selectedEven == null)) {
@@ -146,12 +155,13 @@ fun RouletteScreen(
 
                 val winnings = checkBetResult(winningNumber, betValue)
                 val hasWon = winnings > 0
-
-                gameViewModel.addWinnings(winnings)
-                gameViewModel.addRouletteExperience(hasWon)
+                experienceToAdd = if (hasWon) 50 else 0
 
                 userId.toIntOrNull()?.let { id ->
-                    gameViewModel.updateUserFondoCoins(id, vmFondocoins)
+                    gameViewModel.updateUserFondoCoins(id, vmFondocoins + winnings - betValue)
+                    if (hasWon) {
+                        gameViewModel.updateUserExperience(id, vmExperience + experienceToAdd)
+                    }
                 }
 
                 resultMessage = if (winnings > 0) {
@@ -171,7 +181,7 @@ fun RouletteScreen(
 
     val isBetValid = remember {
         derivedStateOf {
-            betAmount.text.toIntOrNull()?.let { it > 0 } ?: false &&
+            betAmount.text.toIntOrNull()?.let { it > 0 } == true &&
                     (selectedNumbers.isNotEmpty() || selectedColor != null || selectedEven != null)
         }
     }
@@ -191,7 +201,11 @@ fun RouletteScreen(
             ) {
                 IconButton(
                     onClick = {
-                        navController.popBackStack()
+                        userId.toIntOrNull()?.let { id ->
+                            gameViewModel.updateUserFondoCoins(id, localFondocoins)
+                            gameViewModel.updateUserExperience(id, localExperience)
+                            navController.popBackStack()
+                        }
                     }
                 ) {
                     Icon(

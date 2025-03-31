@@ -26,7 +26,7 @@ fun RegisterScreen(
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") } // 👈 Nueva variable
+    var confirmPassword by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
     var isAdult by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
@@ -38,8 +38,8 @@ fun RegisterScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color(0xFF228B22))
-                .padding(vertical = 200.dp)
         ) {
+            Spacer(modifier = Modifier.height(200.dp))
             Text(
                 text = "Register",
                 style = MaterialTheme.typography.headlineMedium,
@@ -69,7 +69,7 @@ fun RegisterScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField( // 👈 Nueva casilla de confirmación de contraseña
+            TextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
                 label = { Text("Confirm Password") },
@@ -99,7 +99,7 @@ fun RegisterScreen(
                         !isAdult -> {
                             errorMessage = "You must be 18 years or older to register."
                         }
-                        password != confirmPassword -> { // 👈 Validación de contraseña
+                        password != confirmPassword -> {
                             errorMessage = "Passwords do not match."
                         }
                         else -> {
@@ -149,7 +149,7 @@ fun RegisterScreen(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(top = 24.dp)
+                modifier = Modifier.padding(top = 10.dp)
             ) {
                 Text(
                     text = "Already have an account?",
