@@ -38,27 +38,8 @@ interface RemoteGameInterface {
 class GameViewModel : ViewModel() {
     private val _fondocoins = MutableStateFlow(0)
     val fondocoins: StateFlow<Int> get() = _fondocoins
-
-    private var userId: Int = 0
-
-    fun setUserId(id: Int) {
-        userId = id
-    }
-
-    fun placeBet(betAmount: Int): Boolean {
-        return if (_fondocoins.value >= betAmount) {
-            _fondocoins.value -= betAmount
-            updateUserFondoCoins(userId, _fondocoins.value)
-            true
-        } else {
-            false
-        }
-    }
-
-    fun addWinnings(amount: Int) {
-        _fondocoins.value += amount
-        updateUserFondoCoins(userId, _fondocoins.value)
-    }
+    private val _experience = MutableStateFlow(0)
+    val experience: StateFlow<Int> get() = _experience
 
     private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl("http://10.0.2.2:8080")
@@ -66,6 +47,15 @@ class GameViewModel : ViewModel() {
         .build()
 
     private val endpoint: RemoteGameInterface = retrofit.create(RemoteGameInterface::class.java)
+
+    fun placeBet(betAmount: Int): Boolean {
+        return if (_fondocoins.value >= betAmount) {
+            _fondocoins.value -= betAmount
+            true
+        } else {
+            false
+        }
+    }
 
     fun getUserFondoCoins(userId: Int) {
         viewModelScope.launch {
@@ -94,32 +84,6 @@ class GameViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("GameViewModel", "Error actualizando fondocoins: ${e.message}", e)
             }
-        }
-    }
-
-
-    private val _experience = MutableStateFlow(0)
-    val experience: StateFlow<Int> get() = _experience
-
-    fun addSlotExperience(winMultiplier: Int) {
-        val experienceToAdd = when (winMultiplier) {
-            10 -> 15  // 3 símbolos iguales
-            2 -> 5     // 2 símbolos iguales
-            else -> 0  // Sin premio
-        }
-
-        if (experienceToAdd > 0) {
-            _experience.value += experienceToAdd
-            updateUserExperience(userId, _experience.value)
-        }
-    }
-
-    fun addRouletteExperience(isWin: Boolean) {
-        val experienceToAdd = if (isWin) 50 else 0
-
-        if (experienceToAdd > 0) {
-            _experience.value += experienceToAdd
-            updateUserExperience(userId, _experience.value)
         }
     }
 
