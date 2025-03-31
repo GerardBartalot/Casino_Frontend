@@ -16,6 +16,8 @@ import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
+import retrofit2.http.Path
 
 sealed interface RemoteMessageUiState {
     data class Success(val remoteMessage: List<User>) : RemoteMessageUiState
@@ -53,6 +55,11 @@ interface RemoteUserInterface {
     @POST("/sessionGame/save")
     suspend fun saveGameSession(@Body gameSession: GameSession): Response<GameSession>
 
+    @PUT("/user/update/{id}")
+    suspend fun updateUser(
+        @Path("id") id: Int,
+        @Body user: User
+    ): Response<Map<String, String>>
 }
 
 class RemoteViewModel : ViewModel() {
@@ -175,4 +182,27 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
+    fun updateUser(user: User, onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val connection = Retrofit.Builder()
+                    .baseUrl("http://10.0.2.2:8080")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                val endpoint = connection.create(RemoteUserInterface::class.java)
+                val response = endpoint.updateUser(user.userId, user)
+
+                if(response.isSuccessful) {
+                    response.body()?.let {
+                        _loggedInUser.value = user
+                        onResult("Perfil actualizado con éxito")
+                    }
+                } else {
+                    onResult("Error al actualizar: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                onResult("Error de conexión: ${e.message}")
+            }
+        }
+    }
 }

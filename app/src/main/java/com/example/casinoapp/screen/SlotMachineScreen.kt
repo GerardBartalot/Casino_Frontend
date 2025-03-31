@@ -13,6 +13,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -39,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -59,6 +62,10 @@ import com.example.casinoapp.viewModel.RemoteViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.roundToLong
 import kotlin.random.Random
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.ui.draw.clip
 
 @Composable
 fun SlotMachineScreen(
@@ -321,6 +328,69 @@ fun SlotMachineScreen(
                 )
             }
         }
+
+        //PopUp
+        var showRulesDialog by remember { mutableStateOf(false) }
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(20.dp)
+                .padding(top = 50.dp)
+                .zIndex(1f)
+        ) {
+            Button(
+                onClick = {showRulesDialog = true},
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Black,
+                    contentColor = Color.White,
+                ),
+                        contentPadding = PaddingValues(0.dp)
+            ) {
+                Text("?", style = TextStyle(fontSize = 20.sp, color = Color.White))
+            }
+        }
+
+        if (showRulesDialog) {
+            AlertDialog(
+                onDismissRequest = { showRulesDialog = false },
+                containerColor = Color.Black,
+                title = {
+                    Text(
+                        "Cómo jugar",
+                        color = Color.Yellow
+                    )
+                },
+                text = {
+                    Column {
+                        Text("1. Apuesta mínima: 10 fondocoins", color = Color.White)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("2. Premios:", color = Color.White)
+                        Text("   - 3 símbolos iguales: x10", color = Color.White)
+                        Text("   - 2 símbolos iguales: x2", color = Color.White)
+                        Text("   - 0 símbolos iguales: sin premio", color = Color.White)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("3. Cada victoria otorga experiencia:", color = Color.White)
+                        Text("   - 3 símbolos: 15 XP", color = Color.White)
+                        Text("   - 2 símbolos: 5 XP", color = Color.White)
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { showRulesDialog = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color.Yellow,
+                            contentColor = Color.Black
+                        )
+                    ) {
+                        Text("Ok")
+                    }
+                }
+            )
+        }
+
     }
 
     LaunchedEffect(isAnimating) {

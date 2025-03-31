@@ -41,6 +41,7 @@ fun ProfileScreen(
     remoteViewModel: RemoteViewModel,
     navController: NavController,
     onNavigateToProfile: () -> Unit,
+    onNavigateToEditProfileScreen: () -> Unit,
 ) {
     val currentUser = remoteViewModel.loggedInUser.collectAsState().value
     val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
@@ -96,7 +97,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(30.dp))
             ProfileButton("Canviar contrasenya") { onNavigateToProfile() }
             Spacer(modifier = Modifier.height(30.dp))
-            ProfileButton("Editar perfil") { onNavigateToProfile() }
+            ProfileButton("Editar perfil") { onNavigateToEditProfileScreen()}
 
             Spacer(modifier = Modifier.height(120.dp))
 
@@ -126,7 +127,7 @@ fun ProfileScreen(
 @Composable
 fun ProfileButton(text: String, onNavigate: () -> Unit) {
     Button(
-        onClick = {},
+        onClick = onNavigate,
         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFD700)),
         modifier = Modifier
             .fillMaxWidth(0.8f)
