@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.casinoapp.screen.EditProfileScreen
 import com.example.casinoapp.screen.HomeScreen
 import com.example.casinoapp.screen.LoginScreen
 import com.example.casinoapp.screen.RegisterScreen
@@ -71,7 +72,14 @@ class MainActivity : ComponentActivity() {
                         ProfileScreen(
                             remoteViewModel = remoteViewModel,
                             navController = navController,
-                            onNavigateToProfile = { navController.navigate("profileScreen") }
+                            onNavigateToProfile = { navController.navigate("profileScreen") },
+                            onNavigateToEditProfileScreen = { navController.navigate("editProfileScreen") }
+                        )
+                    }
+                    composable("editProfileScreen") {
+                        EditProfileScreen(
+                            remoteViewModel = remoteViewModel,
+                            navController = navController
                         )
                     }
                 }
