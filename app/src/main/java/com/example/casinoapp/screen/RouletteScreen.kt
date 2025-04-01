@@ -123,7 +123,7 @@ fun RouletteScreen(
     }
 
     val lottieComposition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(R.raw.lluvia_monedas1)
+        spec = LottieCompositionSpec.RawRes(R.raw.lluvia_monedas)
     )
 
     fun checkBetResult(number: Int, betValue: Int): Int {

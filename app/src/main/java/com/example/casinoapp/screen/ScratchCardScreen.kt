@@ -78,7 +78,7 @@ fun ScratchCardScreen(
     }
 
     val lottieComposition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(R.raw.lluvia_monedas1)
+        spec = LottieCompositionSpec.RawRes(R.raw.lluvia_monedas)
     )
 
     val hasWon by derivedStateOf {
