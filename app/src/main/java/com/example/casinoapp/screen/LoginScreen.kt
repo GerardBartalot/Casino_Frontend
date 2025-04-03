@@ -70,7 +70,13 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxSize()
         ) {
-            Spacer(modifier = Modifier.height(200.dp))
+            Spacer(modifier = Modifier.height(50.dp))
+            Image(
+                painter = painterResource(id = R.drawable.logo_splash),
+                contentDescription = "App Logo",
+                modifier = Modifier.size(200.dp)
+            )
+            Spacer(modifier = Modifier.height(25.dp))
             Text(
                 text = "Login",
                 style = MaterialTheme.typography.headlineMedium,
