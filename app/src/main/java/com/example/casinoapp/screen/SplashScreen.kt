@@ -85,7 +85,7 @@ fun SplashScreen(navController: NavHostController) {
                 modifier = Modifier.size(200.dp)
             )
 
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(150.dp))
         }
     }
 }

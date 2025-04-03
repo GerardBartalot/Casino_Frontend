@@ -8,15 +8,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.casinoapp.screen.EditProfileScreen
+import com.example.casinoapp.screen.profile.EditProfileScreen
 import com.example.casinoapp.screen.HomeScreen
+import com.example.casinoapp.screen.LoadingScreen
 import com.example.casinoapp.screen.LoginScreen
 import com.example.casinoapp.screen.RegisterScreen
-import com.example.casinoapp.screen.RouletteScreen
-import com.example.casinoapp.screen.SlotMachineScreen
+import com.example.casinoapp.screen.games.RouletteScreen
+import com.example.casinoapp.screen.games.SlotMachineScreen
 import com.example.casinoapp.screen.SplashScreen
-import com.example.casinoapp.screen.ProfileScreen
-import com.example.casinoapp.screen.ScratchCardScreen
+import com.example.casinoapp.screen.profile.ProfileScreen
+import com.example.casinoapp.screen.games.ScratchCardScreen
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 
@@ -31,6 +32,9 @@ class MainActivity : ComponentActivity() {
                 NavHost(navController = navController, startDestination = "splashScreen") {
                     composable("splashScreen") {
                         SplashScreen(navController = navController)
+                    }
+                    composable("loadingScreen") {
+                        LoadingScreen()
                     }
                     composable("loginScreen") {
                         LoginScreen(

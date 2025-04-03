@@ -1,5 +1,6 @@
-package com.example.casinoapp.screen
+package com.example.casinoapp.screen.games
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -12,22 +13,29 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -40,28 +48,38 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.casinoapp.R
 import com.example.casinoapp.entity.GameSession
+import com.example.casinoapp.screen.ExperienceProgressBar
+import com.example.casinoapp.screen.formatWithSeparator
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RouletteScreen(
     navController: NavController,
@@ -87,7 +105,6 @@ fun RouletteScreen(
     var userId by remember { mutableStateOf("") }
     val isWin = remember { mutableStateOf(false) }
     var experienceToAdd by remember { mutableIntStateOf(0) }
-    val diamondXP by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.diamond_xp))
     var roundsPlayed by remember { mutableIntStateOf(0) }
     var fondocoinsSpent by remember { mutableIntStateOf(0) }
     var fondocoinsEarned by remember { mutableIntStateOf(0) }
@@ -209,241 +226,316 @@ fun RouletteScreen(
         }
     }
 
-    Box {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFF228B22))
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = {
-                        userId.toIntOrNull()?.let { id ->
-                            gameViewModel.updateUserFondoCoins(id, localFondocoins)
-                            gameViewModel.updateUserExperience(id, localExperience)
-                            navController.popBackStack()
-                            saveGameSession()
-                        }
-                    }
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Volver atrás",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
+    val gradientBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF1E8449),
+            Color(0xFF1E8449),
+            Color(0xFF0D420D)
+        ),
+        startY = 0f,
+        endY = 1000f
+    )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // Fondocoins
-                Image(
-                    painter = painterResource(id = R.drawable.fondocoin),
-                    contentDescription = "Fondocoin",
-                    modifier = Modifier.size(70.dp)
-                )
-                Text(
-                    "$localFondocoins",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 30.sp),
-                    modifier = Modifier.padding(start = 4.dp, end = 16.dp)
-                )
-
-                // Experiencia
-                LottieAnimation(
-                    composition = diamondXP,
-                    iterations = LottieConstants.IterateForever,
-                    modifier = Modifier.size(70.dp)
-                )
-                Text(
-                    "$localExperience",
-                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 30.sp),
-                    modifier = Modifier.padding(start = 4.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Box(contentAlignment = Alignment.Center, modifier = Modifier.size(250.dp)) {
-                Image(
-                    painter = painterResource(id = R.drawable.roulette),
-                    contentDescription = "Ruleta",
-                    modifier = Modifier
-                        .size(250.dp)
-                        .graphicsLayer(rotationZ = rotationAngle.value % 360)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(if (resultNumber == null) 20.dp else 20.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(30.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedCard(
-                    modifier = Modifier
-                        .width(180.dp)
-                        .height(50.dp),
-                ) {
+    Scaffold(
+        containerColor = Color.Black,
+        topBar = {
+            TopAppBar(
+                modifier = Modifier.height(100.dp),
+                title = {
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.White)
-                            .padding(10.dp),
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Text(
+                            text = "Ruleta",
+                            color = Color.White,
+                            modifier = Modifier.padding(start = 0.dp)
+                        )
+                    }
+                },
+                navigationIcon = {
+                    Box(
+                        modifier = Modifier.fillMaxHeight(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            contentAlignment = Alignment.Center,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            BasicTextField(
-                                value = betAmount.text,
-                                onValueChange = { betAmount = TextFieldValue(it) },
-                                textStyle = TextStyle(
-                                    fontSize = 18.sp,
-                                    color = Color.Black,
-                                    textAlign = TextAlign.Center
-                                ),
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                modifier = Modifier.fillMaxWidth(),
-                                decorationBox = { innerTextField ->
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        if (betAmount.text.isEmpty()) {
-                                            Text(
-                                                text = "Apuesta",
-                                                fontSize = 18.sp,
-                                                color = Color.Gray,
-                                                textAlign = TextAlign.Center
-                                            )
-                                        }
-                                        innerTextField()
+                        IconButton(
+                            onClick = {
+                                navController.navigate("loadingScreen") {
+                                    popUpTo("slotMachineScreen") { inclusive = true }
+                                }
+
+                                userId.toIntOrNull()?.let { id ->
+                                    gameViewModel.updateUserFondoCoins(id, localFondocoins)
+                                    gameViewModel.updateUserExperience(id, localExperience)
+                                }
+                                saveGameSession()
+
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    delay(1500)
+                                    navController.navigate("homeScreen") {
+                                        popUpTo("loadingScreen") { inclusive = true }
                                     }
                                 }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Volver",
+                                tint = Color.White,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
                     }
-                }
-
-                Spacer(modifier = Modifier.width(4.dp))
-
-                Button(
-                    onClick = {
-                        lastBetType = when {
-                            selectedNumbers.isNotEmpty() -> "Número"
-                            selectedColor != null -> "Color"
-                            selectedEven != null -> "ParImpar"
-                            else -> null
-                        }
-                        spinRoulette()
-                    },
-                    enabled = isBetValid.value && !isSpinning
-                ) {
-                    Text("GIRA!")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(5.dp))
-
-            resultNumber?.let { number ->
-                val redNumbers =
-                    listOf(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
-                val blackNumbers =
-                    listOf(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
-                val evenNumbers = (1..36).filter { it % 2 == 0 }
-                val oddNumbers = (1..36).filter { it % 2 != 0 }
-                val selectedZero by remember { mutableStateOf(false) }
-
-                val colorWinner = when {
-                    number in redNumbers -> "Rojo"
-                    number in blackNumbers -> "Negro"
-                    else -> "Verde"
-                }
-
-                val evenOddWinner = when {
-                    number in evenNumbers -> "Par"
-                    number in oddNumbers -> "Impar"
-                    else -> "Ninguno"
-                }
-
-                val isWin = when (lastBetType) {
-                    "Número" -> selectedNumbers.contains(number) || (selectedZero && number == 0)
-                    "Color" -> (selectedColor == "Rojo" && number in redNumbers) || (selectedColor == "Negro" && number in blackNumbers)
-                    "ParImpar" -> (selectedEven == true && number in evenNumbers) || (selectedEven == false && number in oddNumbers)
-                    else -> false
-                }
-
-                val resultText = when (lastBetType) {
-                    "Número" -> if (isWin) "¡Ganaste! Número: $number (+50 XP)" else "¡Perdiste! Número: $number"
-                    "Color" -> if (isWin) "¡Ganaste! Color: $colorWinner (+50 XP)" else "¡Perdiste! Color: $colorWinner"
-                    "ParImpar" -> if (isWin) "¡Ganaste! Evento: $evenOddWinner (+50 XP)" else "¡Perdiste! Evento: $evenOddWinner"
-                    else -> if (isWin) "¡Ganaste! (+50 XP)" else "¡Perdiste!"
-                }
-
-                Text(
-                    text = resultText,
-                    style = MaterialTheme.typography.headlineSmall,
-                    textAlign = TextAlign.Center
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF0D420D),
+                    titleContentColor = Color.White
                 )
-            }
-
-            Spacer(modifier = Modifier.height(if (resultNumber == null) 18.dp else 40.dp))
-
-            var selectedZero by remember { mutableStateOf(false) }
-
-            BetSelection(
-                selectedNumbers = selectedNumbers,
-                onNumberSelected = { numbers ->
-                    if (numbers.isNotEmpty()) {
-                        selectedColor = null
-                        selectedEven = null
-                        selectedZero = false
-                    }
-                    selectedNumbers = numbers
-                },
-                selectedColor = selectedColor,
-                selectedZero = selectedZero,
-                onColorSelected = { color, zero ->
-                    selectedNumbers = emptyList()
-                    selectedEven = null
-                    selectedColor = color
-                    selectedZero = zero
-                },
-                selectedEven = selectedEven,
-                onEvenOddSelected = { even ->
-                    selectedNumbers = emptyList()
-                    selectedColor = null
-                    selectedZero = false
-                    selectedEven = if (selectedEven == even) null else even
-                }
             )
         }
-        if (isWin.value) {
-            Box(modifier = Modifier
+    ) { innerPadding ->
+        Box (
+            modifier = Modifier
                 .fillMaxSize()
-                .zIndex(1f)
+                .background(gradientBrush)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.subtle_texture1),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .alpha(0.4f),
+                contentScale = ContentScale.Crop
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                LottieAnimation(
-                    composition = lottieComposition,
-                    modifier = Modifier.fillMaxSize().zIndex(1f),
-                    iterations = 1,
-                    speed = 0.5f
+
+                Spacer(modifier = Modifier.height(100.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 15.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Fondoscoins
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.fondocoin),
+                            contentDescription = "Fondocoin",
+                            modifier = Modifier.size(50.dp)
+                        )
+                        Text(
+                            vmFondocoins.formatWithSeparator(),
+                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 22.sp),
+                            modifier = Modifier.padding(start = 8.dp),
+                            color = Color.White
+                        )
+                    }
+
+                    // Barra de experiencia
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        ExperienceProgressBar(
+                            currentXp = vmExperience,
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 8.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(250.dp)) {
+                    Image(
+                        painter = painterResource(id = R.drawable.roulette),
+                        contentDescription = "Ruleta",
+                        modifier = Modifier
+                            .size(250.dp)
+                            .graphicsLayer(rotationZ = rotationAngle.value % 360)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(if (resultNumber == null) 20.dp else 20.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(30.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedCard(
+                        modifier = Modifier
+                            .width(180.dp)
+                            .height(50.dp),
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.White)
+                                .padding(10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                BasicTextField(
+                                    value = betAmount.text,
+                                    onValueChange = { betAmount = TextFieldValue(it) },
+                                    textStyle = TextStyle(
+                                        fontSize = 18.sp,
+                                        color = Color.Black,
+                                        textAlign = TextAlign.Center
+                                    ),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    decorationBox = { innerTextField ->
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            if (betAmount.text.isEmpty()) {
+                                                Text(
+                                                    text = "Apuesta",
+                                                    fontSize = 18.sp,
+                                                    color = Color.Gray,
+                                                    textAlign = TextAlign.Center
+                                                )
+                                            }
+                                            innerTextField()
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Button(
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFFFFD700),
+                            disabledContainerColor = Color(0x80FFD700)
+                        ),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .height(50.dp),
+                        onClick = {
+                            lastBetType = when {
+                                selectedNumbers.isNotEmpty() -> "Número"
+                                selectedColor != null -> "Color"
+                                selectedEven != null -> "ParImpar"
+                                else -> null
+                            }
+                            spinRoulette()
+                        },
+                        enabled = isBetValid.value && !isSpinning
+                    ) {
+                        Text("GIRA!")
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(5.dp))
+
+                resultNumber?.let { number ->
+                    val redNumbers =
+                        listOf(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
+                    val blackNumbers =
+                        listOf(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
+                    val evenNumbers = (1..36).filter { it % 2 == 0 }
+                    val oddNumbers = (1..36).filter { it % 2 != 0 }
+                    val selectedZero by remember { mutableStateOf(false) }
+
+                    val colorWinner = when {
+                        number in redNumbers -> "Rojo"
+                        number in blackNumbers -> "Negro"
+                        else -> "Verde"
+                    }
+
+                    val evenOddWinner = when {
+                        number in evenNumbers -> "Par"
+                        number in oddNumbers -> "Impar"
+                        else -> "Ninguno"
+                    }
+
+                    val isWin = when (lastBetType) {
+                        "Número" -> selectedNumbers.contains(number) || (selectedZero && number == 0)
+                        "Color" -> (selectedColor == "Rojo" && number in redNumbers) || (selectedColor == "Negro" && number in blackNumbers)
+                        "ParImpar" -> (selectedEven == true && number in evenNumbers) || (selectedEven == false && number in oddNumbers)
+                        else -> false
+                    }
+
+                    val resultText = when (lastBetType) {
+                        "Número" -> if (isWin) "¡Ganaste! Número: $number (+50 XP)" else "¡Perdiste! Número: $number"
+                        "Color" -> if (isWin) "¡Ganaste! Color: $colorWinner (+50 XP)" else "¡Perdiste! Color: $colorWinner"
+                        "ParImpar" -> if (isWin) "¡Ganaste! Evento: $evenOddWinner (+50 XP)" else "¡Perdiste! Evento: $evenOddWinner"
+                        else -> if (isWin) "¡Ganaste! (+50 XP)" else "¡Perdiste!"
+                    }
+
+                    Text(
+                        text = resultText,
+                        style = MaterialTheme.typography.headlineSmall,
+                        textAlign = TextAlign.Center
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(if (resultNumber == null) 18.dp else 40.dp))
+
+                var selectedZero by remember { mutableStateOf(false) }
+
+                BetSelection(
+                    selectedNumbers = selectedNumbers,
+                    onNumberSelected = { numbers ->
+                        if (numbers.isNotEmpty()) {
+                            selectedColor = null
+                            selectedEven = null
+                            selectedZero = false
+                        }
+                        selectedNumbers = numbers
+                    },
+                    selectedColor = selectedColor,
+                    selectedZero = selectedZero,
+                    onColorSelected = { color, zero ->
+                        selectedNumbers = emptyList()
+                        selectedEven = null
+                        selectedColor = color
+                        selectedZero = zero
+                    },
+                    selectedEven = selectedEven,
+                    onEvenOddSelected = { even ->
+                        selectedNumbers = emptyList()
+                        selectedColor = null
+                        selectedZero = false
+                        selectedEven = if (selectedEven == even) null else even
+                    }
                 )
+            }
+            if (isWin.value) {
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .zIndex(1f)
+                ) {
+                    LottieAnimation(
+                        composition = lottieComposition,
+                        modifier = Modifier.fillMaxSize().zIndex(1f),
+                        iterations = 1,
+                        speed = 0.5f
+                    )
+                }
             }
         }
     }
@@ -588,4 +680,14 @@ fun EvenOddTable(selectedEven: Boolean?, onEvenOddSelected: (Boolean) -> Unit) {
             Text(text = "Número Impar", color = Color.White)
         }
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RouletteScreenPreview() {
+    RouletteScreen(
+        navController = rememberNavController(),
+        remoteViewModel = RemoteViewModel(),
+        gameViewModel = GameViewModel()
+    )
 }
