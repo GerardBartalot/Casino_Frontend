@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -61,6 +62,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -101,7 +103,6 @@ fun SlotMachineScreen(
     val vmFondocoins by gameViewModel.fondocoins.collectAsState()
     val vmExperience by gameViewModel.experience.collectAsState()
     var userId by remember { mutableStateOf("") }
-    var scoreMessage by remember { mutableStateOf("") }
     var currentBet by remember { mutableIntStateOf(0) }
     var localFondocoins by remember { mutableIntStateOf(0) }
     var localExperience by remember { mutableIntStateOf(0) }
@@ -113,6 +114,9 @@ fun SlotMachineScreen(
     var showFondocoinsWon by remember { mutableIntStateOf(0) }
     var fondoCoinsEarnedDisplay by remember { mutableIntStateOf(0) }
     var experienceEarnedDisplay by remember { mutableIntStateOf(0) }
+    var experienceEarnedInCurrentRound by remember { mutableIntStateOf(0) }
+    var totalExperienceEarned by remember { mutableIntStateOf(0) }
+    var buttonsLocked by remember { mutableStateOf(false) }
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
@@ -120,7 +124,7 @@ fun SlotMachineScreen(
                 user = user,
                 gameName = "Slot Machine",
                 rounds = roundsPlayed,
-                experienceEarned = experienceEarned,
+                experienceEarned = totalExperienceEarned,
                 fondocoinsSpent = fondocoinsSpent,
                 fondocoinsEarned = fondocoinsEarned
             )
@@ -283,7 +287,7 @@ fun SlotMachineScreen(
                         ) {
                             WinDisplay(
                                 fondocoins = showFondocoinsWon,
-                                experience = experienceEarned,
+                                experience = totalExperienceEarned,
                                 modifier = Modifier
                                     .height(60.dp)
                                     .width(200.dp)
@@ -345,120 +349,66 @@ fun SlotMachineScreen(
                                 .padding(horizontal = 16.dp),
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp, 60.dp)
-                                    .background(
-                                        brush = Brush.verticalGradient(casinoBlueGradient),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .border(
-                                        width = 2.dp,
-                                        brush = Brush.verticalGradient(listOf(Color.Yellow, Color.White)),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .clickable(
-                                        enabled = localFondocoins >= 10 && !isAnimating,
-                                        onClick = {
-                                            currentBet = 10
-                                            fondoCoinsEarnedDisplay = 0
-                                            experienceEarnedDisplay = 0
-                                            if (gameViewModel.placeBet(10)) {
-                                                localFondocoins -= 10
-                                                scoreMessage = ""
-                                                isAnimating = true
-                                                startAnimation = true
-                                                targetSymbols = List(3) { symbols.random() }
-                                            }
-                                        }
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "10",
-                                    color = Color.White,
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
+                            BetButton(
+                                value = 10,
+                                enabled = localFondocoins >= 10,
+                                isLocked = buttonsLocked,
+                                onClick = {
+                                    currentBet = 10
+                                    fondoCoinsEarnedDisplay = 0
+                                    experienceEarnedDisplay = 0
+                                    experienceEarnedInCurrentRound = 0
+                                    if (gameViewModel.placeBet(10)) {
+                                        localFondocoins -= 10
+                                        completedAnimations = 0
+                                        isAnimating = true
+                                        startAnimation = true
+                                        targetSymbols = List(3) { symbols.random() }
+                                    }
+                                }
+                            )
 
                             Spacer(modifier = Modifier.width(16.dp))
 
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp, 60.dp)
-                                    .background(
-                                        brush = Brush.verticalGradient(casinoBlueGradient),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .border(
-                                        width = 2.dp,
-                                        brush = Brush.verticalGradient(listOf(Color.Yellow, Color.White)),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .clickable(
-                                        enabled = localFondocoins >= 20 && !isAnimating,
-                                        onClick = {
-                                            currentBet = 20
-                                            fondoCoinsEarnedDisplay = 0
-                                            experienceEarnedDisplay = 0
-                                            if (gameViewModel.placeBet(20)) {
-                                                localFondocoins -= 20
-                                                scoreMessage = ""
-                                                isAnimating = true
-                                                startAnimation = true
-                                                targetSymbols = List(3) { symbols.random() }
-                                            }
-                                        }
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "20",
-                                    color = Color.White,
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
+                            BetButton(
+                                value = 20,
+                                enabled = localFondocoins >= 20,
+                                isLocked = buttonsLocked,
+                                onClick = {
+                                    currentBet = 20
+                                    fondoCoinsEarnedDisplay = 0
+                                    experienceEarnedDisplay = 0
+                                    experienceEarnedInCurrentRound = 0
+                                    if (gameViewModel.placeBet(20)) {
+                                        localFondocoins -= 20
+                                        completedAnimations = 0
+                                        isAnimating = true
+                                        startAnimation = true
+                                        targetSymbols = List(3) { symbols.random() }
+                                    }
+                                }
+                            )
 
                             Spacer(modifier = Modifier.width(16.dp))
 
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp, 60.dp)
-                                    .background(
-                                        brush = Brush.verticalGradient(casinoBlueGradient),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .border(
-                                        width = 2.dp,
-                                        brush = Brush.verticalGradient(listOf(Color.Yellow, Color.White)),
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .clickable(
-                                        enabled = localFondocoins >= 50 && !isAnimating,
-                                        onClick = {
-                                            currentBet = 50
-                                            fondoCoinsEarnedDisplay = 0
-                                            experienceEarnedDisplay = 0
-                                            if (gameViewModel.placeBet(50)) {
-                                                localFondocoins -= 50
-                                                scoreMessage = ""
-                                                isAnimating = true
-                                                startAnimation = true
-                                                targetSymbols = List(3) { symbols.random() }
-                                            }
-                                        }
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "50",
-                                    color = Color.White,
-                                    fontSize = 24.sp,
-                                    fontWeight = FontWeight.Bold,
-                                )
-                            }
+                            BetButton(
+                                value = 50,
+                                enabled = localFondocoins >= 50,
+                                isLocked = buttonsLocked,
+                                onClick = {
+                                    currentBet = 50
+                                    fondoCoinsEarnedDisplay = 0
+                                    experienceEarnedDisplay = 0
+                                    experienceEarnedInCurrentRound = 0
+                                    if (gameViewModel.placeBet(50)) {
+                                        localFondocoins -= 50
+                                        completedAnimations = 0
+                                        isAnimating = true
+                                        startAnimation = true
+                                        targetSymbols = List(3) { symbols.random() }
+                                    }
+                                }
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(30.dp))
@@ -467,22 +417,33 @@ fun SlotMachineScreen(
                             modifier = Modifier
                                 .size(130.dp, 60.dp)
                                 .background(
-                                    brush = Brush.verticalGradient(casinoGreenGradient),
+                                    brush = if (!buttonsLocked) {
+                                        Brush.verticalGradient(casinoGreenGradient)
+                                    } else {
+                                        Brush.verticalGradient(listOf(Color(0xFF616161), Color(0xFF424242)))
+                                    },
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .border(
                                     width = 2.dp,
-                                    brush = Brush.verticalGradient(listOf(Color.Yellow, Color.White)),
+                                    brush = if (!buttonsLocked) {
+                                        Brush.verticalGradient(listOf(Color.Yellow, Color.White))
+                                    } else {
+                                        Brush.verticalGradient(listOf(Color(0xFF9E9E9E), Color(0xFF757575)))
+                                    },
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .clickable(
-                                    enabled = !isAnimating,
+                                    enabled = !buttonsLocked,
                                     onClick = {
                                         saveGameSession()
                                         localFondocoins += showFondocoinsWon
+                                        localExperience += totalExperienceEarned
                                         userId.toIntOrNull()?.let { id ->
                                             gameViewModel.updateUserFondoCoins(id, localFondocoins)
+                                            gameViewModel.updateUserExperience(id, localExperience)
                                         }
+                                        totalExperienceEarned = 0
                                         showFondocoinsWon = 0
                                         fondoCoinsEarnedDisplay = 0
                                         experienceEarnedDisplay = 0
@@ -494,10 +455,9 @@ fun SlotMachineScreen(
                                 text = "CASH OUT",
                                 color = Color.White,
                                 fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold,
+                                fontWeight = FontWeight.Bold
                             )
                         }
-
                         Spacer(modifier = Modifier.height(70.dp))
                     }
                 }
@@ -506,7 +466,9 @@ fun SlotMachineScreen(
     }
 
     LaunchedEffect(isAnimating) {
-        if (!isAnimating && startAnimation) {
+        if (isAnimating) {
+            buttonsLocked = true
+        } else if (startAnimation) {
             val winMultiplier = calculateWinMultiplier(targetSymbols)
             val winAmount = currentBet * winMultiplier
 
@@ -516,18 +478,28 @@ fun SlotMachineScreen(
             showFondocoinsWon += winAmount
             fondoCoinsEarnedDisplay += winAmount
 
-            experienceEarned += calculateSlotExperience(winMultiplier)
-            localExperience += experienceEarned
-            experienceEarnedDisplay += experienceEarned
+            // Calcular experiencia solo para esta ronda
+            val currentRoundXp = calculateSlotExperience(winMultiplier)
+            experienceEarnedInCurrentRound = currentRoundXp
+            experienceEarnedDisplay = currentRoundXp
+
+            // Sumar al total solo si se gana
+            if (currentRoundXp > 0) {
+                totalExperienceEarned += currentRoundXp
+                experienceEarned += currentRoundXp
+            }
 
             if (winMultiplier > 0) {
                 isWin.value = true
                 delay(5000)
                 isWin.value = false
             }
+
+            buttonsLocked = false
             startAnimation = false
             currentBet = 0
             isAnimating = false
+            completedAnimations = 0
         }
     }
 }
@@ -716,65 +688,75 @@ fun AnimatedNumberDisplay(
         end = Offset(sparkleProgress * 1000, sparkleProgress * 1000)
     )
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier
+    Column (
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Fondocoins
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = animatedFondocoins.toString(),
-                style = TextStyle(
-                    fontSize = 60.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.SansSerif,
-                    brush = sparkleBrush, // Aplicamos el efecto de brillo
-                    shadow = Shadow(
-                        color = Color.Yellow,
-                        offset = Offset(2f, 2f),
-                        blurRadius = 8f
-                    )
+        Text(
+            text = "¡HAS GANADO!",
+            style = TextStyle(
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                shadow = Shadow(
+                    color = Color.Yellow,
+                    offset = Offset(2f, 2f),
+                    blurRadius = 8f
                 )
             )
-            Spacer(modifier = Modifier.width(5.dp))
-            Text(
-                text = "FC",
-                style = TextStyle(
-                    fontSize = 40.sp,
-                    fontFamily = FontFamily.SansSerif,
-                    color = Color.White,
-                ),
-                modifier = Modifier.offset(y = 2.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(15.dp))
-        // Experiencia
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = animatedExperience.toString(),
-                style = TextStyle(
-                    fontSize = 60.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily.SansSerif,
-                    brush = sparkleBrush,
-                    shadow = Shadow(
-                        color = Color(0xFF00FF00),
-                        offset = Offset(2f, 2f),
-                        blurRadius = 8f
+        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = modifier
+        ) {
+            // Fondocoins
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = animatedFondocoins.toString(),
+                    style = TextStyle(
+                        fontSize = 60.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.SansSerif,
+                        brush = sparkleBrush,
+                        shadow = Shadow(
+                            color = Color.Yellow,
+                            offset = Offset(2f, 2f),
+                            blurRadius = 8f
+                        )
                     )
                 )
-            )
-            Spacer(modifier = Modifier.width(5.dp))
-            Text(
-                text = "XP",
-                style = TextStyle(
-                    fontSize = 40.sp,
-                    fontFamily = FontFamily.SansSerif,
-                    color = Color.White,
-                ),
-                modifier = Modifier.offset(y = 2.dp)
-            )
+                Spacer(modifier = Modifier.width(5.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.fondocoin),
+                    contentDescription = "Fondocoin",
+                    modifier = Modifier.size(80.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(15.dp))
+            // Experiencia
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = animatedExperience.toString(),
+                    style = TextStyle(
+                        fontSize = 60.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.SansSerif,
+                        brush = sparkleBrush,
+                        shadow = Shadow(
+                            color = Color(0xFF00FF00),
+                            offset = Offset(2f, 2f),
+                            blurRadius = 8f
+                        )
+                    )
+                )
+                Spacer(modifier = Modifier.width(5.dp))
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Level",
+                    tint = Color.Yellow,
+                    modifier = Modifier.size(60.dp)
+                )
+            }
         }
     }
 }
@@ -825,10 +807,12 @@ fun WinDisplay(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.Center
         ) {
             // Fondocoins
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Text(
                     text = animatedFondocoins.toString(),
                     style = TextStyle(
@@ -843,20 +827,10 @@ fun WinDisplay(
                         )
                     )
                 )
-                Text(
-                    text = "FC",
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.SansSerif,
-                        color = Color(0xFFFFD700), // Gold
-                        shadow = Shadow(
-                            color = Color.Black,
-                            offset = Offset(1f, 1f),
-                            blurRadius = 2f
-                        )
-                    ),
-                    modifier = Modifier.offset(y = 2.dp)
+                Image(
+                    painter = painterResource(id = R.drawable.fondocoin),
+                    contentDescription = "Fondocoin",
+                    modifier = Modifier.size(50.dp)
                 )
             }
 
@@ -865,9 +839,9 @@ fun WinDisplay(
                 text = "|",
                 color = Color.White.copy(alpha = 0.5f),
                 fontSize = 24.sp,
-                modifier = Modifier.padding(horizontal = 4.dp)
+                modifier = Modifier.padding(end = 4.dp)
             )
-
+            Spacer(modifier = Modifier.width(5.dp))
             // Experiencia
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -884,23 +858,59 @@ fun WinDisplay(
                         )
                     )
                 )
-                Text(
-                    text = "XP",
-                    style = TextStyle(
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.SansSerif,
-                        color = Color(0xFF00FF00), // Green
-                        shadow = Shadow(
-                            color = Color.Black,
-                            offset = Offset(1f, 1f),
-                            blurRadius = 2f
-                        )
-                    ),
-                    modifier = Modifier.offset(y = 2.dp)
+                Spacer(modifier = Modifier.width(5.dp))
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = "Level",
+                    tint = Color.Yellow,
+                    modifier = Modifier.size(25.dp)
                 )
             }
         }
+    }
+}
+
+@Composable
+fun BetButton(
+    value: Int,
+    enabled: Boolean,
+    isLocked: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val buttonColors = if (enabled && !isLocked) {
+        Brush.verticalGradient(listOf(Color(0xFF1E88E5), Color(0xFF0D47A1)))
+    } else {
+        Brush.verticalGradient(listOf(Color(0xFF616161), Color(0xFF424242)))
+    }
+
+    val borderColors = if (enabled && !isLocked) {
+        Brush.verticalGradient(listOf(Color.Yellow, Color.White))
+    } else {
+        Brush.verticalGradient(listOf(Color(0xFF9E9E9E), Color(0xFF757575)))
+    }
+
+    Box(
+        modifier = modifier
+            .size(80.dp, 60.dp)
+            .background(buttonColors, RoundedCornerShape(8.dp))
+            .graphicsLayer {
+                alpha = if (enabled && !isLocked) 1f else 0.5f
+            }
+            .border(
+                width = 2.dp,
+                brush = borderColors,
+                shape = RoundedCornerShape(8.dp)
+            )
+            .clickable(enabled = enabled && !isLocked, onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = value.toString(),
+            color = Color.White,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
+        )
     }
 }
 

@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="FondoCasinoApp">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-04-03T20:01:18.957839300Z">
+        <DropdownSelection timestamp="2025-04-07T09:00:09.265329500Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Android\.android\avd\Pixel_9_Pro.avd" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Android\.android\avd\Pixel_6a_bdf.avd" />
             </handle>
           </Target>
         </DropdownSelection>
