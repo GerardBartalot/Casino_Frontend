@@ -207,7 +207,7 @@ fun GameButtonWithBackground(
     Box(
         modifier = Modifier
             .fillMaxWidth(0.9f)
-            .height(95.dp)
+            .height(100.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center
@@ -226,7 +226,6 @@ fun GameButtonWithBackground(
             )
         }
 
-        // Texto superpuesto
         Text(
             text = text,
             color = Color.White,
