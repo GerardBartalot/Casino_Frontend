@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -47,10 +48,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,6 +65,8 @@ import com.example.casinoapp.R
 import com.example.casinoapp.entity.GameSession
 import com.example.casinoapp.ui.components.AnimatedNumberDisplay
 import com.example.casinoapp.ui.components.ExperienceProgressBar
+import com.example.casinoapp.ui.components.GameRuleSection
+import com.example.casinoapp.ui.components.GameRulesDialog
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -87,10 +93,8 @@ fun ScratchCardScreen(
     var userId by remember { mutableStateOf("") }
     val vmExperience by gameViewModel.experience.collectAsState()
     val vmFondocoins by gameViewModel.fondocoins.collectAsState()
-
     val localFondocoins by gameViewModel.fondocoins.collectAsState()
     val localExperience by gameViewModel.experience.collectAsState()
-
     var roundsPlayed by remember { mutableIntStateOf(0) }
     var fondocoinsSpent by remember { mutableIntStateOf(0) }
     var fondocoinsEarned by remember { mutableIntStateOf(0) }
@@ -99,6 +103,7 @@ fun ScratchCardScreen(
     var fondocoinsWon by remember { mutableIntStateOf(0) }
     var revealedSymbol by remember { mutableStateOf<String?>(null) }
     var hasWon by remember { mutableStateOf(false) }
+    var showRulesDialog by remember { mutableStateOf(false) }
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
@@ -266,6 +271,29 @@ fun ScratchCardScreen(
                                 tint = Color.White,
                                 modifier = Modifier.size(24.dp)
                             )
+                        }
+                    }
+                },
+                actions = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(end = 20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Button(
+                            onClick = {showRulesDialog = true},
+                            modifier = Modifier
+                                .size(30.dp)
+                                .border(2.dp, Color.Green, CircleShape)
+                                .clip(CircleShape),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Black,
+                                contentColor = Color.White,
+                            ),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("?", style = TextStyle(fontSize = 16.sp, color = Color.Green))
                         }
                     }
                 },
@@ -443,9 +471,55 @@ fun ScratchCardScreen(
                         }
                     }
 
-                    if (resultMessage.isNotEmpty()) {
-                        Text(resultMessage, color = Color.White, fontSize = 18.sp)
-                    }
+                    GameRulesDialog(
+                        gameName = "RASCA Y GANA",
+                        rules = listOf(
+                            GameRuleSection(
+                                title = "💎 CÓMO JUGAR",
+                                titleColor = Color(0xFF1E88E5),
+                                items = listOf(
+                                    "Ingresa la cantidad a apostar",
+                                    "Selecciona el símbolo que quieres encontrar",
+                                    "Adivina la casilla donde se encuentra"
+                                )
+                            ),
+                            GameRuleSection(
+                                title = "💰 PREMIOS",
+                                titleColor = Color(0xFFFFA000),
+                                items = listOf(
+                                    "Si aciertas la casilla: Apuesta x5",
+                                    "Si no aciertas la casilla: Sin premio"
+                                )
+                            ),
+                            GameRuleSection(
+                                title = "🌟 EXPERIENCIA",
+                                titleColor = Color(0xFF4CAF50),
+                                items = listOf(
+                                    "Ganar una partida: +100 XP",
+                                    "Perder una partida: +0 XP"
+                                )
+                            ),
+                            GameRuleSection(
+                                title = "ℹ️ IMPORTANTE",
+                                titleColor = Color(0xFFBA68C8),
+                                items = listOf(
+                                    "Las ganancias se suman automáticamente",
+                                    "La experiencia se acumula inmediatamente"
+                                )
+                            ),
+                            GameRuleSection(
+                                title = "⚠️ ATENCIÓN",
+                                titleColor = Color(0xFFE57373),
+                                items = listOf(
+                                    "Solo puedes elegir una casilla",
+                                    "Debes seleccionar un símbolo para jugar",
+                                    "Apuesta mínima de 1 fondocoin"
+                                )
+                            )
+                        ),
+                        showDialog = showRulesDialog,
+                        onDismiss = { showRulesDialog = false }
+                    )
                 }
             }
         }

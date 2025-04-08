@@ -7,10 +7,12 @@ import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -20,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
@@ -49,6 +52,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -66,6 +70,8 @@ import androidx.navigation.compose.rememberNavController
 import com.example.casinoapp.R
 import com.example.casinoapp.entity.GameSession
 import com.example.casinoapp.ui.components.ExperienceProgressBar
+import com.example.casinoapp.ui.components.GameRuleSection
+import com.example.casinoapp.ui.components.GameRulesDialog
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -104,6 +110,7 @@ fun RouletteScreen(
     var fondocoinsSpent by remember { mutableIntStateOf(0) }
     var fondocoinsEarned by remember { mutableIntStateOf(0) }
     var experienceEarned by remember { mutableIntStateOf(0) }
+    var showRulesDialog by remember { mutableStateOf(false) }
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
@@ -275,6 +282,29 @@ fun RouletteScreen(
                                 tint = Color.White,
                                 modifier = Modifier.size(24.dp)
                             )
+                        }
+                    }
+                },
+                actions = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(end = 20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Button(
+                            onClick = {showRulesDialog = true},
+                            modifier = Modifier
+                                .size(30.dp)
+                                .border(2.dp, Color.Green, CircleShape)
+                                .clip(CircleShape),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Black,
+                                contentColor = Color.White,
+                            ),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("?", style = TextStyle(fontSize = 16.sp, color = Color.Green))
                         }
                     }
                 },
@@ -503,6 +533,57 @@ fun RouletteScreen(
                         selectedEven = if (selectedEven == even) null else even
                     }
                 )
+
+                if (showRulesDialog) {
+                    GameRulesDialog(
+                        gameName = "RULETA",
+                        rules = listOf(
+                            GameRuleSection(
+                                title = "💎 APUESTAS",
+                                titleColor = Color(0xFF1E88E5),
+                                items = listOf(
+                                    "Tiradas de 10, 20 o 50 fondocoins",
+                                    "El premio se calcula en base a tu apuesta"
+                                )
+                            ),
+                            GameRuleSection(
+                                title = "💰 PREMIOS",
+                                titleColor = Color(0xFFFFA000),
+                                items = listOf(
+                                    "3 símbolos iguales: Apuesta × 10",
+                                    "2 símbolos iguales: Apuesta × 2",
+                                    "Todos distintos: Sin premio"
+                                )
+                            ),
+                            GameRuleSection(
+                                title = "🌟 EXPERIENCIA",
+                                titleColor = Color(0xFF4CAF50),
+                                items = listOf(
+                                    "3 símbolos iguales: +15 XP",
+                                    "2 símbolos iguales: +5 XP",
+                                    "Todos distintos: +0 XP"
+                                )
+                            ),
+                            GameRuleSection(
+                                title = "ℹ️ IMPORTANTE",
+                                titleColor = Color(0xFFBA68C8),
+                                items = listOf(
+                                    "Las ganancias se acumulan hasta hacer CASH OUT",
+                                    "La experiencia se suma automáticamente",
+                                )
+                            ),
+                            GameRuleSection(
+                                title = "⚠️ IMPORTANTE",
+                                titleColor = Color(0xFFE57373),
+                                items = listOf(
+                                    "Si antes de salir no haces CASH OUT perderás tus ganancias"
+                                )
+                            )
+                        ),
+                        showDialog = showRulesDialog,
+                        onDismiss = { showRulesDialog = false }
+                    )
+                }
             }
         }
     }
