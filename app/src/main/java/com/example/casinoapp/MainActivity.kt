@@ -10,12 +10,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.casinoapp.screen.profile.EditProfileScreen
 import com.example.casinoapp.screen.HomeScreen
-import com.example.casinoapp.screen.LoadingScreen
-import com.example.casinoapp.screen.LoginScreen
-import com.example.casinoapp.screen.RegisterScreen
+import com.example.casinoapp.screen.loaders.LoadingScreen
+import com.example.casinoapp.screen.auth.LoginScreen
+import com.example.casinoapp.screen.auth.RegisterScreen
 import com.example.casinoapp.screen.games.RouletteScreen
 import com.example.casinoapp.screen.games.SlotMachineScreen
-import com.example.casinoapp.screen.SplashScreen
+import com.example.casinoapp.screen.loaders.SplashScreen
 import com.example.casinoapp.screen.profile.ProfileScreen
 import com.example.casinoapp.screen.games.ScratchCardScreen
 import com.example.casinoapp.viewModel.GameViewModel

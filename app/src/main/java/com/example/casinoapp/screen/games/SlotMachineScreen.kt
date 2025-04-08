@@ -4,12 +4,6 @@ import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateIntAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -36,11 +30,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -57,11 +49,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -76,8 +65,9 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.casinoapp.R
 import com.example.casinoapp.entity.GameSession
-import com.example.casinoapp.screen.ExperienceProgressBar
-import com.example.casinoapp.screen.formatWithSeparator
+import com.example.casinoapp.ui.components.AnimatedNumberDisplay
+import com.example.casinoapp.ui.components.ExperienceProgressBar
+import com.example.casinoapp.ui.components.WinDisplay
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -146,11 +136,6 @@ fun SlotMachineScreen(
         localFondocoins = vmFondocoins
         localExperience = vmExperience
     }
-
-    val casinoBlueGradient = listOf(
-        Color(0xFF1E88E5),
-        Color(0xFF0D47A1)
-    )
 
     val casinoGreenGradient = listOf(
         Color(0xFF4CAF50),
@@ -478,12 +463,10 @@ fun SlotMachineScreen(
             showFondocoinsWon += winAmount
             fondoCoinsEarnedDisplay += winAmount
 
-            // Calcular experiencia solo para esta ronda
             val currentRoundXp = calculateSlotExperience(winMultiplier)
             experienceEarnedInCurrentRound = currentRoundXp
             experienceEarnedDisplay = currentRoundXp
 
-            // Sumar al total solo si se gana
             if (currentRoundXp > 0) {
                 totalExperienceEarned += currentRoundXp
                 experienceEarned += currentRoundXp
@@ -640,231 +623,6 @@ fun PixelDisplay(
                         modifier = Modifier.padding(horizontal = 2.dp)
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun AnimatedNumberDisplay(
-    fondocoins: Int,
-    experience: Int,
-    modifier: Modifier = Modifier
-) {
-    val animatedFondocoins by animateIntAsState(
-        targetValue = fondocoins,
-        animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
-        label = "fondocoinsAnimation"
-    )
-
-    val animatedExperience by animateIntAsState(
-        targetValue = experience,
-        animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
-        label = "experienceAnimation"
-    )
-
-    val sparkleColors = listOf(
-        Color.Yellow,
-        Color(0xFFFFA500),
-        Color(0xFFFFD700),
-        Color(0xFFFFFF00),
-        Color.Yellow
-    )
-
-    val infiniteTransition = rememberInfiniteTransition()
-    val sparkleProgress by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable<Float>(
-            animation = tween(1000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "sparkleEffect"
-    )
-
-    val sparkleBrush = Brush.linearGradient(
-        colors = sparkleColors,
-        start = Offset(0f, 0f),
-        end = Offset(sparkleProgress * 1000, sparkleProgress * 1000)
-    )
-
-    Column (
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "¡HAS GANADO!",
-            style = TextStyle(
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                shadow = Shadow(
-                    color = Color.Yellow,
-                    offset = Offset(2f, 2f),
-                    blurRadius = 8f
-                )
-            )
-        )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = modifier
-        ) {
-            // Fondocoins
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = animatedFondocoins.toString(),
-                    style = TextStyle(
-                        fontSize = 60.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.SansSerif,
-                        brush = sparkleBrush,
-                        shadow = Shadow(
-                            color = Color.Yellow,
-                            offset = Offset(2f, 2f),
-                            blurRadius = 8f
-                        )
-                    )
-                )
-                Spacer(modifier = Modifier.width(5.dp))
-                Image(
-                    painter = painterResource(id = R.drawable.fondocoin),
-                    contentDescription = "Fondocoin",
-                    modifier = Modifier.size(80.dp)
-                )
-            }
-            Spacer(modifier = Modifier.width(15.dp))
-            // Experiencia
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = animatedExperience.toString(),
-                    style = TextStyle(
-                        fontSize = 60.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.SansSerif,
-                        brush = sparkleBrush,
-                        shadow = Shadow(
-                            color = Color(0xFF00FF00),
-                            offset = Offset(2f, 2f),
-                            blurRadius = 8f
-                        )
-                    )
-                )
-                Spacer(modifier = Modifier.width(5.dp))
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = "Level",
-                    tint = Color.Yellow,
-                    modifier = Modifier.size(60.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun WinDisplay(
-    fondocoins: Int,
-    experience: Int,
-    modifier: Modifier = Modifier
-) {
-    val animatedFondocoins by animateIntAsState(
-        targetValue = fondocoins,
-        animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
-        label = "fondocoinsAnimation"
-    )
-
-    val animatedExperience by animateIntAsState(
-        targetValue = experience,
-        animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
-        label = "experienceAnimation"
-    )
-
-    Box(
-        modifier = modifier
-            .background(
-                brush = Brush.horizontalGradient(
-                    colors = listOf(Color(0xFF4A148C), Color(0xFF1A237E)),
-                    startX = 0f,
-                    endX = Float.POSITIVE_INFINITY
-                ),
-                shape = RoundedCornerShape(10.dp)
-            )
-            .border(
-                width = 2.dp,
-                color = Color.White,
-                shape = RoundedCornerShape(10.dp)
-            )
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(10.dp),
-                clip = false,
-                ambientColor = Color.Yellow,
-                spotColor = Color.Yellow
-            )
-            .background(Color(0xFF222222), RoundedCornerShape(8.dp))
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            // Fondocoins
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = animatedFondocoins.toString(),
-                    style = TextStyle(
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.SansSerif,
-                        color = Color.White,
-                        shadow = Shadow(
-                            color = Color.Yellow,
-                            offset = Offset(2f, 2f),
-                            blurRadius = 8f
-                        )
-                    )
-                )
-                Image(
-                    painter = painterResource(id = R.drawable.fondocoin),
-                    contentDescription = "Fondocoin",
-                    modifier = Modifier.size(50.dp)
-                )
-            }
-
-            // Separador
-            Text(
-                text = "|",
-                color = Color.White.copy(alpha = 0.5f),
-                fontSize = 24.sp,
-                modifier = Modifier.padding(end = 4.dp)
-            )
-            Spacer(modifier = Modifier.width(5.dp))
-            // Experiencia
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = animatedExperience.toString(),
-                    style = TextStyle(
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.SansSerif,
-                        color = Color.White,
-                        shadow = Shadow(
-                            color = Color(0xFF00FF00),
-                            offset = Offset(2f, 2f),
-                            blurRadius = 8f
-                        )
-                    )
-                )
-                Spacer(modifier = Modifier.width(5.dp))
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = "Level",
-                    tint = Color.Yellow,
-                    modifier = Modifier.size(25.dp)
-                )
             }
         }
     }

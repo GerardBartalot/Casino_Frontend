@@ -6,15 +6,44 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -26,16 +55,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.casinoapp.R
 import com.example.casinoapp.entity.GameSession
-import com.example.casinoapp.screen.ExperienceProgressBar
-import com.example.casinoapp.screen.formatWithSeparator
+import com.example.casinoapp.ui.components.AnimatedNumberDisplay
+import com.example.casinoapp.ui.components.ExperienceProgressBar
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -62,12 +87,18 @@ fun ScratchCardScreen(
     var userId by remember { mutableStateOf("") }
     val vmExperience by gameViewModel.experience.collectAsState()
     val vmFondocoins by gameViewModel.fondocoins.collectAsState()
-    var localFondocoins by remember { mutableIntStateOf(0) }
-    var localExperience by remember { mutableIntStateOf(0) }
+
+    val localFondocoins by gameViewModel.fondocoins.collectAsState()
+    val localExperience by gameViewModel.experience.collectAsState()
+
     var roundsPlayed by remember { mutableIntStateOf(0) }
     var fondocoinsSpent by remember { mutableIntStateOf(0) }
     var fondocoinsEarned by remember { mutableIntStateOf(0) }
     var experienceEarned by remember { mutableIntStateOf(0) }
+    var experienceWon by remember { mutableIntStateOf(0) }
+    var fondocoinsWon by remember { mutableIntStateOf(0) }
+    var revealedSymbol by remember { mutableStateOf<String?>(null) }
+    var hasWon by remember { mutableStateOf(false) }
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
@@ -83,19 +114,6 @@ fun ScratchCardScreen(
                 Log.d("ScratchCardScreen", "Game session save result: $result")
             }
         }
-    }
-
-    val lottieComposition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(R.raw.lluvia_monedas)
-    )
-
-    val hasWon by derivedStateOf {
-        resultMessage.contains("¡Ganaste")
-    }
-
-    LaunchedEffect(vmFondocoins, vmExperience) {
-        localFondocoins = vmFondocoins
-        localExperience = vmExperience
     }
 
     LaunchedEffect(loggedInUser) {
@@ -156,25 +174,27 @@ fun ScratchCardScreen(
             }
 
             revealedIndex = index
-            val revealedSymbol = generatedSymbols[index]
-            val hasWon = revealedSymbol == selectedSymbol
-            val winnings = if (hasWon) bet * 5 else 0
-            val experienceToAdd = if (hasWon) 100 else 0
-
-            localFondocoins = localFondocoins - bet + winnings
-            localExperience += experienceToAdd
+            revealedSymbol = generatedSymbols[index]
+            hasWon = revealedSymbol == selectedSymbol
 
             roundsPlayed++
             fondocoinsSpent += bet
-            if (hasWon) {
-                fondocoinsEarned += winnings
-                experienceEarned += experienceToAdd
-            }
 
-            resultMessage = if (revealedSymbol == selectedSymbol) {
-                "¡Ganaste $winnings fondocoins! +${experienceToAdd} XP. Símbolo ganador: $revealedSymbol"
+            if (hasWon) {
+                fondocoinsWon = bet * 5
+                experienceWon = 100
+
+                fondocoinsEarned += fondocoinsWon
+                experienceEarned += experienceWon
+
+                userId.toIntOrNull()?.let { id ->
+                    gameViewModel.updateUserFondoCoins(id, vmFondocoins + fondocoinsWon)
+                    gameViewModel.updateUserExperience(id, vmExperience + experienceWon)
+                }
             } else {
-                "¡Perdiste! Símbolo ganador: $revealedSymbol"
+                userId.toIntOrNull()?.let { id ->
+                    gameViewModel.updateUserFondoCoins(id, vmFondocoins - bet)
+                }
             }
 
             isGameActive = false
@@ -191,6 +211,7 @@ fun ScratchCardScreen(
         revealedIndex = null
         resultMessage = ""
         isGameActive = true
+        experienceWon = 0
     }
 
     val gradientBrush = Brush.verticalGradient(
@@ -230,13 +251,7 @@ fun ScratchCardScreen(
                                 navController.navigate("loadingScreen") {
                                     popUpTo("slotMachineScreen") { inclusive = true }
                                 }
-
-                                userId.toIntOrNull()?.let { id ->
-                                    gameViewModel.updateUserFondoCoins(id, localFondocoins)
-                                    gameViewModel.updateUserExperience(id, localExperience)
-                                }
                                 saveGameSession()
-
                                 CoroutineScope(Dispatchers.Main).launch {
                                     delay(1500)
                                     navController.navigate("homeScreen") {
@@ -281,12 +296,11 @@ fun ScratchCardScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Spacer(modifier = Modifier.height(100.dp))
+                Spacer(modifier = Modifier.height(80.dp))
 
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 15.dp),
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -295,17 +309,7 @@ fun ScratchCardScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.fondocoin),
-                            contentDescription = "Fondocoin",
-                            modifier = Modifier.size(50.dp)
-                        )
-                        Text(
-                            vmFondocoins.formatWithSeparator(),
-                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 22.sp),
-                            modifier = Modifier.padding(start = 8.dp),
-                            color = Color.White
-                        )
+                        PixelDisplay(localFondocoins)
                     }
 
                     // Barra de experiencia
@@ -314,7 +318,7 @@ fun ScratchCardScreen(
                         modifier = Modifier.weight(1f)
                     ) {
                         ExperienceProgressBar(
-                            currentXp = vmExperience,
+                            currentXp = localExperience,
                             modifier = Modifier
                                 .weight(1f)
                                 .padding(horizontal = 8.dp)
@@ -407,24 +411,41 @@ fun ScratchCardScreen(
                     }
                 }
 
-                if (resultMessage.isNotEmpty()) {
-                    Text(resultMessage, color = Color.White, fontSize = 18.sp)
-                    Button(onClick = { resetGame() }) {
-                        Text("Volver a jugar")
-                    }
-                }
-            }
-            if (hasWon) {
-                Box(modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(1f)
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    LottieAnimation(
-                        composition = lottieComposition,
-                        modifier = Modifier.fillMaxSize().zIndex(1f),
-                        iterations = 1,
-                        speed = 0.5f
-                    )
+                    if (revealedIndex != null) {
+                        if (hasWon) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                AnimatedNumberDisplay(
+                                    fondocoins = fondocoinsWon,
+                                    experience = experienceWon,
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "¡Perdiste! Símbolo ganador: $revealedSymbol",
+                                color = Color.White,
+                                fontSize = 18.sp
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(onClick = { resetGame() }) {
+                            Text("Volver a jugar")
+                        }
+                    }
+
+                    if (resultMessage.isNotEmpty()) {
+                        Text(resultMessage, color = Color.White, fontSize = 18.sp)
+                    }
                 }
             }
         }

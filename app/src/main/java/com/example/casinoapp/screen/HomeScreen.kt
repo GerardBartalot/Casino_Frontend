@@ -1,7 +1,5 @@
 package com.example.casinoapp.screen
 
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,12 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,26 +23,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.casinoapp.R
+import com.example.casinoapp.screen.games.PixelDisplay
+import com.example.casinoapp.ui.components.ExperienceProgressBar
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
-import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -147,8 +135,7 @@ fun HomeScreen(
 
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 15.dp),
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -157,17 +144,7 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.fondocoin),
-                        contentDescription = "Fondocoin",
-                        modifier = Modifier.size(50.dp)
-                    )
-                    Text(
-                        vmFondocoins.formatWithSeparator(),
-                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 22.sp),
-                        modifier = Modifier.padding(start = 8.dp),
-                        color = Color.White
-                    )
+                    PixelDisplay(vmFondocoins)
                 }
 
                 // Barra de experiencia
@@ -221,80 +198,6 @@ fun HomeScreen(
 }
 
 @Composable
-fun ExperienceProgressBar(
-    currentXp: Int,
-    modifier: Modifier = Modifier
-) {
-    val level = currentXp / 1000 + 1
-    val progress by animateFloatAsState(
-        targetValue = (currentXp % 1000) / 1000f,
-        animationSpec = tween(durationMillis = 1000)
-    )
-
-    Column(modifier = modifier) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "Level",
-                tint = Color.Yellow,
-                modifier = Modifier.size(20.dp)
-            )
-            Text(
-                text = "Nivel $level",
-                color = Color.White,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .padding(start = 4.dp),
-            )
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(8.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .background(Color.DarkGray.copy(alpha = 0.5f))
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(progress)
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(
-                        Brush.horizontalGradient(
-                            colors = listOf(
-                                Color(0xFF00C9FF),
-                                Color(0xFF92FE9D)
-                            )
-                        )
-                    )
-                    .shadow(
-                        elevation = 2.dp,
-                        shape = RoundedCornerShape(4.dp),
-                        clip = true
-                    )
-            )
-        }
-
-        Text(
-            text = "${(currentXp % 1000).toInt()} / 1000 XP",
-            color = Color.White.copy(alpha = 0.7f),
-            fontSize = 12.sp,
-            modifier = Modifier
-                .align(Alignment.End)
-                .padding(top = 5.dp),
-        )
-    }
-}
-
-fun Int.formatWithSeparator(): String {
-    return NumberFormat.getNumberInstance(Locale.getDefault()).format(this)
-}
-
-@Composable
 fun GameButtonWithBackground(
     text: String,
     imageRes: Int,
@@ -319,7 +222,6 @@ fun GameButtonWithBackground(
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize(),
-                    //.alpha(0.1f),
                 contentScale = ContentScale.Crop
             )
         }
