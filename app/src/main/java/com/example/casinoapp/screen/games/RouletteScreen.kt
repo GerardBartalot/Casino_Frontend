@@ -61,16 +61,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.casinoapp.R
 import com.example.casinoapp.entity.GameSession
-import com.example.casinoapp.screen.ExperienceProgressBar
-import com.example.casinoapp.screen.formatWithSeparator
+import com.example.casinoapp.ui.components.ExperienceProgressBar
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -138,10 +133,6 @@ fun RouletteScreen(
         localFondocoins = vmFondocoins
         localExperience = vmExperience
     }
-
-    val lottieComposition by rememberLottieComposition(
-        spec = LottieCompositionSpec.RawRes(R.raw.lluvia_monedas)
-    )
 
     fun checkBetResult(number: Int, betValue: Int): Int {
         val redNumbers = listOf(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
@@ -318,8 +309,7 @@ fun RouletteScreen(
 
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 15.dp),
+                        .fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -328,17 +318,7 @@ fun RouletteScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.fondocoin),
-                            contentDescription = "Fondocoin",
-                            modifier = Modifier.size(50.dp)
-                        )
-                        Text(
-                            vmFondocoins.formatWithSeparator(),
-                            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 22.sp),
-                            modifier = Modifier.padding(start = 8.dp),
-                            color = Color.White
-                        )
+                        PixelDisplay(vmFondocoins)
                     }
 
                     // Barra de experiencia
@@ -523,19 +503,6 @@ fun RouletteScreen(
                         selectedEven = if (selectedEven == even) null else even
                     }
                 )
-            }
-            if (isWin.value) {
-                Box(modifier = Modifier
-                    .fillMaxSize()
-                    .zIndex(1f)
-                ) {
-                    LottieAnimation(
-                        composition = lottieComposition,
-                        modifier = Modifier.fillMaxSize().zIndex(1f),
-                        iterations = 1,
-                        speed = 0.5f
-                    )
-                }
             }
         }
     }

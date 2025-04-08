@@ -1,4 +1,4 @@
-package com.example.casinoapp.screen
+package com.example.casinoapp.screen.auth
 
 import android.util.Log
 import androidx.compose.foundation.Image

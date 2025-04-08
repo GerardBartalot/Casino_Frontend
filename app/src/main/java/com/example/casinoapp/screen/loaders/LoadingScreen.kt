@@ -1,4 +1,4 @@
-package com.example.casinoapp.screen
+package com.example.casinoapp.screen.loaders
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box

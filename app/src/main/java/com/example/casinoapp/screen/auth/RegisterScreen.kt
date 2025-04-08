@@ -1,4 +1,4 @@
-package com.example.casinoapp.screen
+package com.example.casinoapp.screen.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
