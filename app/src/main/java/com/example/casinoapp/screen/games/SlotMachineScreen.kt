@@ -17,6 +17,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -27,9 +28,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -49,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -67,6 +72,8 @@ import com.example.casinoapp.R
 import com.example.casinoapp.entity.GameSession
 import com.example.casinoapp.ui.components.AnimatedNumberDisplay
 import com.example.casinoapp.ui.components.ExperienceProgressBar
+import com.example.casinoapp.ui.components.GameRuleSection
+import com.example.casinoapp.ui.components.GameRulesDialog
 import com.example.casinoapp.ui.components.WinDisplay
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
@@ -107,6 +114,7 @@ fun SlotMachineScreen(
     var experienceEarnedInCurrentRound by remember { mutableIntStateOf(0) }
     var totalExperienceEarned by remember { mutableIntStateOf(0) }
     var buttonsLocked by remember { mutableStateOf(false) }
+    var showRulesDialog by remember { mutableStateOf(false) }
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
@@ -189,6 +197,29 @@ fun SlotMachineScreen(
                                 tint = Color.White,
                                 modifier = Modifier.size(24.dp)
                             )
+                        }
+                    }
+                },
+                actions = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .padding(end = 20.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Button(
+                            onClick = {showRulesDialog = true},
+                            modifier = Modifier
+                                .size(30.dp)
+                                .border(2.dp, Color.Green, CircleShape)
+                                .clip(CircleShape),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.Black,
+                                contentColor = Color.White,
+                            ),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Text("?", style = TextStyle(fontSize = 16.sp, color = Color.Green))
                         }
                     }
                 },
@@ -398,50 +429,124 @@ fun SlotMachineScreen(
 
                         Spacer(modifier = Modifier.height(30.dp))
 
-                        Box(
-                            modifier = Modifier
-                                .size(130.dp, 60.dp)
-                                .background(
-                                    brush = if (!buttonsLocked) {
-                                        Brush.verticalGradient(casinoGreenGradient)
-                                    } else {
-                                        Brush.verticalGradient(listOf(Color(0xFF616161), Color(0xFF424242)))
-                                    },
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .border(
-                                    width = 2.dp,
-                                    brush = if (!buttonsLocked) {
-                                        Brush.verticalGradient(listOf(Color.Yellow, Color.White))
-                                    } else {
-                                        Brush.verticalGradient(listOf(Color(0xFF9E9E9E), Color(0xFF757575)))
-                                    },
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .clickable(
-                                    enabled = !buttonsLocked,
-                                    onClick = {
-                                        saveGameSession()
-                                        localFondocoins += showFondocoinsWon
-                                        localExperience += totalExperienceEarned
-                                        userId.toIntOrNull()?.let { id ->
-                                            gameViewModel.updateUserFondoCoins(id, localFondocoins)
-                                            gameViewModel.updateUserExperience(id, localExperience)
+                        Row {
+                            Box(
+                                modifier = Modifier
+                                    .size(130.dp, 60.dp)
+                                    .background(
+                                        brush = if (!buttonsLocked) {
+                                            Brush.verticalGradient(casinoGreenGradient)
+                                        } else {
+                                            Brush.verticalGradient(
+                                                listOf(
+                                                    Color(0xFF616161),
+                                                    Color(0xFF424242)
+                                                )
+                                            )
+                                        },
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        brush = if (!buttonsLocked) {
+                                            Brush.verticalGradient(
+                                                listOf(
+                                                    Color.Yellow,
+                                                    Color.White
+                                                )
+                                            )
+                                        } else {
+                                            Brush.verticalGradient(
+                                                listOf(
+                                                    Color(0xFF9E9E9E),
+                                                    Color(0xFF757575)
+                                                )
+                                            )
+                                        },
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .clickable(
+                                        enabled = !buttonsLocked,
+                                        onClick = {
+                                            saveGameSession()
+                                            localFondocoins += showFondocoinsWon
+                                            localExperience += totalExperienceEarned
+                                            userId.toIntOrNull()?.let { id ->
+                                                gameViewModel.updateUserFondoCoins(
+                                                    id,
+                                                    localFondocoins
+                                                )
+                                                gameViewModel.updateUserExperience(
+                                                    id,
+                                                    localExperience
+                                                )
+                                            }
+                                            totalExperienceEarned = 0
+                                            showFondocoinsWon = 0
+                                            fondoCoinsEarnedDisplay = 0
+                                            experienceEarnedDisplay = 0
                                         }
-                                        totalExperienceEarned = 0
-                                        showFondocoinsWon = 0
-                                        fondoCoinsEarnedDisplay = 0
-                                        experienceEarnedDisplay = 0
-                                    }
-                                ),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "CASH OUT",
-                                color = Color.White,
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "CASH OUT",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            if (showRulesDialog) {
+                                GameRulesDialog(
+                                    gameName = "TRAGAPERRAS",
+                                    rules = listOf(
+                                        GameRuleSection(
+                                            title = "💎 APUESTAS",
+                                            titleColor = Color(0xFF1E88E5),
+                                            items = listOf(
+                                                "Tiradas de 10, 20 o 50 fondocoins",
+                                                "El premio se calcula en base a tu apuesta"
+                                            )
+                                        ),
+                                        GameRuleSection(
+                                            title = "💰 PREMIOS",
+                                            titleColor = Color(0xFFFFA000),
+                                            items = listOf(
+                                                "3 símbolos iguales: Apuesta × 10",
+                                                "2 símbolos iguales: Apuesta × 2",
+                                                "Todos distintos: Sin premio"
+                                            )
+                                        ),
+                                        GameRuleSection(
+                                            title = "🌟 EXPERIENCIA",
+                                            titleColor = Color(0xFF4CAF50),
+                                            items = listOf(
+                                                "3 símbolos iguales: +100 XP",
+                                                "2 símbolos iguales: +50 XP",
+                                                "Todos distintos: +0 XP"
+                                            )
+                                        ),
+                                        GameRuleSection(
+                                            title = "ℹ️ IMPORTANTE",
+                                            titleColor = Color(0xFFBA68C8),
+                                            items = listOf(
+                                                "Las ganancias se acumulan hasta hacer CASH OUT",
+                                                "La experiencia se suma automáticamente",
+                                            )
+                                        ),
+                                        GameRuleSection(
+                                            title = "⚠️ IMPORTANTE",
+                                            titleColor = Color(0xFFE57373),
+                                            items = listOf(
+                                                "Si antes de salir no haces CASH OUT perderás tus ganancias"
+                                            )
+                                        )
+                                    ),
+                                    showDialog = showRulesDialog,
+                                    onDismiss = { showRulesDialog = false }
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.height(70.dp))
                     }
@@ -489,8 +594,8 @@ fun SlotMachineScreen(
 
 fun calculateSlotExperience(winMultiplier: Int): Int {
     val experienceToAdd = when (winMultiplier) {
-        10 -> 15
-        2 -> 5
+        10 -> 100
+        2 -> 50
         else -> 0
     }
     return experienceToAdd

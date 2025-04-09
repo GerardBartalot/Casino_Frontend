@@ -54,6 +54,7 @@ fun HomeScreen(
     val vmFondocoins by gameViewModel.fondocoins.collectAsState()
     val vmExperience by gameViewModel.experience.collectAsState()
     val profile by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
+    val currentLevel = (vmExperience / 1000) + 1
 
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
@@ -169,29 +170,35 @@ fun HomeScreen(
                 enabled = true,
                 onClick = onNavigateToSlotMachine
             )
-            Spacer(modifier = Modifier.height(35.dp))
 
-            GameButtonWithBackground(
-                text = "",
-                imageRes = R.drawable.roulette_img,
-                enabled = vmExperience >= 100,
-                onClick = onNavigateToRoulette
-            )
             Spacer(modifier = Modifier.height(35.dp))
 
             GameButtonWithBackground(
                 text = "",
                 imageRes = R.drawable.scratch_cards_img,
-                enabled = vmExperience >= 100,
-                onClick = onNavigateToScratchCard
+                enabled = currentLevel >= 2,
+                onClick = onNavigateToScratchCard,
+                requiredLevel = 2
             )
+
+            Spacer(modifier = Modifier.height(35.dp))
+
+            GameButtonWithBackground(
+                text = "",
+                imageRes = R.drawable.roulette_img,
+                enabled = currentLevel >= 5,
+                onClick = onNavigateToRoulette,
+                requiredLevel = 5
+            )
+
             Spacer(modifier = Modifier.height(35.dp))
 
             GameButtonWithBackground(
                 text = "",
                 imageRes = R.drawable.black_jack_img,
-                enabled = vmExperience >= 200,
-                onClick = onNavigateToScratchCard
+                enabled = currentLevel >= 10,
+                onClick = onNavigateToScratchCard,
+                requiredLevel = 10
             )
         }
     }
@@ -202,38 +209,64 @@ fun GameButtonWithBackground(
     text: String,
     imageRes: Int,
     enabled: Boolean,
-    onClick: () -> Unit
-) {
+    onClick: () -> Unit,
+    requiredLevel: Int = 0
+){
     Box(
         modifier = Modifier
             .fillMaxWidth(0.9f)
-            .height(95.dp)
+            .height(105.dp)
             .clip(RoundedCornerShape(12.dp))
             .clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center
     ) {
-        Box(
+        Image(
+            painter = painterResource(id = imageRes),
+            contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Yellow.copy(alpha = 0.1f))
-        ) {
-            Image(
-                painter = painterResource(id = imageRes),
-                contentDescription = null,
+                .alpha(if (enabled) 1f else 0.4f),
+            contentScale = ContentScale.Crop
+        )
+
+        if (!enabled) {
+            Box(
                 modifier = Modifier
-                    .fillMaxSize(),
-                contentScale = ContentScale.Crop
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f))
             )
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(8.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.lock),
+                    contentDescription = "Locked",
+                    modifier = Modifier.size(40.dp)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Nivel $requiredLevel requerido",
+                    color = Color.White,
+                    fontSize = 14.sp
+                )
+            }
         }
 
-        // Texto superpuesto
-        Text(
-            text = text,
-            color = Color.White,
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        )
+        if (text.isNotEmpty()) {
+            Text(
+                text = text,
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        }
     }
+
 }
