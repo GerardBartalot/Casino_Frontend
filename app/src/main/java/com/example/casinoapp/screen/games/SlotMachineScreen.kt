@@ -72,6 +72,8 @@ import com.example.casinoapp.R
 import com.example.casinoapp.entity.GameSession
 import com.example.casinoapp.ui.components.AnimatedNumberDisplay
 import com.example.casinoapp.ui.components.ExperienceProgressBar
+import com.example.casinoapp.ui.components.GameRuleSection
+import com.example.casinoapp.ui.components.GameRulesDialog
 import com.example.casinoapp.ui.components.WinDisplay
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
@@ -494,8 +496,59 @@ fun SlotMachineScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                             }
+
+                            if (showRulesDialog) {
+                                GameRulesDialog(
+                                    gameName = "TRAGAPERRAS",
+                                    rules = listOf(
+                                        GameRuleSection(
+                                            title = "💎 APUESTAS",
+                                            titleColor = Color(0xFF1E88E5),
+                                            items = listOf(
+                                                "Tiradas de 10, 20 o 50 fondocoins",
+                                                "El premio se calcula en base a tu apuesta"
+                                            )
+                                        ),
+                                        GameRuleSection(
+                                            title = "💰 PREMIOS",
+                                            titleColor = Color(0xFFFFA000),
+                                            items = listOf(
+                                                "3 símbolos iguales: Apuesta × 10",
+                                                "2 símbolos iguales: Apuesta × 2",
+                                                "Todos distintos: Sin premio"
+                                            )
+                                        ),
+                                        GameRuleSection(
+                                            title = "🌟 EXPERIENCIA",
+                                            titleColor = Color(0xFF4CAF50),
+                                            items = listOf(
+                                                "3 símbolos iguales: +100 XP",
+                                                "2 símbolos iguales: +50 XP",
+                                                "Todos distintos: +0 XP"
+                                            )
+                                        ),
+                                        GameRuleSection(
+                                            title = "ℹ️ IMPORTANTE",
+                                            titleColor = Color(0xFFBA68C8),
+                                            items = listOf(
+                                                "Las ganancias se acumulan hasta hacer CASH OUT",
+                                                "La experiencia se suma automáticamente",
+                                            )
+                                        ),
+                                        GameRuleSection(
+                                            title = "⚠️ IMPORTANTE",
+                                            titleColor = Color(0xFFE57373),
+                                            items = listOf(
+                                                "Si antes de salir no haces CASH OUT perderás tus ganancias"
+                                            )
+                                        )
+                                    ),
+                                    showDialog = showRulesDialog,
+                                    onDismiss = { showRulesDialog = false }
+                                )
+                            }
                         }
-                        Spacer(modifier = Modifier.height(50.dp))
+                        Spacer(modifier = Modifier.height(70.dp))
                     }
                 }
             }
@@ -541,8 +594,8 @@ fun SlotMachineScreen(
 
 fun calculateSlotExperience(winMultiplier: Int): Int {
     val experienceToAdd = when (winMultiplier) {
-        10 -> 15
-        2 -> 5
+        10 -> 100
+        2 -> 50
         else -> 0
     }
     return experienceToAdd
