@@ -62,6 +62,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -108,13 +109,16 @@ fun SlotMachineScreen(
     var fondocoinsSpent by remember { mutableIntStateOf(0) }
     var fondocoinsEarned by remember { mutableIntStateOf(0) }
     var experienceEarned by remember { mutableIntStateOf(0) }
-    var showFondocoinsWon by remember { mutableIntStateOf(0) }
+    var gameBalance by remember { mutableIntStateOf(0) }
     var fondoCoinsEarnedDisplay by remember { mutableIntStateOf(0) }
     var experienceEarnedDisplay by remember { mutableIntStateOf(0) }
     var experienceEarnedInCurrentRound by remember { mutableIntStateOf(0) }
     var totalExperienceEarned by remember { mutableIntStateOf(0) }
     var buttonsLocked by remember { mutableStateOf(false) }
     var showRulesDialog by remember { mutableStateOf(false) }
+    var showAddFundsMessage by remember { mutableStateOf(false) }
+    val goldenGradient = listOf(Color(0xFFFFD700),Color(0xFFFFA500))
+    var showNotEnoughFundsMessage by remember { mutableStateOf(false) }
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
@@ -302,7 +306,7 @@ fun SlotMachineScreen(
                                 .size(340.dp, 180.dp)
                         ) {
                             WinDisplay(
-                                fondocoins = showFondocoinsWon,
+                                fondocoins = gameBalance,
                                 experience = totalExperienceEarned,
                                 modifier = Modifier
                                     .height(60.dp)
@@ -341,9 +345,52 @@ fun SlotMachineScreen(
                             }
                         }
 
-                        Spacer(modifier = Modifier.height(25.dp))
+                        if (showAddFundsMessage) {
+                            Spacer(modifier = Modifier.height(25.dp))
+                            LaunchedEffect(Unit) {
+                                delay(3000)
+                                showAddFundsMessage = false
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Añade fondocoins a la tragaperras para jugar",
+                                    color = Color.Red,
+                                    fontSize = 16.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+
+                        if (showNotEnoughFundsMessage) {
+                            Spacer(modifier = Modifier.height(25.dp))
+                            LaunchedEffect(Unit) {
+                                delay(3000)
+                                showNotEnoughFundsMessage = false
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    .padding(8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "No tienes suficientes fondocoins en tu balance",
+                                    color = Color.Red,
+                                    fontSize = 16.sp,
+                                    textAlign = TextAlign.Center
+                                    )
+                            }
+                        }
 
                         if (fondoCoinsEarnedDisplay > 0 || experienceEarnedDisplay > 0) {
+                            Spacer(modifier = Modifier.height(25.dp))
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -374,18 +421,19 @@ fun SlotMachineScreen(
                                     fondoCoinsEarnedDisplay = 0
                                     experienceEarnedDisplay = 0
                                     experienceEarnedInCurrentRound = 0
-                                    if (gameViewModel.placeBet(10)) {
-                                        localFondocoins -= 10
+
+                                    if (gameBalance >= currentBet) {
+                                        gameBalance -= currentBet
                                         completedAnimations = 0
                                         isAnimating = true
                                         startAnimation = true
                                         targetSymbols = List(3) { symbols.random() }
+                                    } else {
+                                        showAddFundsMessage = true
                                     }
                                 }
                             )
-
-                            Spacer(modifier = Modifier.width(16.dp))
-
+                            Spacer(modifier = Modifier.width(10.dp))
                             BetButton(
                                 value = 20,
                                 enabled = localFondocoins >= 20,
@@ -395,18 +443,19 @@ fun SlotMachineScreen(
                                     fondoCoinsEarnedDisplay = 0
                                     experienceEarnedDisplay = 0
                                     experienceEarnedInCurrentRound = 0
-                                    if (gameViewModel.placeBet(20)) {
-                                        localFondocoins -= 20
+
+                                    if (gameBalance >= currentBet) {
+                                        gameBalance -= currentBet
                                         completedAnimations = 0
                                         isAnimating = true
                                         startAnimation = true
                                         targetSymbols = List(3) { symbols.random() }
+                                    } else {
+                                        showAddFundsMessage = true
                                     }
                                 }
                             )
-
-                            Spacer(modifier = Modifier.width(16.dp))
-
+                            Spacer(modifier = Modifier.width(10.dp))
                             BetButton(
                                 value = 50,
                                 enabled = localFondocoins >= 50,
@@ -416,15 +465,71 @@ fun SlotMachineScreen(
                                     fondoCoinsEarnedDisplay = 0
                                     experienceEarnedDisplay = 0
                                     experienceEarnedInCurrentRound = 0
-                                    if (gameViewModel.placeBet(50)) {
-                                        localFondocoins -= 50
+
+                                    if (gameBalance >= currentBet) {
+                                        gameBalance -= currentBet
                                         completedAnimations = 0
                                         isAnimating = true
                                         startAnimation = true
                                         targetSymbols = List(3) { symbols.random() }
+                                    } else {
+                                        showAddFundsMessage = true
                                     }
                                 }
                             )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Box(
+                                modifier = Modifier
+                                    .size(70.dp)
+                                    .background(
+                                        brush = if (!buttonsLocked) {
+                                            Brush.verticalGradient(goldenGradient)
+                                        } else {
+                                            Brush.verticalGradient(listOf(Color(0xFF616161), Color(0xFF424242)))
+                                        },
+                                        shape = CircleShape
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        brush = if (!buttonsLocked) {
+                                            Brush.verticalGradient(listOf(Color.Yellow, Color.White))
+                                        } else {
+                                            Brush.verticalGradient(listOf(Color(0xFF9E9E9E), Color(0xFF757575)))
+                                        },
+                                        shape = CircleShape
+                                    )
+                                    .graphicsLayer {
+                                        alpha = if (!buttonsLocked) 1f else 0.5f
+                                    }
+                                    .clickable(
+                                        enabled = !buttonsLocked,
+                                        onClick = {
+                                            currentBet = gameBalance
+                                            fondoCoinsEarnedDisplay = 0
+                                            experienceEarnedDisplay = 0
+                                            experienceEarnedInCurrentRound = 0
+
+                                            if (gameBalance > 0) {
+                                                gameBalance -= currentBet
+                                                completedAnimations = 0
+                                                isAnimating = true
+                                                startAnimation = true
+                                                targetSymbols = List(3) { symbols.random() }
+                                            } else {
+                                                showAddFundsMessage = true
+                                            }
+                                        }
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "MAX BET",
+                                    color = Color.White,
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(30.dp))
@@ -432,7 +537,7 @@ fun SlotMachineScreen(
                         Row {
                             Box(
                                 modifier = Modifier
-                                    .size(130.dp, 60.dp)
+                                    .size(70.dp, 80.dp)
                                     .background(
                                         brush = if (!buttonsLocked) {
                                             Brush.verticalGradient(casinoGreenGradient)
@@ -449,12 +554,7 @@ fun SlotMachineScreen(
                                     .border(
                                         width = 2.dp,
                                         brush = if (!buttonsLocked) {
-                                            Brush.verticalGradient(
-                                                listOf(
-                                                    Color.Yellow,
-                                                    Color.White
-                                                )
-                                            )
+                                            Brush.verticalGradient(listOf(Color.Yellow, Color.White))
                                         } else {
                                             Brush.verticalGradient(
                                                 listOf(
@@ -465,24 +565,19 @@ fun SlotMachineScreen(
                                         },
                                         shape = RoundedCornerShape(8.dp)
                                     )
+                                    .graphicsLayer {
+                                        alpha = if (!buttonsLocked) 1f else 0.5f
+                                    }
                                     .clickable(
                                         enabled = !buttonsLocked,
                                         onClick = {
                                             saveGameSession()
-                                            localFondocoins += showFondocoinsWon
-                                            localExperience += totalExperienceEarned
+                                            localFondocoins += gameBalance
                                             userId.toIntOrNull()?.let { id ->
-                                                gameViewModel.updateUserFondoCoins(
-                                                    id,
-                                                    localFondocoins
-                                                )
-                                                gameViewModel.updateUserExperience(
-                                                    id,
-                                                    localExperience
-                                                )
+                                                gameViewModel.updateUserFondoCoins(id, localFondocoins)
                                             }
-                                            totalExperienceEarned = 0
-                                            showFondocoinsWon = 0
+                                            //totalExperienceEarned = 0
+                                            gameBalance = 0
                                             fondoCoinsEarnedDisplay = 0
                                             experienceEarnedDisplay = 0
                                         }
@@ -493,7 +588,58 @@ fun SlotMachineScreen(
                                     text = "CASH OUT",
                                     color = Color.White,
                                     fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(40.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .size(70.dp, 80.dp)
+                                    .background(
+                                        brush = if (!buttonsLocked) {
+                                            Brush.verticalGradient(casinoGreenGradient)
+                                        } else {
+                                            Brush.verticalGradient(listOf(Color(0xFF616161), Color(0xFF424242)))
+                                        },
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        brush = if (!buttonsLocked) {
+                                            Brush.verticalGradient(listOf(Color.Yellow, Color.White))
+                                        } else {
+                                            Brush.verticalGradient(listOf(Color(0xFF9E9E9E), Color(0xFF757575)))
+                                        },
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .graphicsLayer {
+                                        alpha = if (!buttonsLocked) 1f else 0.5f
+                                    }
+                                    .clickable(
+                                        enabled = !buttonsLocked,
+                                        onClick = {
+                                            if (localFondocoins >= 100) {
+                                                localFondocoins -= 100
+                                                gameBalance += 100
+                                                userId.toIntOrNull()?.let { id ->
+                                                    gameViewModel.updateUserFondoCoins(id, localFondocoins)
+                                                }
+                                            } else {
+                                                showNotEnoughFundsMessage = true
+                                            }
+                                        }
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "ADD 100",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
                                 )
                             }
 
@@ -506,7 +652,9 @@ fun SlotMachineScreen(
                                             titleColor = Color(0xFF1E88E5),
                                             items = listOf(
                                                 "Tiradas de 10, 20 o 50 fondocoins",
-                                                "El premio se calcula en base a tu apuesta"
+                                                "El premio se calcula en base a tu apuesta",
+                                                "Debes añadir fondocoins en la tragaperras para poder jugar",
+                                                "La opción MAX BET te permite apostar todos tus fondocoins"
                                             )
                                         ),
                                         GameRuleSection(
@@ -565,7 +713,7 @@ fun SlotMachineScreen(
             roundsPlayed++
             fondocoinsSpent += currentBet
             fondocoinsEarned += winAmount
-            showFondocoinsWon += winAmount
+            gameBalance += winAmount
             fondoCoinsEarnedDisplay += winAmount
 
             val currentRoundXp = calculateSlotExperience(winMultiplier)
@@ -575,6 +723,11 @@ fun SlotMachineScreen(
             if (currentRoundXp > 0) {
                 totalExperienceEarned += currentRoundXp
                 experienceEarned += currentRoundXp
+            }
+
+            localExperience += totalExperienceEarned
+            userId.toIntOrNull()?.let { id ->
+                gameViewModel.updateUserExperience(id, localExperience)
             }
 
             if (winMultiplier > 0) {
@@ -755,7 +908,7 @@ fun BetButton(
 
     Box(
         modifier = modifier
-            .size(80.dp, 60.dp)
+            .size(70.dp, 70.dp)
             .background(buttonColors, RoundedCornerShape(8.dp))
             .graphicsLayer {
                 alpha = if (enabled && !isLocked) 1f else 0.5f
