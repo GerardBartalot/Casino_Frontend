@@ -150,9 +150,7 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(50.dp))
 
-                    ProfileButton("Historial de partidas") { onNavigateToProfile() }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    ProfileButton("Canviar contrasenya") { onNavigateToProfile() }
+                    ProfileButton("Historial de partides") { onNavigateToProfile() }
                     Spacer(modifier = Modifier.height(20.dp))
                     ProfileButton("Editar perfil") { onNavigateToEditProfileScreen() }
 

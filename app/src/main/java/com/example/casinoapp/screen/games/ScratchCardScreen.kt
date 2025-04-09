@@ -159,7 +159,7 @@ fun ScratchCardScreen(
             }
 
             if (selectedSymbol == null) {
-                resultMessage = "Selecciona un símbolo primero."
+                resultMessage = "Selecciona un símbolo."
                 return
             }
 
@@ -377,7 +377,7 @@ fun ScratchCardScreen(
                         .height(56.dp)
                 )
 
-                Text("Selecciona un símbolo", color = Color.White)
+                Text("Selecciona un símbolo:", color = Color.White)
 
                 Row(
                     modifier = Modifier
@@ -439,11 +439,22 @@ fun ScratchCardScreen(
                     }
                 }
 
+                if (resultMessage.isNotEmpty() && revealedIndex == null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = resultMessage,
+                        color = Color.Red,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(bottom = 16.dp)
+                    )
+                }
+
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     if (revealedIndex != null) {
+                        Spacer(modifier = Modifier.height(16.dp))
                         if (hasWon) {
                             Box(
                                 modifier = Modifier
