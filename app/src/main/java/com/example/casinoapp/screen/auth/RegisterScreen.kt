@@ -227,18 +227,6 @@ fun RegisterScreen(
 
             Spacer(modifier = Modifier.height(25.dp))
 
-            when (registerMessageUiState) {
-                is RegisterMessageUiState.Loading -> {}
-                is RegisterMessageUiState.Success -> {
-                    LaunchedEffect(Unit) {
-                        onNavigateToHome()
-                    }
-                }
-                is RegisterMessageUiState.Error -> {
-                    Text("User could not be registered", color = Color(0xFFFF5252))
-                }
-            }
-
             Row(
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
