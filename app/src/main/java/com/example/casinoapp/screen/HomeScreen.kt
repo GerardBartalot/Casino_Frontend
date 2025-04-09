@@ -157,7 +157,7 @@ fun HomeScreen(
                         currentXp = vmExperience,
                         modifier = Modifier
                             .weight(1f)
-                            .padding(horizontal = 8.dp)
+                            .padding(end = 16.dp)
                     )
                 }
             }
@@ -268,5 +268,4 @@ fun GameButtonWithBackground(
             )
         }
     }
-
 }
