@@ -18,6 +18,8 @@ import com.example.casinoapp.screen.games.SlotMachineScreen
 import com.example.casinoapp.screen.loaders.SplashScreen
 import com.example.casinoapp.screen.profile.ProfileScreen
 import com.example.casinoapp.screen.games.ScratchCardScreen
+import com.example.casinoapp.screen.loaders.LoadingHistoryScreen
+import com.example.casinoapp.screen.profile.HistoryScreen
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 
@@ -86,7 +88,8 @@ class MainActivity : ComponentActivity() {
                             remoteViewModel = remoteViewModel,
                             navController = navController,
                             onNavigateToProfile = { navController.navigate("profileScreen") },
-                            onNavigateToEditProfileScreen = { navController.navigate("editProfileScreen") }
+                            onNavigateToEditProfileScreen = { navController.navigate("editProfileScreen") },
+                            onNavigateToLoadingHistoryScreen = { navController.navigate("loadingHistoryScreen") } // Aquí cambias la ruta
                         )
                     }
                     composable("editProfileScreen") {
@@ -94,6 +97,15 @@ class MainActivity : ComponentActivity() {
                             remoteViewModel = remoteViewModel,
                             navController = navController
                         )
+                    }
+                    composable("historyScreen") {
+                        HistoryScreen(
+                            remoteViewModel = remoteViewModel,
+                            navController = navController
+                        )
+                    }
+                    composable("loadingHistoryScreen") {
+                        LoadingHistoryScreen(remoteViewModel, navController)
                     }
                 }
             }

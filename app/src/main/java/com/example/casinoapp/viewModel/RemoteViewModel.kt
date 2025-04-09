@@ -60,6 +60,9 @@ interface RemoteUserInterface {
         @Path("id") id: Int,
         @Body user: User
     ): Response<Map<String, String>>
+
+    @GET("/sessionGame/{userId}/sessions")
+    suspend fun getUserGameHistory(@Path("userId") userId: Int): List<GameSession>
 }
 
 class RemoteViewModel : ViewModel() {
@@ -75,6 +78,9 @@ class RemoteViewModel : ViewModel() {
 
     private val _loggedInUser = MutableStateFlow<User?>(null)
     val loggedInUser: StateFlow<User?> = _loggedInUser
+
+    private val _gameHistory = MutableStateFlow<List<GameSession>>(emptyList())
+    val gameHistory: StateFlow<List<GameSession>> = _gameHistory
 
     fun login(username: String, password: String, onResult: (Any) -> Any) {
         viewModelScope.launch {
@@ -202,6 +208,30 @@ class RemoteViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 onResult("Error de conexión: ${e.message}")
+            }
+        }
+    }
+
+    // Nueva función para obtener el historial de sesiones de juego del usuario
+    fun getUserGameHistory(userId: Int, onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val connection = Retrofit.Builder()
+                    .baseUrl("http://10.0.2.2:8080")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                val endpoint = connection.create(RemoteUserInterface::class.java)
+                val response = endpoint.getUserGameHistory(userId)
+
+                if (response.isNotEmpty()) {
+                    _gameHistory.value = response
+                    onResult("Historial de partidas cargado exitosamente")
+                } else {
+                    onResult("No hay partidas para mostrar")
+                }
+            } catch (e: Exception) {
+                Log.e("RemoteViewModel", "Error al obtener el historial de partidas: ${e.message}", e)
+                onResult("Error al cargar el historial de partidas")
             }
         }
     }
