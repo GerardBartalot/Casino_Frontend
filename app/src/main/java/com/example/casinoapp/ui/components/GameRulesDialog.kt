@@ -60,7 +60,7 @@ fun GameRulesDialog(
                     modifier = Modifier.width(120.dp)
                 ) {
                     Text(
-                        "ENTENDIDO",
+                        "D'ACORD",
                         fontWeight = FontWeight.Bold,
                         fontSize = 13.sp
                     )

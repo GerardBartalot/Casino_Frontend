@@ -53,7 +53,7 @@ fun LoadingHistoryScreen(
                 modifier = Modifier.size(200.dp)
             )
             Spacer(modifier = Modifier.height(20.dp))
-            Text(text = "Cargando historial de partidas...", color = Color.White)
+            Text(text = "Carregant historial de partides...", color = Color.White)
 
         }
     }

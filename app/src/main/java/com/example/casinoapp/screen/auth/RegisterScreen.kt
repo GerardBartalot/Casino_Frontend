@@ -74,7 +74,7 @@ fun RegisterScreen(
             )
             Spacer(modifier = Modifier.height(25.dp))
             Text(
-                text = "Register",
+                text = "Registre",
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(bottom = 50.dp),
                 color = Color.White
@@ -83,7 +83,7 @@ fun RegisterScreen(
             TextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Name", color = Color.White) },
+                label = { Text("Nom", color = Color.White) },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFF333333),
                     unfocusedContainerColor = Color(0xFF333333),
@@ -101,7 +101,7 @@ fun RegisterScreen(
             TextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Username", color = Color.White) },
+                label = { Text("Nom d'usuari", color = Color.White) },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFF333333),
                     unfocusedContainerColor = Color(0xFF333333),
@@ -119,7 +119,7 @@ fun RegisterScreen(
             TextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password", color = Color.White) },
+                label = { Text("Contrasenya", color = Color.White) },
                 visualTransformation = PasswordVisualTransformation(),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFF333333),
@@ -139,7 +139,7 @@ fun RegisterScreen(
             TextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
-                label = { Text("Confirm Password", color = Color.White) },
+                label = { Text("Confirma la contrasenya", color = Color.White) },
                 visualTransformation = PasswordVisualTransformation(),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFF333333),
@@ -158,7 +158,7 @@ fun RegisterScreen(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    text = "I confirm that I am 18 years or older",
+                    text = "Confirmo que tinc 18 anys o més",
                     color = Color.White
                 )
                 Checkbox(
@@ -183,10 +183,10 @@ fun RegisterScreen(
                 onClick = {
                     when {
                         !isAdult -> {
-                            errorMessage = "You must be 18 years or older to register."
+                            errorMessage = "Has de tenir 18 anys o més per registrar-te."
                         }
                         password != confirmPassword -> {
-                            errorMessage = "Passwords do not match."
+                            errorMessage = "Les contrasenyes no coincideixen."
                         }
                         else -> {
                             val user = User(
@@ -199,7 +199,7 @@ fun RegisterScreen(
                                 profilePicture = null
                             )
                             remoteViewModel.register(user) { resultMessage ->
-                                if (resultMessage == "Registro exitoso") {
+                                if (resultMessage == "Registre exitós") {
                                     onNavigateToHome()
                                 } else {
                                     errorMessage = resultMessage
@@ -219,7 +219,7 @@ fun RegisterScreen(
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Text(
-                    "Register",
+                    "Registrar",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                 )
@@ -233,13 +233,13 @@ fun RegisterScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    "Already have an account?",
+                    "Ja tens un compte?",
                     fontSize = 15.sp,
                     color = Color.White
                 )
                 TextButton(onClick = onNavigateToLogin) {
                     Text(
-                        text = "Login now!",
+                        text = "Inicia sessió ara!",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = Color(0xFFFFD700)
