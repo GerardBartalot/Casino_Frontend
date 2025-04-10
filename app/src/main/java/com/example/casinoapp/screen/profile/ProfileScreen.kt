@@ -22,16 +22,14 @@ import androidx.navigation.NavController
 import com.airbnb.lottie.compose.*
 import com.example.casinoapp.R
 import com.example.casinoapp.viewModel.RemoteViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     remoteViewModel: RemoteViewModel,
     navController: NavController,
-    onNavigateToProfile: () -> Unit,
     onNavigateToEditProfileScreen: () -> Unit,
+    onNavigateToHistoryScreen: () -> Unit,
     onNavigateToLoadingHistoryScreen: () -> Unit,
 ) {
     val currentUser = remoteViewModel.loggedInUser.collectAsState().value
@@ -50,7 +48,11 @@ fun ProfileScreen(
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
-                modifier = Modifier.height(100.dp),
+                modifier = Modifier.height(100.dp)
+                    .background(
+                        brush = gradientBrush,
+                        alpha = 0.7f
+                    ),
                 title = {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -69,8 +71,11 @@ fun ProfileScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         IconButton(
-                            onClick = { navController.popBackStack() },
-                            modifier = Modifier.size(48.dp)
+                            onClick = {
+                                navController.navigate("homeScreen") {
+                                    popUpTo("profileScreen") { inclusive = true }
+                                }
+                            }
                         ) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -82,7 +87,7 @@ fun ProfileScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0D0D0D),
+                    containerColor = Color.Transparent,
                     titleContentColor = Color.White
                 )
             )
@@ -130,18 +135,9 @@ fun ProfileScreen(
                     )
 
                     Spacer(modifier = Modifier.height(50.dp))
-
-
-                    ProfileButton("Historial de partidas") {
-                        onNavigateToLoadingHistoryScreen()
-                    }
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    ProfileButton("Canviar contrasenya") { onNavigateToProfile() }
+                    ProfileButton("Historial de partides") {onNavigateToLoadingHistoryScreen()}
                     Spacer(modifier = Modifier.height(20.dp))
                     ProfileButton("Editar perfil") { onNavigateToEditProfileScreen() }
-
                     Spacer(modifier = Modifier.weight(1f))
 
                     Button(

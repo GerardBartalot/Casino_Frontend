@@ -238,7 +238,12 @@ fun RouletteScreen(
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
-                modifier = Modifier.height(100.dp),
+                modifier = Modifier
+                    .height(100.dp)
+                    .background(
+                        brush = gradientBrush,
+                        alpha = 0.7f
+                    ),
                 title = {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -266,7 +271,9 @@ fun RouletteScreen(
                                     gameViewModel.updateUserFondoCoins(id, localFondocoins)
                                     gameViewModel.updateUserExperience(id, localExperience)
                                 }
-                                saveGameSession()
+                                if (roundsPlayed > 0) {
+                                    saveGameSession()
+                                }
 
                                 CoroutineScope(Dispatchers.Main).launch {
                                     delay(1500)
@@ -309,7 +316,7 @@ fun RouletteScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0D420D),
+                    containerColor = Color.Transparent,
                     titleContentColor = Color.White
                 )
             )

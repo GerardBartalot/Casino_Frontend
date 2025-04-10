@@ -44,18 +44,17 @@ fun LoadingHistoryScreen(
     ) {
         val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.cartas_loading))
 
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
             LottieAnimation(
                 composition = composition,
                 iterations = LottieConstants.IterateForever,
                 modifier = Modifier.size(200.dp)
             )
+            Spacer(modifier = Modifier.height(20.dp))
+            Text(text = "Cargando historial de partidas...", color = Color.White)
 
-            if (gameHistory.isEmpty()) {
-                CircularProgressIndicator()
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(text = "Cargando historial de partidas...", color = Color.White)
-            }
         }
     }
 
