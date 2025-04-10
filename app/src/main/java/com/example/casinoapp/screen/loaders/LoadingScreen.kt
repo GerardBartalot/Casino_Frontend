@@ -39,7 +39,7 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
                 modifier = Modifier.size(200.dp)
             )
             Spacer(modifier = Modifier.height(20.dp))
-            Text("Actualizando saldo...", color = Color.White)
+            Text("Actualitzant saldo...", color = Color.White)
         }
     }
 }

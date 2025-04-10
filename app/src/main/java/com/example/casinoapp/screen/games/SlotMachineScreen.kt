@@ -179,7 +179,7 @@ fun SlotMachineScreen(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "Tragaperras",
+                            text = "Escurabutxaques",
                             color = Color.White,
                             modifier = Modifier.padding(start = 0.dp)
                         )
@@ -395,7 +395,7 @@ fun SlotMachineScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "Añade fondocoins a la tragaperras para jugar",
+                                    text = "Afegeix fondocoins a la màquina escurabutxaques per jugar",
                                     color = Color.Red,
                                     fontSize = 16.sp,
                                     textAlign = TextAlign.Center
@@ -417,7 +417,7 @@ fun SlotMachineScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "No tienes suficientes fondocoins en tu balance",
+                                    text = "No tens fondocoins suficients en el teu balanç",
                                     color = Color.Red,
                                     fontSize = 16.sp,
                                     textAlign = TextAlign.Center
@@ -513,10 +513,67 @@ fun SlotMachineScreen(
                                     }
                                 }
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
+                        }
+
+                        Spacer(modifier = Modifier.height(30.dp))
+
+                        Row (
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+
                             Box(
                                 modifier = Modifier
-                                    .size(70.dp)
+                                    .size(120.dp, 80.dp)
+                                    .background(
+                                        brush = if (!buttonsLocked) {
+                                            Brush.verticalGradient(casinoGreenGradient)
+                                        } else {
+                                            Brush.verticalGradient(listOf(Color(0xFF616161), Color(0xFF424242)))
+                                        },
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        brush = if (!buttonsLocked) {
+                                            Brush.verticalGradient(listOf(Color.Yellow, Color.White))
+                                        } else {
+                                            Brush.verticalGradient(listOf(Color(0xFF9E9E9E), Color(0xFF757575)))
+                                        },
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .graphicsLayer {
+                                        alpha = if (!buttonsLocked) 1f else 0.5f
+                                    }
+                                    .clickable(
+                                        enabled = !buttonsLocked,
+                                        onClick = {
+                                            if (localFondocoins >= 100) {
+                                                localFondocoins -= 100
+                                                gameBalance += 100
+                                                userId.toIntOrNull()?.let { id ->
+                                                    gameViewModel.updateUserFondoCoins(id, localFondocoins)
+                                                }
+                                            } else {
+                                                showNotEnoughFundsMessage = true
+                                            }
+                                        }
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "AFEGEIX 100",
+                                    color = Color.White,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(20.dp))
+
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
                                     .background(
                                         brush = if (!buttonsLocked) {
                                             Brush.verticalGradient(goldenGradient)
@@ -559,21 +616,19 @@ fun SlotMachineScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "MAX BET",
+                                    text = "APOSTA MÀXIMA",
                                     color = Color.White,
-                                    fontSize = 18.sp,
+                                    fontSize = 15.sp,
                                     fontWeight = FontWeight.Bold,
                                     textAlign = TextAlign.Center
                                 )
                             }
-                        }
 
-                        Spacer(modifier = Modifier.height(30.dp))
+                            Spacer(modifier = Modifier.width(20.dp))
 
-                        Row {
                             Box(
                                 modifier = Modifier
-                                    .size(70.dp, 80.dp)
+                                    .size(120.dp, 80.dp)
                                     .background(
                                         brush = if (!buttonsLocked) {
                                             Brush.verticalGradient(casinoGreenGradient)
@@ -619,57 +674,7 @@ fun SlotMachineScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "CASH OUT",
-                                    color = Color.White,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(40.dp))
-
-                            Box(
-                                modifier = Modifier
-                                    .size(70.dp, 80.dp)
-                                    .background(
-                                        brush = if (!buttonsLocked) {
-                                            Brush.verticalGradient(casinoGreenGradient)
-                                        } else {
-                                            Brush.verticalGradient(listOf(Color(0xFF616161), Color(0xFF424242)))
-                                        },
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .border(
-                                        width = 2.dp,
-                                        brush = if (!buttonsLocked) {
-                                            Brush.verticalGradient(listOf(Color.Yellow, Color.White))
-                                        } else {
-                                            Brush.verticalGradient(listOf(Color(0xFF9E9E9E), Color(0xFF757575)))
-                                        },
-                                        shape = RoundedCornerShape(8.dp)
-                                    )
-                                    .graphicsLayer {
-                                        alpha = if (!buttonsLocked) 1f else 0.5f
-                                    }
-                                    .clickable(
-                                        enabled = !buttonsLocked,
-                                        onClick = {
-                                            if (localFondocoins >= 100) {
-                                                localFondocoins -= 100
-                                                gameBalance += 100
-                                                userId.toIntOrNull()?.let { id ->
-                                                    gameViewModel.updateUserFondoCoins(id, localFondocoins)
-                                                }
-                                            } else {
-                                                showNotEnoughFundsMessage = true
-                                            }
-                                        }
-                                    ),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "ADD 100",
+                                    text = "RETIRAR",
                                     color = Color.White,
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
@@ -679,49 +684,49 @@ fun SlotMachineScreen(
 
                             if (showRulesDialog) {
                                 GameRulesDialog(
-                                    gameName = "TRAGAPERRAS",
+                                    gameName = "ESCURABUTXAQUES",
                                     rules = listOf(
                                         GameRuleSection(
-                                            title = "💎 APUESTAS",
+                                            title = "💎 APOSTES",
                                             titleColor = Color(0xFF1E88E5),
                                             items = listOf(
-                                                "Tiradas de 10, 20 o 50 fondocoins",
-                                                "El premio se calcula en base a tu apuesta",
-                                                "Debes añadir fondocoins en la tragaperras para poder jugar",
-                                                "La opción MAX BET te permite apostar todos tus fondocoins"
+                                                "Tirades de 10, 20 o 50 fondocoins",
+                                                "El premi es calcula sobre la base de la teva aposta",
+                                                "Has d'afegir fondocoins a la màquina escurabutxaques per poder jugar",
+                                                "L'opció APOSTA MÀXIMA et permet apostar tots els teus fondocoins"
                                             )
                                         ),
                                         GameRuleSection(
-                                            title = "💰 PREMIOS",
+                                            title = "💰 PREMIS",
                                             titleColor = Color(0xFFFFA000),
                                             items = listOf(
-                                                "3 símbolos iguales: Apuesta × 10",
-                                                "2 símbolos iguales: Apuesta × 2",
-                                                "Todos distintos: Sin premio"
+                                                "3 símbols iguals: Aposta × 10",
+                                                "2 símbols iguals: Aposta × 2",
+                                                "Tots diferents: Sense premi"
                                             )
                                         ),
                                         GameRuleSection(
-                                            title = "🌟 EXPERIENCIA",
+                                            title = "🌟 EXPERIÈNCIA",
                                             titleColor = Color(0xFF4CAF50),
                                             items = listOf(
-                                                "3 símbolos iguales: +100 XP",
-                                                "2 símbolos iguales: +50 XP",
-                                                "Todos distintos: +0 XP"
+                                                "3 símbols iguals: +100 XP",
+                                                "2 símbols iguals: +50 XP",
+                                                "Tots diferents: +0 XP"
                                             )
                                         ),
                                         GameRuleSection(
-                                            title = "ℹ️ IMPORTANTE",
+                                            title = "ℹ️ IMPORTANT",
                                             titleColor = Color(0xFFBA68C8),
                                             items = listOf(
-                                                "Las ganancias se acumulan hasta hacer CASH OUT",
-                                                "La experiencia se suma automáticamente",
+                                                "Les ganències s'acumulen fins seleccionar RETIRAR",
+                                                "L'experiència es suma automàticament",
                                             )
                                         ),
                                         GameRuleSection(
-                                            title = "⚠️ IMPORTANTE",
+                                            title = "⚠️ ATENCIÓ",
                                             titleColor = Color(0xFFE57373),
                                             items = listOf(
-                                                "Si antes de salir no haces CASH OUT perderás tus ganancias"
+                                                "Si abans de sortir no selecciones RETIRAR perdràs les teves ganències"
                                             )
                                         )
                                     ),
@@ -942,7 +947,7 @@ fun BetButton(
 
     Box(
         modifier = modifier
-            .size(70.dp, 70.dp)
+            .size(90.dp, 90.dp)
             .background(buttonColors, RoundedCornerShape(8.dp))
             .graphicsLayer {
                 alpha = if (enabled && !isLocked) 1f else 0.5f

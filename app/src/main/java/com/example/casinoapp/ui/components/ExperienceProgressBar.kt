@@ -76,7 +76,7 @@ fun ExperienceProgressBar(
                     )
 
                     Text(
-                        text = "Nivel $level",
+                        text = "Nivell $level",
                         color = Color.White,
                         fontSize = 16.sp,
                         modifier = Modifier
