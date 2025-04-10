@@ -153,12 +153,26 @@ fun SlotMachineScreen(
         Color(0xFF4CAF50),
         Color(0xFF2E7D32)
     )
+    val gradientBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF1A1A1A),
+            Color(0xFF2D2D2D),
+            Color(0xFF1A1A1A)
+        ),
+        startY = 0f,
+        endY = 1000f
+    )
 
     Scaffold(
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
-                modifier = Modifier.height(100.dp),
+                modifier = Modifier
+                    .height(100.dp)
+                    .background(
+                        brush = gradientBrush,
+                        alpha = 0.7f
+                    ),
                 title = {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -185,7 +199,10 @@ fun SlotMachineScreen(
                                 userId.toIntOrNull()?.let { id ->
                                     gameViewModel.updateUserExperience(id, localExperience)
                                 }
-                                saveGameSession()
+
+                                if (roundsPlayed > 0) {
+                                    saveGameSession()
+                                }
 
                                 CoroutineScope(Dispatchers.Main).launch {
                                     delay(1500)
@@ -228,7 +245,7 @@ fun SlotMachineScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0D0D0D),
+                    containerColor = Color.Transparent,
                     titleContentColor = Color.White
                 )
             )
@@ -312,35 +329,54 @@ fun SlotMachineScreen(
                                     .height(60.dp)
                                     .width(200.dp)
                                     .zIndex(1f)
-                                    .offset(y = (-20).dp)
+                                    .offset(y = (-35).dp)
                                     .align(Alignment.TopCenter)
                                     .padding(bottom = 8.dp)
                             )
 
-                            Image(
-                                painter = painterResource(id = R.drawable.frame),
-                                contentDescription = "Frame",
-                                modifier = Modifier.fillMaxSize()
-                            )
-
-                            // Slots dentro del marco
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(30.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.align(Alignment.Center)
-                            ) {
-                                targetSymbols.forEach { target ->
-                                    SlotMachine(
-                                        targetSymbol = target,
-                                        startAnimation = startAnimation,
-                                        onAnimationComplete = {
-                                            completedAnimations++
-                                            if (completedAnimations == 3) {
-                                                isAnimating = false
-                                                completedAnimations = 0
-                                            }
-                                        }
+                            Box(
+                                modifier = Modifier
+                                    .height(140.dp)
+                                    .fillMaxWidth()
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(
+                                                Color(0xFF0D47A1),
+                                                Color(0xFF1A3E72),
+                                                Color(0xFF2A5C8C)
+                                            ),
+                                            startX = 0f,
+                                            endX = Float.POSITIVE_INFINITY
+                                        ),
+                                        shape = RoundedCornerShape(10.dp)
                                     )
+                                    .border(
+                                        width = 3.dp,
+                                        color = Color.Yellow,
+                                        shape = RoundedCornerShape(10.dp)
+                                    )
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ){
+                                // Slots dentro del marco
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(30.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.align(Alignment.Center)
+                                ) {
+                                    targetSymbols.forEach { target ->
+                                        SlotMachine(
+                                            targetSymbol = target,
+                                            startAnimation = startAnimation,
+                                            onAnimationComplete = {
+                                                completedAnimations++
+                                                if (completedAnimations == 3) {
+                                                    isAnimating = false
+                                                    completedAnimations = 0
+                                                }
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -571,12 +607,10 @@ fun SlotMachineScreen(
                                     .clickable(
                                         enabled = !buttonsLocked,
                                         onClick = {
-                                            saveGameSession()
                                             localFondocoins += gameBalance
                                             userId.toIntOrNull()?.let { id ->
                                                 gameViewModel.updateUserFondoCoins(id, localFondocoins)
                                             }
-                                            //totalExperienceEarned = 0
                                             gameBalance = 0
                                             fondoCoinsEarnedDisplay = 0
                                             experienceEarnedDisplay = 0

@@ -86,7 +86,12 @@ fun EditProfileScreen(
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
-                modifier = Modifier.height(100.dp),
+                modifier = Modifier
+                    .height(100.dp)
+                    .background(
+                        brush = gradientBrush,
+                        alpha = 0.7f
+                    ),
                 title = {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -118,7 +123,7 @@ fun EditProfileScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF0D0D0D),
+                    containerColor = Color.Transparent,
                     titleContentColor = Color.White
                 )
             )

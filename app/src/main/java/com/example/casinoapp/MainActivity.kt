@@ -87,9 +87,9 @@ class MainActivity : ComponentActivity() {
                         ProfileScreen(
                             remoteViewModel = remoteViewModel,
                             navController = navController,
-                            onNavigateToProfile = { navController.navigate("profileScreen") },
                             onNavigateToEditProfileScreen = { navController.navigate("editProfileScreen") },
-                            onNavigateToLoadingHistoryScreen = { navController.navigate("loadingHistoryScreen") } // Aquí cambias la ruta
+                            onNavigateToHistoryScreen = { navController.navigate("historyScreen") },
+                            onNavigateToLoadingHistoryScreen = { navController.navigate("loadingHistoryScreen") },
                         )
                     }
                     composable("editProfileScreen") {

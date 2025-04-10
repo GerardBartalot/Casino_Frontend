@@ -105,6 +105,16 @@ fun ScratchCardScreen(
     var hasWon by remember { mutableStateOf(false) }
     var showRulesDialog by remember { mutableStateOf(false) }
 
+    val gradientBrush = Brush.verticalGradient(
+        colors = listOf(
+            Color(0xFF4A148C),
+            Color(0xFF7B1FA2),
+            Color(0xFF12005E)
+        ),
+        startY = 0f,
+        endY = 1000f
+    )
+
     fun saveGameSession() {
         loggedInUser?.let { user ->
             val gameSession = GameSession(
@@ -219,21 +229,16 @@ fun ScratchCardScreen(
         experienceWon = 0
     }
 
-    val gradientBrush = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF4A148C),
-            Color(0xFF7B1FA2),
-            Color(0xFF12005E)
-        ),
-        startY = 0f,
-        endY = 1000f
-    )
-
     Scaffold(
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
-                modifier = Modifier.height(100.dp),
+                modifier = Modifier
+                    .height(100.dp)
+                    .background(
+                        brush = gradientBrush,
+                        alpha = 0.7f
+                    ),
                 title = {
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -256,7 +261,9 @@ fun ScratchCardScreen(
                                 navController.navigate("loadingScreen") {
                                     popUpTo("slotMachineScreen") { inclusive = true }
                                 }
-                                saveGameSession()
+                                if (roundsPlayed > 0) {
+                                    saveGameSession()
+                                }
                                 CoroutineScope(Dispatchers.Main).launch {
                                     delay(1500)
                                     navController.navigate("homeScreen") {
@@ -298,7 +305,7 @@ fun ScratchCardScreen(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFF12005E),
+                    containerColor = Color.Transparent,
                     titleContentColor = Color.White
                 )
             )
