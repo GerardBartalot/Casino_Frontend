@@ -1,7 +1,11 @@
 package com.example.casinoapp.screen.profile
 
+import android.R.attr.bitmap
+import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.MediaStore
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.background
@@ -59,11 +63,20 @@ import androidx.navigation.compose.rememberNavController
 import com.example.casinoapp.R
 import com.example.casinoapp.viewModel.RemoteViewModel
 import android.util.Base64
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
 import com.example.casinoapp.ui.components.ImagePickerDialog
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.LottieConstants
+import java.io.ByteArrayOutputStream
+import java.io.IOException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +92,19 @@ fun EditProfileScreen(
     var selectedImage by remember { mutableStateOf<String?>(null) }
     var showImagePicker by remember { mutableStateOf(false) }
     val profileAnimation by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
+    val context = LocalContext.current
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            uri?.let {
+                val bitmap = uriToBitmap(context, it)
+                bitmap?.let { bmp ->
+                    selectedImage = bitmapToBase64(bmp)
+                }
+            }
+        }
+    )
 
     LaunchedEffect(currentUser) {
         currentUser?.let {
@@ -171,9 +197,10 @@ fun EditProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+
                 Box(
                     modifier = Modifier
-                        .size(120.dp)
+                        .size(200.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF333333))
                         .clickable { showImagePicker = true },
@@ -281,7 +308,6 @@ fun EditProfileScreen(
                             )
 
                             remoteViewModel.updateUser(updatedUser) { message ->
-                                // Si hay una nueva imagen, actualizarla por separado
                                 if (selectedImage != null && selectedImage != user.profilePicture) {
                                     remoteViewModel.updateProfilePicture(user.userId, selectedImage!!) {
                                         updateMessage = "$message\nFoto de perfil actualizada"
@@ -318,9 +344,19 @@ fun EditProfileScreen(
             }
             if (showImagePicker) {
                 ImagePickerDialog(
+                    hasCurrentImage = !selectedImage.isNullOrEmpty(),
                     onDismiss = { showImagePicker = false },
-                    onImageSelected = { base64Image ->
-                        selectedImage = base64Image
+                    onSelectFromGallery = {
+                        galleryLauncher.launch("image/*")
+                    },
+                    onDeleteCurrent = {
+                        currentUser?.userId?.let { userId ->
+                            remoteViewModel.deleteProfilePicture(userId) { message ->
+                                selectedImage = null
+                                updateMessage = message
+                                showImagePicker = false
+                            }
+                        }
                     }
                 )
             }
@@ -349,4 +385,20 @@ fun rememberImageFromBase64(base64: String): ImageBitmap {
     }
 
     return bitmap ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
+}
+
+private fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
+    return try {
+        MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+    } catch (e: IOException) {
+        e.printStackTrace()
+        null
+    }
+}
+
+private fun bitmapToBase64(bitmap: Bitmap): String {
+    val byteArrayOutputStream = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream)
+    val byteArray = byteArrayOutputStream.toByteArray()
+    return Base64.encodeToString(byteArray, Base64.DEFAULT)
 }

@@ -1,5 +1,6 @@
 package com.example.casinoapp.ui.components
 
+import android.R
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -12,67 +13,62 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 
 @Composable
 fun ImagePickerDialog(
+    hasCurrentImage: Boolean,
     onDismiss: () -> Unit,
-    onImageSelected: (String) -> Unit
+    onSelectFromGallery: () -> Unit,
+    onDeleteCurrent: () -> Unit
 ) {
-    val context = LocalContext.current
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
-
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent(),
-        onResult = { uri ->
-            uri?.let {
-                bitmap = uriToBitmap(context, it)
-            }
-        }
-    )
-
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Seleccionar foto de perfil") },
+        title = { Text("Foto de perfil") },
         text = {
             Column {
                 Button(
-                    onClick = { galleryLauncher.launch("image/*") },
-                    modifier = Modifier.fillMaxWidth()
+                    onClick = onSelectFromGallery,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFD700),
+                        contentColor = Color.Black
+                    )
                 ) {
                     Text("Abrir galería")
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                if (bitmap != null) {
-                    Text("Imagen seleccionada", style = MaterialTheme.typography.bodyMedium)
-                    // Aquí podrías mostrar una previsualización si lo deseas
+                if (hasCurrentImage) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedButton(
+                        onClick = onDeleteCurrent,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = Color(0xFFFF5252),
+                            containerColor = Color.Transparent
+                        )
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_delete),
+                            contentDescription = "Eliminar foto",
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Eliminar foto actual")
+                    }
                 }
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    bitmap?.let {
-                        onImageSelected(bitmapToBase64(it))
-                        onDismiss()
-                    }
-                },
-                enabled = bitmap != null
-            ) {
-                Text("Confirmar")
-            }
-        },
-        dismissButton = {
-            Button(
+            TextButton(
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.error
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color(0xFFFFD700)
                 )
             ) {
                 Text("Cancelar")
@@ -81,11 +77,11 @@ fun ImagePickerDialog(
     )
 }
 
+// Mantén las funciones de utilidad al final
 private fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
     return try {
         MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
     } catch (e: IOException) {
-        e.printStackTrace()
         null
     }
 }
