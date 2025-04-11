@@ -149,42 +149,42 @@ fun ScratchCardScreen(
     fun playGame(index: Int) {
         try {
             val bet = betAmount.toIntOrNull() ?: run {
-                resultMessage = "Ingresa una apuesta válida."
+                resultMessage = "Ingressa una aposta vàlida."
                 return
             }
 
             if (!isGameActive) {
-                resultMessage = "El juego no está activo."
+                resultMessage = "El joc no està actiu."
                 return
             }
 
             if (bet <= 0) {
-                resultMessage = "La apuesta debe ser mayor a cero."
+                resultMessage = "L'aposta ha de ser major a zero."
                 return
             }
 
             if (bet > localFondocoins) {
-                resultMessage = "Fondos insuficientes."
+                resultMessage = "Fons insuficients."
                 return
             }
 
             if (selectedSymbol == null) {
-                resultMessage = "Selecciona un símbolo."
+                resultMessage = "Selecciona un símbol."
                 return
             }
 
             if (revealedIndex != null) {
-                resultMessage = "Ya has revelado una posición."
+                resultMessage = "Ja has revelat una posició."
                 return
             }
 
             if (index !in generatedSymbols.indices) {
-                resultMessage = "Posición inválida."
+                resultMessage = "Posició invàlida."
                 return
             }
 
             if (!gameViewModel.placeBet(bet)) {
-                resultMessage = "No se pudo procesar la apuesta."
+                resultMessage = "No s'ha pogut processar la aposta."
                 return
             }
 
@@ -215,7 +215,7 @@ fun ScratchCardScreen(
             isGameActive = false
         } catch (e: Exception) {
             Log.e("ScratchCardScreen", "Error en playGame: ${e.message}")
-            resultMessage = "Error en el juego. Intenta nuevamente."
+            resultMessage = "Error del joc. Intenta-ho novament."
         }
     }
 
@@ -245,7 +245,7 @@ fun ScratchCardScreen(
                         contentAlignment = Alignment.CenterStart
                     ) {
                         Text(
-                            text = "Rasca y Gana",
+                            text = "Rasca i Guanya",
                             color = Color.White,
                             modifier = Modifier.padding(start = 0.dp)
                         )
@@ -364,7 +364,7 @@ fun ScratchCardScreen(
                 TextField(
                     value = betAmount,
                     onValueChange = { betAmount = it },
-                    placeholder = { Text("Apuesta", color = Color.Gray) },
+                    placeholder = { Text("Aposta", color = Color.Gray) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color.White,
                         unfocusedContainerColor = Color.White,
@@ -384,7 +384,7 @@ fun ScratchCardScreen(
                         .height(56.dp)
                 )
 
-                Text("Selecciona un símbolo:", color = Color.White)
+                Text("Selecciona un símbol:", color = Color.White)
 
                 Row(
                     modifier = Modifier
@@ -476,7 +476,7 @@ fun ScratchCardScreen(
                             }
                         } else {
                             Text(
-                                text = "¡Perdiste! Símbolo ganador: $revealedSymbol",
+                                text = "Has perdut! Símbol guanyador: $revealedSymbol",
                                 color = Color.White,
                                 fontSize = 18.sp
                             )
@@ -485,53 +485,53 @@ fun ScratchCardScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         Button(onClick = { resetGame() }) {
-                            Text("Volver a jugar")
+                            Text("Tornar a jugar")
                         }
                     }
 
                     GameRulesDialog(
-                        gameName = "RASCA Y GANA",
+                        gameName = "RASCA I GUANYA",
                         rules = listOf(
                             GameRuleSection(
-                                title = "💎 CÓMO JUGAR",
+                                title = "💎 COM JUGAR",
                                 titleColor = Color(0xFF1E88E5),
                                 items = listOf(
-                                    "Ingresa la cantidad a apostar",
-                                    "Selecciona el símbolo que quieres encontrar",
-                                    "Adivina la casilla donde se encuentra"
+                                    "Ingressa la quantitat per apostar",
+                                    "Selecciona el símbol que vols trobar",
+                                    "Endevina la casella on es troba"
                                 )
                             ),
                             GameRuleSection(
-                                title = "💰 PREMIOS",
+                                title = "💰 PREMIS",
                                 titleColor = Color(0xFFFFA000),
                                 items = listOf(
-                                    "Si aciertas la casilla: Apuesta x5",
-                                    "Si no aciertas la casilla: Sin premio"
+                                    "Si encertas la casella: Aposta x5",
+                                    "Si no aciertas la casilla: Sense premi"
                                 )
                             ),
                             GameRuleSection(
-                                title = "🌟 EXPERIENCIA",
+                                title = "🌟 EXPERIÈNCIA",
                                 titleColor = Color(0xFF4CAF50),
                                 items = listOf(
-                                    "Ganar una partida: +100 XP",
-                                    "Perder una partida: +0 XP"
+                                    "Guanyar una partida: +100 XP",
+                                    "Perdre una partida: +0 XP"
                                 )
                             ),
                             GameRuleSection(
-                                title = "ℹ️ IMPORTANTE",
+                                title = "ℹ️ IMPORTANT",
                                 titleColor = Color(0xFFBA68C8),
                                 items = listOf(
-                                    "Las ganancias se suman automáticamente",
-                                    "La experiencia se acumula inmediatamente"
+                                    "Les ganàncies es sumen automàticament",
+                                    "L'experiència s'acumula inmediatament"
                                 )
                             ),
                             GameRuleSection(
-                                title = "⚠️ ATENCIÓN",
+                                title = "⚠️ ATENCIÓ",
                                 titleColor = Color(0xFFE57373),
                                 items = listOf(
-                                    "Solo puedes elegir una casilla",
-                                    "Debes seleccionar un símbolo para jugar",
-                                    "Apuesta mínima de 1 fondocoin"
+                                    "Només pots escollir una casella",
+                                    "Has de seleccionar un símbol per jugar",
+                                    "Aposta mínima d'un fondocoin"
                                 )
                             )
                         ),

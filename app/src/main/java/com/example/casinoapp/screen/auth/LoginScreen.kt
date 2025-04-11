@@ -78,7 +78,7 @@ fun LoginScreen(
             )
             Spacer(modifier = Modifier.height(25.dp))
             Text(
-                text = "Login",
+                text = "Inici de sessió",
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(bottom = 50.dp),
                 color = Color.White
@@ -86,7 +86,7 @@ fun LoginScreen(
             TextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Username", color = Color.White) },
+                label = { Text("Nom d'usuari", color = Color.White) },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFF333333),
                     unfocusedContainerColor = Color(0xFF333333),
@@ -104,7 +104,7 @@ fun LoginScreen(
             TextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password", color = Color.White) },
+                label = { Text("Contrasenya", color = Color.White) },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color(0xFF333333),
                     unfocusedContainerColor = Color(0xFF333333),
@@ -147,7 +147,7 @@ fun LoginScreen(
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Text(
-                    "Login",
+                    "Accedeix",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                 )
@@ -159,7 +159,7 @@ fun LoginScreen(
                 is LoginMessageUiState.Success -> {
                 }
                 is LoginMessageUiState.Error -> {
-                    Text("Incorrect username or password", color = Color(0xFFFF5252))
+                    Text("Nom d'usuari o contrasenya incorrectes", color = Color(0xFFFF5252))
                 }
                 is LoginMessageUiState.Loading -> {
                 }
@@ -171,13 +171,13 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    "Don't have an account?",
+                    "No tens encara un compte?",
                     fontSize = 15.sp,
                     color = Color.White
                 )
                 TextButton(onClick = onNavigateToRegister) {
                     Text(
-                        text = "Register now!",
+                        text = "Registra't ara!",
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp,
                         color = Color(0xFFFFD700)

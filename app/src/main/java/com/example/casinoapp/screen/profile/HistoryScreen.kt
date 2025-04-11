@@ -220,7 +220,7 @@ fun CompactGameSessionItem(gameSession: GameSession) {
         Spacer(modifier = Modifier.width(8.dp))
 
         Text(
-            text = "RONDAS: ${gameSession.rounds}",
+            text = "RONDES: ${gameSession.rounds}",
             color = Color.White,
             fontSize = 12.sp,
             modifier = Modifier.weight(1f),
