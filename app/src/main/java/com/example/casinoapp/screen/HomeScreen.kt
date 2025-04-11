@@ -2,6 +2,7 @@ package com.example.casinoapp.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -239,7 +240,12 @@ fun GameButtonWithBackground(
             .fillMaxWidth(0.9f)
             .height(105.dp)
             .clip(RoundedCornerShape(12.dp))
-            .clickable(enabled = enabled) { onClick() },
+            .clickable(enabled = enabled) { onClick() }
+            .border(
+                width = 2.dp,
+                color = Color.White,
+                shape = RoundedCornerShape(10.dp)
+            ),
         contentAlignment = Alignment.Center
     ) {
         Image(
@@ -272,7 +278,7 @@ fun GameButtonWithBackground(
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "Nivel $requiredLevel requerido",
+                    text = "Nivell $requiredLevel requerit",
                     color = Color.White,
                     fontSize = 14.sp
                 )

@@ -177,17 +177,26 @@ fun RouletteScreen(
             resultMessage = ""
 
             coroutineScope.launch {
-                val targetRotation = (360 * 10) + (0..36).random() * (360f / 37)
+
+                rotationAngle.snapTo(0f)
+
+                val fullRotations = 6
+                val randomPosition = (0..36).random()
+                val degreesPerNumber = 360f / 37f
+                val targetRotation = 360f * fullRotations + randomPosition * degreesPerNumber
+
                 rotationAngle.animateTo(
                     targetValue = targetRotation,
                     animationSpec = tween(durationMillis = 4000, easing = LinearOutSlowInEasing)
                 )
 
-                val finalPosition = (rotationAngle.value % 360) / (360f / 37)
+                // Calcular el número ganador
+                val finalPosition = (rotationAngle.value % 360) / degreesPerNumber
                 val winningNumber = (finalPosition.toInt() + 1) % 37
                 resultNumber = winningNumber
                 isSpinning = false
 
+                // Resto de la lógica de cálculo de premios...
                 val winnings = checkBetResult(winningNumber, betValue)
                 val hasWon = winnings > 0
                 experienceToAdd = if (hasWon) 50 else 0
@@ -546,33 +555,33 @@ fun RouletteScreen(
                         gameName = "RULETA",
                         rules = listOf(
                             GameRuleSection(
-                                title = "💎 APUESTAS",
+                                title = "💎 APOSTES",
                                 titleColor = Color(0xFF1E88E5),
                                 items = listOf(
-                                    "Tiradas de 10, 20 o 50 fondocoins",
-                                    "El premio se calcula en base a tu apuesta"
+                                    "Tirades de 10, 20 o 50 fondocoins",
+                                    "El premi es calcula sobre la base de la teva aposta"
                                 )
                             ),
                             GameRuleSection(
-                                title = "💰 PREMIOS",
+                                title = "💰 PREMIS",
                                 titleColor = Color(0xFFFFA000),
                                 items = listOf(
-                                    "3 símbolos iguales: Apuesta × 10",
-                                    "2 símbolos iguales: Apuesta × 2",
-                                    "Todos distintos: Sin premio"
+                                    "3 símbols iguals: Aposta × 10",
+                                    "2 símbols iguals: Aposta × 2",
+                                    "Tots diferents: Sense premi"
                                 )
                             ),
                             GameRuleSection(
-                                title = "🌟 EXPERIENCIA",
+                                title = "🌟 EXPERIÈNCIA",
                                 titleColor = Color(0xFF4CAF50),
                                 items = listOf(
-                                    "3 símbolos iguales: +15 XP",
-                                    "2 símbolos iguales: +5 XP",
-                                    "Todos distintos: +0 XP"
+                                    "3 símbols iguals: +15 XP",
+                                    "2 símbols iguals: +5 XP",
+                                    "Tots diferents: +0 XP"
                                 )
                             ),
                             GameRuleSection(
-                                title = "ℹ️ IMPORTANTE",
+                                title = "ℹ️ IMPORTANT",
                                 titleColor = Color(0xFFBA68C8),
                                 items = listOf(
                                     "Las ganancias se acumulan hasta hacer CASH OUT",
@@ -580,7 +589,7 @@ fun RouletteScreen(
                                 )
                             ),
                             GameRuleSection(
-                                title = "⚠️ IMPORTANTE",
+                                title = "⚠️ ATENCIÓ",
                                 titleColor = Color(0xFFE57373),
                                 items = listOf(
                                     "Si antes de salir no haces CASH OUT perderás tus ganancias"
@@ -673,7 +682,7 @@ fun ColorTable(selectedColor: String?, selectedZero: Boolean, onColorSelected: (
                 .clickable { onColorSelected(if (selectedColor == "Rojo") null else "Rojo", false) },
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "Color Rojo", color = Color.White)
+            Text(text = "Color Vermell", color = Color.White)
         }
 
         Spacer(modifier = Modifier.width(3.dp))
@@ -699,7 +708,7 @@ fun ColorTable(selectedColor: String?, selectedZero: Boolean, onColorSelected: (
                 .clickable { onColorSelected(if (selectedColor == "Negro") null else "Negro", false) },
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "Color Negro", color = Color.White)
+            Text(text = "Color Negre", color = Color.White)
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -719,7 +728,7 @@ fun EvenOddTable(selectedEven: Boolean?, onEvenOddSelected: (Boolean) -> Unit) {
                 .clickable { onEvenOddSelected(true) },
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "Número Par", color = Color.White)
+            Text(text = "Número Parell", color = Color.White)
         }
 
         Spacer(modifier = Modifier.width(2.5.dp))
@@ -732,7 +741,7 @@ fun EvenOddTable(selectedEven: Boolean?, onEvenOddSelected: (Boolean) -> Unit) {
                 .clickable { onEvenOddSelected(false) },
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "Número Impar", color = Color.White)
+            Text(text = "Número Imparell", color = Color.White)
         }
     }
 }

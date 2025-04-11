@@ -227,7 +227,7 @@ fun EditProfileScreen(
                 TextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Nombre", color = Color.White) },
+                    label = { Text("Nom", color = Color.White) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color(0xFF333333),
                         unfocusedContainerColor = Color(0xFF333333),
@@ -248,7 +248,7 @@ fun EditProfileScreen(
                 TextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("Nombre de usuario", color = Color.White) },
+                    label = { Text("Nom d'usuari", color = Color.White) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color(0xFF333333),
                         unfocusedContainerColor = Color(0xFF333333),
@@ -269,7 +269,7 @@ fun EditProfileScreen(
                 TextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Nueva contraseña", color = Color.White) },
+                    label = { Text("Nova contrasenya", color = Color.White) },
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color(0xFF333333),
                         unfocusedContainerColor = Color(0xFF333333),
@@ -335,7 +335,7 @@ fun EditProfileScreen(
                     shape = RoundedCornerShape(10.dp)
                 ) {
                     Text(
-                        text = "Aplicar cambios",
+                        text = "Aplicar canvis",
                         color = Color.Black,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
