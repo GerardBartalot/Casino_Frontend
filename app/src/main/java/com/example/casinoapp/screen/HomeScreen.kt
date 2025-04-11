@@ -18,7 +18,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -39,6 +41,13 @@ import com.example.casinoapp.screen.games.PixelDisplay
 import com.example.casinoapp.ui.components.ExperienceProgressBar
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import com.example.casinoapp.screen.profile.rememberImageFromBase64
 
 @Composable
 fun HomeScreen(
@@ -53,6 +62,9 @@ fun HomeScreen(
     val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
     val vmFondocoins by gameViewModel.fondocoins.collectAsState()
     val vmExperience by gameViewModel.experience.collectAsState()
+    val profileImage by remember { derivedStateOf {
+        loggedInUser?.profilePicture?.takeIf { it.isNotEmpty() }
+    } }
     val profile by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
     val currentLevel = (vmExperience / 1000) + 1
 
@@ -109,13 +121,23 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .size(80.dp)
+                    .clip(CircleShape)
                     .clickable { onNavigateToProfile() }
             ) {
-                LottieAnimation(
-                    composition = profile,
-                    iterations = LottieConstants.IterateForever,
-                    modifier = Modifier.size(80.dp)
-                )
+                if (profileImage != null) {
+                    Image(
+                        bitmap = rememberImageFromBase64(profileImage!!),
+                        contentDescription = "Foto de perfil",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    LottieAnimation(
+                        composition = profile,
+                        iterations = LottieConstants.IterateForever,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
         }
 
@@ -267,5 +289,20 @@ fun GameButtonWithBackground(
                     .padding(horizontal = 16.dp, vertical = 8.dp)
             )
         }
+    }
+
+    @Composable
+    fun rememberImageFromBase64(base64: String): ImageBitmap {
+        val bitmap = remember(base64) {
+            try {
+                val imageBytes = Base64.decode(base64, Base64.DEFAULT)
+                BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                    ?.asImageBitmap()
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        return bitmap ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
     }
 }

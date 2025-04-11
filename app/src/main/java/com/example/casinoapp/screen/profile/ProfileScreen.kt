@@ -34,6 +34,9 @@ fun ProfileScreen(
 ) {
     val currentUser = remoteViewModel.loggedInUser.collectAsState().value
     val profile by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
+    val profileImage by remember { derivedStateOf {
+        currentUser?.profilePicture?.takeIf { it.isNotEmpty() }
+    } }
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF1A1A1A),
@@ -115,11 +118,25 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 currentUser?.let { user ->
-                    LottieAnimation(
-                        composition = profile,
-                        iterations = LottieConstants.IterateForever,
-                        modifier = Modifier.size(300.dp)
-                    )
+                    Box(
+                        modifier = Modifier.size(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (profileImage != null) {
+                            Image(
+                                bitmap = rememberImageFromBase64(profileImage!!),
+                                contentDescription = "Foto de perfil",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            LottieAnimation(
+                                composition = profile,
+                                iterations = LottieConstants.IterateForever,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
 
                     Text(
                         text = "Hola, ${user.name}!",

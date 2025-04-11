@@ -124,7 +124,13 @@ fun LoginScreen(
                 onClick = {
                     remoteViewModel.login(username, password) { resultMessage ->
                         if (resultMessage == "Login exitoso") {
-
+                            remoteViewModel.loggedInUser.value?.userId?.let { userId ->
+                                remoteViewModel.getProfilePicture(userId) { imageBase64 ->
+                                    onNavigateToHome()
+                                }
+                            } ?: run {
+                                onNavigateToHome()
+                            }
                         } else {
                             Log.e("LoginScreen", "Error en login: $resultMessage")
                         }
