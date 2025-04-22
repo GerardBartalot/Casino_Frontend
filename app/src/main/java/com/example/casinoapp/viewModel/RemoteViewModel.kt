@@ -12,6 +12,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -63,6 +64,20 @@ interface RemoteUserInterface {
 
     @GET("/sessionGame/{userId}/sessions")
     suspend fun getUserGameHistory(@Path("userId") userId: Int): List<GameSession>
+
+    @PUT("/user/{id}/profile-picture")
+    suspend fun updateProfilePicture(
+        @Path("id") id: Int,
+        @Body profilePicture: String
+    ): Response<Map<String, String>>
+
+    @GET("/user/{id}/profile-picture")
+    suspend fun getProfilePicture(
+        @Path("id") id: Int
+    ): Response<String>
+
+    @DELETE("/user/{id}/profile-picture")
+    suspend fun deleteProfilePicture(@Path("id") id: Int): Response<Map<String, String>>
 }
 
 class RemoteViewModel : ViewModel() {
@@ -232,6 +247,84 @@ class RemoteViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("RemoteViewModel", "Error al obtener el historial de partidas: ${e.message}", e)
                 onResult("Error al cargar el historial de partidas")
+            }
+        }
+    }
+
+
+
+    fun updateProfilePicture(userId: Int, imageBase64: String, onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val connection = Retrofit.Builder()
+                    .baseUrl("http://10.0.2.2:8080")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                val endpoint = connection.create(RemoteUserInterface::class.java)
+                val response = endpoint.updateProfilePicture(userId, imageBase64)
+
+                if(response.isSuccessful) {
+                    response.body()?.let {
+                        // Actualizar el usuario local con la nueva imagen
+                        _loggedInUser.value?.let { currentUser ->
+                            _loggedInUser.value = currentUser.copy(profilePicture = imageBase64)
+                        }
+                        onResult("Foto de perfil actualizada con éxito")
+                    }
+                } else {
+                    onResult("Error al actualizar la foto: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                onResult("Error de conexión: ${e.message}")
+            }
+        }
+    }
+
+    fun getProfilePicture(userId: Int, onResult: (String) -> Unit = {}) {
+        viewModelScope.launch {
+            try {
+                val connection = Retrofit.Builder()
+                    .baseUrl("http://10.0.2.2:8080")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                val endpoint = connection.create(RemoteUserInterface::class.java)
+                val response = endpoint.getProfilePicture(userId)
+
+                if(response.isSuccessful) {
+                    response.body()?.let { base64Image ->
+                        _loggedInUser.value?.let { currentUser ->
+                            _loggedInUser.value = currentUser.copy(profilePicture = base64Image)
+                        }
+                        onResult(base64Image)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("RemoteViewModel", "Error al obtener foto de perfil", e)
+            }
+        }
+    }
+
+
+    fun deleteProfilePicture(userId: Int, onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                val connection = Retrofit.Builder()
+                    .baseUrl("http://10.0.2.2:8080")
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build()
+                val endpoint = connection.create(RemoteUserInterface::class.java)
+                val response = endpoint.deleteProfilePicture(userId)
+
+                if(response.isSuccessful) {
+                    _loggedInUser.value?.let { currentUser ->
+                        _loggedInUser.value = currentUser.copy(profilePicture = null)
+                    }
+                    onResult("Foto de perfil eliminada")
+                } else {
+                    onResult("Error al eliminar: ${response.errorBody()?.string()}")
+                }
+            } catch (e: Exception) {
+                onResult("Error de conexión: ${e.message}")
             }
         }
     }

@@ -1,8 +1,15 @@
 package com.example.casinoapp.screen.profile
 
+import android.R.attr.bitmap
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.provider.MediaStore
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -37,8 +45,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -51,6 +62,21 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.casinoapp.R
 import com.example.casinoapp.viewModel.RemoteViewModel
+import android.util.Base64
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+import com.example.casinoapp.ui.components.ImagePickerDialog
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.airbnb.lottie.compose.LottieConstants
+import java.io.ByteArrayOutputStream
+import java.io.IOException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,12 +89,32 @@ fun EditProfileScreen(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var updateMessage by remember { mutableStateOf<String?>(null) }
+    var selectedImage by remember { mutableStateOf<String?>(null) }
+    var showImagePicker by remember { mutableStateOf(false) }
+    val profileAnimation by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
+    val context = LocalContext.current
+    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri ->
+            uri?.let {
+                val bitmap = uriToBitmap(context, it)
+                bitmap?.let { bmp ->
+                    selectedImage = bitmapToBase64(bmp)
+                }
+            }
+        }
+    )
 
     LaunchedEffect(currentUser) {
         currentUser?.let {
             name = it.name
             username = it.username
             password = ""
+            selectedImage = it.profilePicture
+            if (it.profilePicture.isNullOrEmpty()) {
+                remoteViewModel.getProfilePicture(it.userId) {}
+            }
         }
     }
 
@@ -151,6 +197,31 @@ fun EditProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+
+                Box(
+                    modifier = Modifier
+                        .size(200.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF333333))
+                        .clickable { showImagePicker = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (!selectedImage.isNullOrEmpty()) {
+                        Image(
+                            bitmap = rememberImageFromBase64(selectedImage!!),
+                            contentDescription = "Foto de perfil",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        LottieAnimation(
+                            composition = profileAnimation,
+                            iterations = LottieConstants.IterateForever,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 TextField(
@@ -232,12 +303,23 @@ fun EditProfileScreen(
                             val updatedUser = user.copy(
                                 name = name,
                                 username = username,
-                                password = if (password.isNotEmpty()) password else user.password
+                                password = if (password.isNotEmpty()) password else user.password,
+                                profilePicture = selectedImage ?: user.profilePicture
                             )
+
                             remoteViewModel.updateUser(updatedUser) { message ->
-                                updateMessage = message
-                                if (message.contains("éxito")) {
-                                    navController.popBackStack()
+                                if (selectedImage != null && selectedImage != user.profilePicture) {
+                                    remoteViewModel.updateProfilePicture(user.userId, selectedImage!!) {
+                                        updateMessage = "$message\nFoto de perfil actualizada"
+                                        if (message.contains("éxito")) {
+                                            navController.popBackStack()
+                                        }
+                                    }
+                                } else {
+                                    updateMessage = message
+                                    if (message.contains("éxito")) {
+                                        navController.popBackStack()
+                                    }
                                 }
                             }
                         }
@@ -260,6 +342,24 @@ fun EditProfileScreen(
                     )
                 }
             }
+            if (showImagePicker) {
+                ImagePickerDialog(
+                    hasCurrentImage = !selectedImage.isNullOrEmpty(),
+                    onDismiss = { showImagePicker = false },
+                    onSelectFromGallery = {
+                        galleryLauncher.launch("image/*")
+                    },
+                    onDeleteCurrent = {
+                        currentUser?.userId?.let { userId ->
+                            remoteViewModel.deleteProfilePicture(userId) { message ->
+                                selectedImage = null
+                                updateMessage = message
+                                showImagePicker = false
+                            }
+                        }
+                    }
+                )
+            }
         }
     }
 }
@@ -271,4 +371,34 @@ fun EditProfileScreenPreview() {
         navController = rememberNavController(),
         remoteViewModel = RemoteViewModel(),
     )
+}
+@Composable
+fun rememberImageFromBase64(base64: String): ImageBitmap {
+    val bitmap = remember(base64) {
+        try {
+            val imageBytes = Base64.decode(base64, Base64.DEFAULT) // Corregido aquí
+            BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                ?.asImageBitmap()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    return bitmap ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
+}
+
+private fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
+    return try {
+        MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+    } catch (e: IOException) {
+        e.printStackTrace()
+        null
+    }
+}
+
+private fun bitmapToBase64(bitmap: Bitmap): String {
+    val byteArrayOutputStream = ByteArrayOutputStream()
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 70, byteArrayOutputStream)
+    val byteArray = byteArrayOutputStream.toByteArray()
+    return Base64.encodeToString(byteArray, Base64.DEFAULT)
 }
