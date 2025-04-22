@@ -506,7 +506,7 @@ fun ScratchCardScreen(
                                 titleColor = Color(0xFFFFA000),
                                 items = listOf(
                                     "Si encertas la casella: Aposta x5",
-                                    "Si no aciertas la casilla: Sense premi"
+                                    "Si no encertes la casella: Sense premi"
                                 )
                             ),
                             GameRuleSection(
