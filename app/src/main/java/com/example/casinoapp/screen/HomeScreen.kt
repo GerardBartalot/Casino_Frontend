@@ -116,15 +116,16 @@ fun HomeScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp, top = 30.dp),
+                .padding(start = 16.dp, end = 20.dp, bottom = 16.dp, top =45.dp),
             horizontalArrangement = Arrangement.End
         ) {
             Box(
                 modifier = Modifier
-                    .size(80.dp)
+                    .size(60.dp)
                     .clip(CircleShape)
                     .clickable { onNavigateToProfile() }
-            ) {
+            )
+            {
                 if (profileImage != null) {
                     Image(
                         bitmap = rememberImageFromBase64(profileImage!!),

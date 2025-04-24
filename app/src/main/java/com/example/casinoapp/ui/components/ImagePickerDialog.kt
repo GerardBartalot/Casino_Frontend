@@ -3,18 +3,14 @@ package com.example.casinoapp.ui.components
 import android.R
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import java.io.ByteArrayOutputStream
@@ -29,7 +25,12 @@ fun ImagePickerDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Foto de perfil") },
+        containerColor = Color.Black,
+        title = {
+            Text(
+                text = "Foto de perfil",
+                color = Color.White)
+                },
         text = {
             Column {
                 Button(
@@ -45,12 +46,12 @@ fun ImagePickerDialog(
 
                 if (hasCurrentImage) {
                     Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedButton(
+                    Button(
                         onClick = onDeleteCurrent,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors(
+                        colors = ButtonDefaults.buttonColors(
                             contentColor = Color(0xFFFF5252),
-                            containerColor = Color.Transparent
+                            containerColor = Color(0xFFFFD700)
                         )
                     ) {
                         Icon(
@@ -71,13 +72,12 @@ fun ImagePickerDialog(
                     contentColor = Color(0xFFFFD700)
                 )
             ) {
-                Text("Cancelar")
+                Text("Aplicar")
             }
         }
     )
 }
 
-// Mantén las funciones de utilidad al final
 private fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
     return try {
         MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
