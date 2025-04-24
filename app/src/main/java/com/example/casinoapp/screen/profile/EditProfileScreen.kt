@@ -75,6 +75,7 @@ import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.LottieConstants
+import com.example.casinoapp.screen.loaders.LoadingScreenEditProfile
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 
@@ -93,6 +94,7 @@ fun EditProfileScreen(
     var showImagePicker by remember { mutableStateOf(false) }
     val profileAnimation by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
     val context = LocalContext.current
+    var showLoading by remember { mutableStateOf(false) }
     var bitmap by remember { mutableStateOf<Bitmap?>(null) }
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
@@ -299,6 +301,7 @@ fun EditProfileScreen(
 
                 Button(
                     onClick = {
+                        showLoading = true
                         currentUser?.let { user ->
                             val updatedUser = user.copy(
                                 name = name,
@@ -310,15 +313,15 @@ fun EditProfileScreen(
                             remoteViewModel.updateUser(updatedUser) { message ->
                                 if (selectedImage != null && selectedImage != user.profilePicture) {
                                     remoteViewModel.updateProfilePicture(user.userId, selectedImage!!) {
-                                        updateMessage = "$message\nFoto de perfil actualizada"
-                                        if (message.contains("éxito")) {
-                                            navController.popBackStack()
+                                        showLoading = false
+                                        navController.navigate("profileScreen") {
+                                            popUpTo("editProfileScreen") { inclusive = true }
                                         }
                                     }
                                 } else {
-                                    updateMessage = message
-                                    if (message.contains("éxito")) {
-                                        navController.popBackStack()
+                                    showLoading = false
+                                    navController.navigate("profileScreen") {
+                                        popUpTo("editProfileScreen") { inclusive = true }
                                     }
                                 }
                             }
@@ -341,6 +344,11 @@ fun EditProfileScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
+            if (showLoading) {
+                LoadingScreenEditProfile(
+                    modifier = Modifier.matchParentSize()
+                )
             }
             if (showImagePicker) {
                 ImagePickerDialog(

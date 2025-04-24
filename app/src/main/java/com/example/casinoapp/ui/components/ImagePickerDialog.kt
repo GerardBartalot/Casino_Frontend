@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
+import android.widget.Button
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -29,7 +30,12 @@ fun ImagePickerDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Foto de perfil") },
+        containerColor = Color.Black,
+        title = {
+            Text(
+                text = "Foto de perfil",
+                color = Color.White)
+                },
         text = {
             Column {
                 Button(
@@ -45,12 +51,12 @@ fun ImagePickerDialog(
 
                 if (hasCurrentImage) {
                     Spacer(modifier = Modifier.height(16.dp))
-                    OutlinedButton(
+                    Button(
                         onClick = onDeleteCurrent,
                         modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.outlinedButtonColors(
+                        colors = ButtonDefaults.buttonColors(
                             contentColor = Color(0xFFFF5252),
-                            containerColor = Color.Transparent
+                            containerColor = Color(0xFFFFD700)
                         )
                     ) {
                         Icon(
@@ -71,13 +77,12 @@ fun ImagePickerDialog(
                     contentColor = Color(0xFFFFD700)
                 )
             ) {
-                Text("Cancelar")
+                Text("Aplicar")
             }
         }
     )
 }
 
-// Mantén las funciones de utilidad al final
 private fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
     return try {
         MediaStore.Images.Media.getBitmap(context.contentResolver, uri)

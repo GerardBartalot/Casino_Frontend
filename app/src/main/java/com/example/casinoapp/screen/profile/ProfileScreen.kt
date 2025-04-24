@@ -3,6 +3,7 @@ package com.example.casinoapp.screen.profile
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -126,7 +128,9 @@ fun ProfileScreen(
                             Image(
                                 bitmap = rememberImageFromBase64(profileImage!!),
                                 contentDescription = "Foto de perfil",
-                                modifier = Modifier.fillMaxSize(),
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape),
                                 contentScale = ContentScale.Crop
                             )
                         } else {
@@ -137,6 +141,7 @@ fun ProfileScreen(
                             )
                         }
                     }
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Text(
                         text = "Hola, ${user.name}!",
