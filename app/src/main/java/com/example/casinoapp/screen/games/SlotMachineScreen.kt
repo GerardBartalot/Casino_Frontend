@@ -761,12 +761,10 @@ fun SlotMachineScreen(
 
             if (currentRoundXp > 0) {
                 totalExperienceEarned += currentRoundXp
-                experienceEarned += currentRoundXp
-            }
-
-            localExperience += totalExperienceEarned
-            userId.toIntOrNull()?.let { id ->
-                gameViewModel.updateUserExperience(id, localExperience)
+                localExperience += totalExperienceEarned
+                userId.toIntOrNull()?.let { id ->
+                    gameViewModel.updateUserExperience(id, localExperience)
+                }
             }
 
             if (winMultiplier > 0) {
