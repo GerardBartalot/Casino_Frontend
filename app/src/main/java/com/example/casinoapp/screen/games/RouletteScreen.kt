@@ -24,17 +24,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -53,14 +51,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -90,8 +91,13 @@ fun RouletteScreen(
 {
     var isSpinning by remember { mutableStateOf(false) }
     var resultNumber by remember { mutableStateOf<Int?>(null) }
+    var selectedZero by remember { mutableStateOf(false) }
     val rotationAngle = remember { Animatable(0f) }
-    var betAmount by remember { mutableStateOf(TextFieldValue("")) }
+
+    var selectedChipValue by remember { mutableIntStateOf(0) }
+    var totalBet by remember { mutableIntStateOf(0) }
+    var roundBet by remember { mutableIntStateOf(0) }
+
     var selectedNumbers by remember { mutableStateOf<List<Int>>(emptyList()) }
     var selectedColor by remember { mutableStateOf<String?>(null) }
     var selectedEven by remember { mutableStateOf<Boolean?>(null) }
@@ -147,26 +153,33 @@ fun RouletteScreen(
         val evenNumbers = (1..36).filter { it % 2 == 0 }
         val oddNumbers = (1..36).filter { it % 2 != 0 }
 
+        val selectionCount = selectedNumbers.size +
+                (if (selectedZero) 1 else 0) +
+                (if (selectedColor != null) 1 else 0) +
+                (if (selectedEven != null) 1 else 0)
+
+        val betPerSelection = if (selectionCount > 0) betValue / selectionCount else 0
+
         val win = when (lastBetType) {
-            "Número" -> selectedNumbers.contains(number)
+            "Número" -> selectedNumbers.contains(number) || (selectedZero && number == 0)
             "Color" -> (selectedColor == "Rojo" && number in redNumbers) || (selectedColor == "Negro" && number in blackNumbers)
             "ParImpar" -> (selectedEven == true && number in evenNumbers) || (selectedEven == false && number in oddNumbers)
             else -> false
         }
 
         return when (lastBetType) {
-            "Número" -> if (win) betValue * 35 else 0
-            "Color", "ParImpar" -> if (win) betValue * 2 else 0
+            "Número" -> if (win) betPerSelection * 35 else 0
+            "Color", "ParImpar" -> if (win) betPerSelection * 2 else 0
             else -> 0
         }
     }
 
     fun spinRoulette() {
         if (!isSpinning) {
-            var betValue = betAmount.text.toIntOrNull() ?: 0
+            val betValue = totalBet
 
             if (betValue <= 0 || !gameViewModel.placeBet(betValue) ||
-                (selectedNumbers.isEmpty() && selectedColor == null && selectedEven == null)) {
+                (selectedNumbers.isEmpty() && selectedColor == null && selectedEven == null && !selectedZero)) {
                 resultMessage = "Apuesta inválida."
                 return
             }
@@ -177,7 +190,6 @@ fun RouletteScreen(
             resultMessage = ""
 
             coroutineScope.launch {
-
                 rotationAngle.snapTo(0f)
 
                 val fullRotations = 6
@@ -190,13 +202,11 @@ fun RouletteScreen(
                     animationSpec = tween(durationMillis = 4000, easing = LinearOutSlowInEasing)
                 )
 
-                // Calcular el número ganador
                 val finalPosition = (rotationAngle.value % 360) / degreesPerNumber
                 val winningNumber = (finalPosition.toInt() + 1) % 37
                 resultNumber = winningNumber
                 isSpinning = false
 
-                // Resto de la lógica de cálculo de premios...
                 val winnings = checkBetResult(winningNumber, betValue)
                 val hasWon = winnings > 0
                 experienceToAdd = if (hasWon) 50 else 0
@@ -215,7 +225,7 @@ fun RouletteScreen(
                     isWin.value = true
                     "¡Ganaste! Número: $winningNumber (+$winnings)"
                 } else {
-                    "¡Perdiste! Número: $winningNumber (-$betValue)"
+                    "¡Perdiste! Número: $winningNumber (-$totalBet)"
                 }
 
                 if (winnings > 0) {
@@ -228,8 +238,8 @@ fun RouletteScreen(
 
     val isBetValid = remember {
         derivedStateOf {
-            betAmount.text.toIntOrNull()?.let { it > 0 } == true &&
-                    (selectedNumbers.isNotEmpty() || selectedColor != null || selectedEven != null)
+            totalBet > 0 &&
+                    (selectedNumbers.isNotEmpty() || selectedColor != null || selectedEven != null || selectedZero)
         }
     }
 
@@ -309,14 +319,14 @@ fun RouletteScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Button(
-                            onClick = {showRulesDialog = true},
+                            onClick = { showRulesDialog = true },
                             modifier = Modifier
                                 .size(30.dp)
                                 .border(2.dp, Color.Green, CircleShape)
                                 .clip(CircleShape),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color.Black,
-                                contentColor = Color.White,
+                                contentColor = Color.White
                             ),
                             contentPadding = PaddingValues(0.dp)
                         ) {
@@ -331,7 +341,7 @@ fun RouletteScreen(
             )
         }
     ) { innerPadding ->
-        Box (
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(gradientBrush)
@@ -350,7 +360,6 @@ fun RouletteScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-
                 Spacer(modifier = Modifier.height(100.dp))
 
                 Row(
@@ -359,7 +368,6 @@ fun RouletteScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Fondoscoins
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f)
@@ -367,7 +375,6 @@ fun RouletteScreen(
                         PixelDisplay(vmFondocoins)
                     }
 
-                    // Barra de experiencia
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f)
@@ -381,101 +388,196 @@ fun RouletteScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(20.dp))
-
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(250.dp)) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(200.dp)
+                ) {
                     Image(
                         painter = painterResource(id = R.drawable.roulette),
                         contentDescription = "Ruleta",
                         modifier = Modifier
-                            .size(250.dp)
+                            .size(200.dp)
                             .graphicsLayer(rotationZ = rotationAngle.value % 360)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(if (resultNumber == null) 20.dp else 20.dp))
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(30.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                        .padding(vertical = 20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    OutlinedCard(
-                        modifier = Modifier
-                            .width(180.dp)
-                            .height(50.dp),
+                    Column(
+                        modifier = Modifier.weight(3f),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color.White)
-                                .padding(10.dp),
-                            contentAlignment = Alignment.Center
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(
-                                contentAlignment = Alignment.Center,
-                                modifier = Modifier.fillMaxWidth()
+                            Row(
+                                modifier = Modifier.weight(3f),
+                                horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                BasicTextField(
-                                    value = betAmount.text,
-                                    onValueChange = { betAmount = TextFieldValue(it) },
-                                    textStyle = TextStyle(
-                                        fontSize = 18.sp,
-                                        color = Color.Black,
-                                        textAlign = TextAlign.Center
-                                    ),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                    modifier = Modifier.fillMaxWidth(),
-                                    decorationBox = { innerTextField ->
-                                        Box(
-                                            contentAlignment = Alignment.Center,
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            if (betAmount.text.isEmpty()) {
-                                                Text(
-                                                    text = "Apuesta",
-                                                    fontSize = 18.sp,
-                                                    color = Color.Gray,
-                                                    textAlign = TextAlign.Center
-                                                )
-                                            }
-                                            innerTextField()
+                                Chip(
+                                    value = 1,
+                                    selected = selectedChipValue == 1,
+                                    onSelected = { selectedChipValue = 1 },
+                                    drawableId = R.drawable.fichas_poker1,
+                                    modifier = Modifier.size(50.dp)
+                                )
+                                Chip(
+                                    value = 5,
+                                    selected = selectedChipValue == 5,
+                                    onSelected = { selectedChipValue = 5 },
+                                    drawableId = R.drawable.fichas_poker5,
+                                    modifier = Modifier.size(50.dp)
+                                )
+                                Chip(
+                                    value = 25,
+                                    selected = selectedChipValue == 25,
+                                    onSelected = { selectedChipValue = 25 },
+                                    drawableId = R.drawable.fichas_poker25,
+                                    modifier = Modifier.size(50.dp)
+                                )
+                                Chip(
+                                    value = 50,
+                                    selected = selectedChipValue == 50,
+                                    onSelected = { selectedChipValue = 50 },
+                                    drawableId = R.drawable.fichas_poker50,
+                                    modifier = Modifier.size(50.dp)
+                                )
+                            }
+
+                            Button(
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFFFD700),
+                                    disabledContainerColor = Color(0x80FFD700)
+                                ),
+                                shape = RoundedCornerShape(4.dp),
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(start = 8.dp)
+                                    .height(50.dp),
+                                contentPadding = PaddingValues(0.dp),
+                                onClick = {
+                                    lastBetType = when {
+                                        selectedNumbers.isNotEmpty() -> "Número"
+                                        selectedColor != null -> "Color"
+                                        selectedEven != null -> "ParImpar"
+                                        selectedZero -> "Número"
+                                        else -> null
+                                    }
+                                    spinRoulette()
+                                },
+                                enabled = isBetValid.value && !isSpinning
+                            ) {
+                                Text("Girar", fontSize = 16.sp)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(15.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Button(
+                                onClick = {
+                                    if (selectedChipValue > 0) {
+                                        val selectionCount = selectedNumbers.size +
+                                                (if (selectedZero) 1 else 0) +
+                                                (if (selectedColor != null) 1 else 0) +
+                                                (if (selectedEven != null) 1 else 0)
+                                        if (selectionCount > 0) {
+                                            roundBet = selectedChipValue * selectionCount
+                                            totalBet += roundBet
+                                            roundBet = 0
+                                            selectedChipValue = 0
                                         }
                                     }
+                                },
+                                shape = RoundedCornerShape(4.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF4CAF50)
+                                ),
+                                contentPadding = PaddingValues(0.dp),
+                                modifier = Modifier
+                                    .width(100.dp)
+                                    .height(40.dp)
+                            ) {
+                                Text("Añadir", fontSize = 16.sp)
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .height(40.dp)
+                                    .width(120.dp)
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(Color(0xFF4A148C), Color(0xFF1A237E)),
+                                            startX = 0f,
+                                            endX = Float.POSITIVE_INFINITY
+                                        ),
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        color = Color.White,
+                                        shape = RoundedCornerShape(4.dp)
+                                    )
+                                    .shadow(
+                                        elevation = 8.dp,
+                                        shape = RoundedCornerShape(4.dp),
+                                        clip = false,
+                                        ambientColor = Color.Yellow,
+                                        spotColor = Color.Yellow
+                                    )
+                                    .background(Color(0xFF222222), RoundedCornerShape(8.dp))
+                                    .padding(horizontal = 8.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    "$totalBet",
+                                    style = TextStyle(
+                                        fontSize = 20.sp,
+                                        fontFamily = FontFamily.SansSerif,
+                                        color = Color.White,
+                                        shadow = Shadow(
+                                            color = Color.Yellow,
+                                            offset = Offset(2f, 2f),
+                                            blurRadius = 8f
+                                        )
+                                    )
                                 )
+                            }
+
+                            Button(
+                                onClick = {
+                                    totalBet = 0
+                                    roundBet = 0
+                                    selectedChipValue = 0
+                                    selectedNumbers = emptyList()
+                                    selectedColor = null
+                                    selectedEven = null
+                                    selectedZero = false
+                                },
+                                shape = RoundedCornerShape(4.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFF44336)
+                                ),
+                                contentPadding = PaddingValues(0.dp),
+                                modifier = Modifier
+                                    .width(100.dp)
+                                    .height(40.dp)
+                            ) {
+                                Text("Reiniciar", fontSize = 16.sp)
                             }
                         }
                     }
-
-                    Spacer(modifier = Modifier.width(4.dp))
-
-                    Button(
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFFD700),
-                            disabledContainerColor = Color(0x80FFD700)
-                        ),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier
-                            .fillMaxWidth(0.8f)
-                            .height(50.dp),
-                        onClick = {
-                            lastBetType = when {
-                                selectedNumbers.isNotEmpty() -> "Número"
-                                selectedColor != null -> "Color"
-                                selectedEven != null -> "ParImpar"
-                                else -> null
-                            }
-                            spinRoulette()
-                        },
-                        enabled = isBetValid.value && !isSpinning
-                    ) {
-                        Text("GIRA!")
-                    }
                 }
-
-                Spacer(modifier = Modifier.height(5.dp))
 
                 resultNumber?.let { number ->
                     val redNumbers =
@@ -484,7 +586,6 @@ fun RouletteScreen(
                         listOf(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
                     val evenNumbers = (1..36).filter { it % 2 == 0 }
                     val oddNumbers = (1..36).filter { it % 2 != 0 }
-                    val selectedZero by remember { mutableStateOf(false) }
 
                     val colorWinner = when {
                         number in redNumbers -> "Rojo"
@@ -519,10 +620,6 @@ fun RouletteScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(if (resultNumber == null) 18.dp else 40.dp))
-
-                var selectedZero by remember { mutableStateOf(false) }
-
                 BetSelection(
                     selectedNumbers = selectedNumbers,
                     onNumberSelected = { numbers ->
@@ -547,7 +644,8 @@ fun RouletteScreen(
                         selectedColor = null
                         selectedZero = false
                         selectedEven = if (selectedEven == even) null else even
-                    }
+                    },
+                    selectedChipValue = selectedChipValue
                 )
 
                 if (showRulesDialog) {
@@ -585,7 +683,7 @@ fun RouletteScreen(
                                 titleColor = Color(0xFFBA68C8),
                                 items = listOf(
                                     "Las ganancias se acumulan hasta hacer CASH OUT",
-                                    "La experiencia se suma automáticamente",
+                                    "La experiencia se suma automáticamente"
                                 )
                             ),
                             GameRuleSection(
@@ -613,43 +711,125 @@ fun BetSelection(
     selectedZero: Boolean,
     onColorSelected: (String?, Boolean) -> Unit,
     selectedEven: Boolean?,
-    onEvenOddSelected: (Boolean) -> Unit
+    onEvenOddSelected: (Boolean) -> Unit,
+    selectedChipValue: Int
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        NumberTable(selectedNumbers, onNumberSelected)
-        Spacer(modifier = Modifier.height(10.dp))
-        ColorTable(selectedColor, selectedZero, onColorSelected)
-        Spacer(modifier = Modifier.height(10.dp))
-        EvenOddTable(selectedEven, onEvenOddSelected)
-    }
+    NumberTable(
+        selectedNumbers = selectedNumbers,
+        onNumberSelected = onNumberSelected,
+        selectedZero = selectedZero,
+        selectedColor = selectedColor,
+        onColorSelected = onColorSelected,
+        selectedEven = selectedEven,
+        onEvenOddSelected = onEvenOddSelected,
+        selectedChipValue = selectedChipValue
+    )
 }
 
 @Composable
-fun NumberTable(selectedNumbers: List<Int>, onNumberSelected: (List<Int>) -> Unit) {
-    val tableNumbers = listOf(
-        listOf(3, 6, 9, 12, 15, 18, 21, 24, 27),
-        listOf(30, 33, 36, 2, 5, 8, 11, 14, 17),
-        listOf(20, 23, 26, 29, 32, 35, 1, 4, 7),
-        listOf(10, 13, 16, 19, 22, 25, 28, 31, 34)
-    )
+fun NumberTable(
+    selectedNumbers: List<Int>,
+    onNumberSelected: (List<Int>) -> Unit,
+    selectedZero: Boolean,
+    selectedColor: String?,
+    onColorSelected: (String?, Boolean) -> Unit,
+    selectedEven: Boolean?,
+    onEvenOddSelected: (Boolean) -> Unit,
+    selectedChipValue: Int
+) {
+    val redNumbers = listOf(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
 
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        tableNumbers.forEach { row ->
-            Row {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color(0xFF2E2E2E))
+            .padding(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(if (selectedEven == true) Color(0xFFFFD700) else Color(0xFF555555))
+                    .clickable(enabled = selectedChipValue > 0) { onEvenOddSelected(true) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Par",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Box(
+                modifier = Modifier
+                    .width(50.dp)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(if (selectedZero) Color(0xFFFFD700) else Color(0xFF2196F3))
+                    .clickable(enabled = selectedChipValue > 0) { onColorSelected(null, !selectedZero) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "0",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(if (selectedEven == false) Color(0xFFFFD700) else Color(0xFF555555))
+                    .clickable(enabled = selectedChipValue > 0) { onEvenOddSelected(false) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Impar",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        val numbers = (1..36).toList()
+        val rows = numbers.chunked(9)
+
+        rows.forEach { row ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
                 row.forEach { number ->
                     Box(
                         modifier = Modifier
-                            .size(40.dp)
+                            .size(35.dp)
+                            .clip(RoundedCornerShape(4.dp))
                             .background(
                                 when {
-                                    selectedNumbers.contains(number) -> Color.Yellow
-                                    number == 0 -> Color.Green
-                                    listOf(3, 9, 12, 18, 21, 27, 30, 36, 5, 14, 23, 32, 1,
-                                        7, 16, 19, 25, 34).contains(number) -> Color.Red
+                                    selectedNumbers.contains(number) -> Color(0xFFFFD700)
+                                    number in redNumbers -> Color.Red
                                     else -> Color.Black
                                 }
                             )
-                            .clickable {
+                            .clickable(enabled = selectedChipValue > 0) {
                                 val newSelection = if (selectedNumbers.contains(number)) {
                                     selectedNumbers - number
                                 } else {
@@ -662,87 +842,88 @@ fun NumberTable(selectedNumbers: List<Int>, onNumberSelected: (List<Int>) -> Uni
                         Text(
                             text = number.toString(),
                             color = Color.White,
+                            fontSize = 14.sp,
                             textAlign = TextAlign.Center
                         )
                     }
                 }
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+        }
+
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(if (selectedColor == "Rojo") Color(0xFFFFD700) else Color.Red)
+                    .clickable(enabled = selectedChipValue > 0) {
+                        onColorSelected(if (selectedColor == "Rojo") null else "Rojo", false)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Rojo",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(if (selectedColor == "Negro") Color(0xFFFFD700) else Color.Black)
+                    .clickable(enabled = selectedChipValue > 0) {
+                        onColorSelected(if (selectedColor == "Negro") null else "Negro", false)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Negro",
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
 }
 
 @Composable
-fun ColorTable(selectedColor: String?, selectedZero: Boolean, onColorSelected: (String?, Boolean) -> Unit) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(47.dp)
-                .background(if (selectedColor == "Rojo") Color.Yellow else Color.Red)
-                .clickable { onColorSelected(if (selectedColor == "Rojo") null else "Rojo", false) },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = "Color Vermell", color = Color.White)
-        }
-
-        Spacer(modifier = Modifier.width(3.dp))
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(47.dp)
-                .background(if (selectedZero) Color.Yellow else Color.Green)
-                .clickable { onColorSelected(null, !selectedZero) },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = "0", color = Color.White)
-        }
-
-        Spacer(modifier = Modifier.width(3.dp))
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(47.dp)
-                .background(if (selectedColor == "Negro") Color.Yellow else Color.Black)
-                .clickable { onColorSelected(if (selectedColor == "Negro") null else "Negro", false) },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = "Color Negre", color = Color.White)
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-    }
-}
-
-@Composable
-fun EvenOddTable(selectedEven: Boolean?, onEvenOddSelected: (Boolean) -> Unit) {
-
-    Row(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(47.dp)
-                .background(if (selectedEven == true) Color.Yellow else Color(0xFF555555))
-                .clickable { onEvenOddSelected(true) },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = "Número Parell", color = Color.White)
-        }
-
-        Spacer(modifier = Modifier.width(2.5.dp))
-
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(47.dp)
-                .background(if (selectedEven == false) Color.Yellow else Color(0xFF555555))
-                .clickable { onEvenOddSelected(false) },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(text = "Número Imparell", color = Color.White)
-        }
+fun Chip(
+    value: Int,
+    selected: Boolean,
+    onSelected: (Int) -> Unit,
+    drawableId: Int,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(40.dp)
+            .clip(CircleShape)
+            .clickable { onSelected(value) }
+            .border(
+                width = if (selected) 3.dp else 0.dp,
+                color = if (selected) Color.Yellow else Color.Transparent,
+                shape = CircleShape
+            )
+    ) {
+        Image(
+            painter = painterResource(id = drawableId),
+            contentDescription = "Ficha de $value",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Fit
+        )
     }
 }
 

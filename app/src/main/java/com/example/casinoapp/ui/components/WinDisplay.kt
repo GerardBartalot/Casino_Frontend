@@ -52,7 +52,6 @@ fun WinDisplay(
         animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
         label = "experienceAnimation"
     )
-
     Box(
         modifier = modifier
             .background(
@@ -142,4 +141,5 @@ fun WinDisplay(
             }
         }
     }
+
 }
