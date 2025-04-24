@@ -81,7 +81,7 @@ fun AnimatedNumberDisplay(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "¡HAS GANADO!",
+            text = "¡HAS GUANYAT!",
             style = TextStyle(
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
