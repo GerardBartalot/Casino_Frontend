@@ -192,7 +192,8 @@ fun HomeScreen(
                 text = "",
                 imageRes = R.drawable.slot_machine_img,
                 enabled = true,
-                onClick = onNavigateToSlotMachine
+                onClick = onNavigateToSlotMachine,
+                isBeta = false
             )
 
             Spacer(modifier = Modifier.height(35.dp))
@@ -202,7 +203,8 @@ fun HomeScreen(
                 imageRes = R.drawable.scratch_cards_img,
                 enabled = currentLevel >= 2,
                 onClick = onNavigateToScratchCard,
-                requiredLevel = 2
+                requiredLevel = 2,
+                isBeta = false
             )
 
             Spacer(modifier = Modifier.height(35.dp))
@@ -212,7 +214,8 @@ fun HomeScreen(
                 imageRes = R.drawable.roulette_img,
                 enabled = currentLevel >= 5,
                 onClick = onNavigateToRoulette,
-                requiredLevel = 5
+                requiredLevel = 5,
+                isBeta = true
             )
 
             Spacer(modifier = Modifier.height(35.dp))
@@ -222,7 +225,8 @@ fun HomeScreen(
                 imageRes = R.drawable.black_jack_img,
                 enabled = currentLevel >= 10,
                 onClick = onNavigateToScratchCard,
-                requiredLevel = 10
+                requiredLevel = 10,
+                isBeta = false
             )
         }
     }
@@ -234,8 +238,9 @@ fun GameButtonWithBackground(
     imageRes: Int,
     enabled: Boolean,
     onClick: () -> Unit,
-    requiredLevel: Int = 0
-){
+    requiredLevel: Int = 0,
+    isBeta: Boolean = false
+) {
     Box(
         modifier = Modifier
             .fillMaxWidth(0.9f)
@@ -244,7 +249,7 @@ fun GameButtonWithBackground(
             .clickable(enabled = enabled) { onClick() }
             .border(
                 width = 2.dp,
-                color = Color.White,
+                color = if (isBeta) Color(0xFFFFA500) else Color.White,
                 shape = RoundedCornerShape(10.dp)
             ),
         contentAlignment = Alignment.Center
@@ -254,15 +259,17 @@ fun GameButtonWithBackground(
             contentDescription = null,
             modifier = Modifier
                 .fillMaxSize()
-                .alpha(if (enabled) 1f else 0.4f),
+                .alpha(if (enabled && !isBeta) 1f else 0.4f),
             contentScale = ContentScale.Crop
         )
 
-        if (!enabled) {
+        if (!enabled || isBeta) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f))
+                    .background(
+                        if (isBeta) Color(0x80FFA500).copy(alpha = 0.3f) else Color.Black.copy(alpha = 0.4f)
+                    )
             )
 
             Column(
@@ -272,17 +279,27 @@ fun GameButtonWithBackground(
                     .fillMaxSize()
                     .padding(8.dp)
             ) {
-                Image(
-                    painter = painterResource(id = R.drawable.lock),
-                    contentDescription = "Locked",
-                    modifier = Modifier.size(40.dp)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Nivell $requiredLevel requerit",
-                    color = Color.White,
-                    fontSize = 14.sp
-                )
+                if (!enabled) {
+                    Image(
+                        painter = painterResource(id = R.drawable.lock),
+                        contentDescription = "Locked",
+                        modifier = Modifier.size(40.dp)
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Nivell $requiredLevel requerit",
+                        color = Color.White,
+                        fontSize = 14.sp
+                    )
+                }
+                if (isBeta) {
+                    Text(
+                        text = "Fase beta",
+                        color = Color.White,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
             }
         }
 
