@@ -153,7 +153,7 @@ fun LoginScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(25.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             when (loginMessageUiState) {
                 is LoginMessageUiState.Success -> {
