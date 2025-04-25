@@ -64,6 +64,12 @@ fun LoadingHistoryScreen(
             navController.navigate("historyScreen") {
                 popUpTo("loadingToHistoryScreen") { inclusive = true }
             }
+        } else {
+            delay(1500)
+            navController.navigate("historyScreen") {
+                popUpTo("loadingToHistoryScreen") { inclusive = true }
+            }
         }
+
     }
 }

@@ -154,20 +154,36 @@ fun HistoryScreen(
                     .padding(bottom = 50.dp)
             ) {
                 Spacer(modifier = Modifier.height(30.dp))
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.Transparent)
-                        .padding(horizontal = 8.dp)
-                ) {
-                    val last10Games = gameHistory.takeLast(10).reversed()
-
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(vertical = 8.dp)
+                if (gameHistory.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
                     ) {
-                        items(last10Games) { gameSession ->
-                            CompactGameSessionItem(gameSession)
+                        Text(
+                            text = "No tens partides registrades",
+                            color = Color.White.copy(alpha = 0.7f),
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.Transparent)
+                            .padding(horizontal = 8.dp)
+                    ) {
+                        val last10Games = gameHistory.takeLast(10).reversed()
+
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(vertical = 8.dp)
+                        ) {
+                            items(last10Games) { gameSession ->
+                                CompactGameSessionItem(gameSession)
+                            }
                         }
                     }
                 }
