@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.casinoapp.R
 import com.example.casinoapp.entity.User
+import com.example.casinoapp.viewModel.RegisterMessageUiState
 import com.example.casinoapp.viewModel.RemoteViewModel
 import java.text.SimpleDateFormat
 import java.util.*
@@ -34,6 +35,15 @@ fun RegisterScreen(
 ) {
     val context = LocalContext.current
     val registerMessageUiState by remoteViewModel.registerMessageUiState.collectAsState()
+
+    LaunchedEffect(registerMessageUiState) {
+        when (registerMessageUiState) {
+            is RegisterMessageUiState.Success -> {
+                onNavigateToHome()
+            }
+            else -> {}
+        }
+    }
 
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -144,7 +154,8 @@ fun RegisterScreen(
                         calendar.get(Calendar.DAY_OF_MONTH)
                     ).show()
                 },
-                modifier = Modifier.fillMaxWidth(0.8f)
+                modifier = Modifier.fillMaxWidth(0.8f),
+                shape = RoundedCornerShape(10.dp)
             ) {
                 Text(birthDateText)
             }
@@ -210,7 +221,7 @@ fun RegisterScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(25.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Row(
                 horizontalArrangement = Arrangement.Center,
