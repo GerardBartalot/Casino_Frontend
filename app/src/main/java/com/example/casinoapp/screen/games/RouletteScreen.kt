@@ -176,6 +176,12 @@ fun RouletteScreen(
         if (!isSpinning) {
             val betValue = totalBet
 
+            // Verificar si el usuario tiene fondos suficientes
+            if (localFondocoins < betValue) {
+                resultMessage = "No tienes suficientes fondocoins."
+                return
+            }
+
             if (betValue <= 0 || !gameViewModel.placeBet(betValue) ||
                 (selectedNumbers.isEmpty() && selectedColor == null && selectedEven == null && !selectedZero)) {
                 resultMessage = "Apuesta inválida."
@@ -450,28 +456,32 @@ fun RouletteScreen(
                                         selected = selectedChipValue == 1,
                                         onSelected = { selectedChipValue = 1 },
                                         drawableId = R.drawable.fichas_poker1,
-                                        modifier = Modifier.size(50.dp)
+                                        modifier = Modifier.size(50.dp),
+                                        availableFunds = localFondocoins
                                     )
                                     Chip(
                                         value = 5,
                                         selected = selectedChipValue == 5,
                                         onSelected = { selectedChipValue = 5 },
                                         drawableId = R.drawable.fichas_poker5,
-                                        modifier = Modifier.size(50.dp)
+                                        modifier = Modifier.size(50.dp),
+                                        availableFunds = localFondocoins
                                     )
                                     Chip(
                                         value = 25,
                                         selected = selectedChipValue == 25,
                                         onSelected = { selectedChipValue = 25 },
                                         drawableId = R.drawable.fichas_poker25,
-                                        modifier = Modifier.size(50.dp)
+                                        modifier = Modifier.size(50.dp),
+                                        availableFunds = localFondocoins
                                     )
                                     Chip(
                                         value = 50,
                                         selected = selectedChipValue == 50,
                                         onSelected = { selectedChipValue = 50 },
                                         drawableId = R.drawable.fichas_poker50,
-                                        modifier = Modifier.size(50.dp)
+                                        modifier = Modifier.size(50.dp),
+                                        availableFunds = localFondocoins
                                     )
                                 }
 
@@ -660,7 +670,8 @@ fun RouletteScreen(
                         selectedEven = if (selectedEven == even) null else even
                     },
                     selectedChipValue = selectedChipValue,
-                    selectedNumbers = selectedNumbers
+                    selectedNumbers = selectedNumbers,
+                    localFondocoins = localFondocoins
                 )
 
                 if (showRulesDialog) {
@@ -719,7 +730,8 @@ fun BetSelection(
     selectedEven: Boolean?,
     onEvenOddSelected: (Boolean) -> Unit,
     selectedChipValue: Int,
-    selectedNumbers: List<Int>
+    selectedNumbers: List<Int>,
+    localFondocoins: Int
 ) {
     NumberTable(
         selectedNumbersCurrentBet = selectedNumbersCurrentBet,
@@ -730,7 +742,8 @@ fun BetSelection(
         selectedEven = selectedEven,
         onEvenOddSelected = onEvenOddSelected,
         selectedChipValue = selectedChipValue,
-        selectedNumbers = selectedNumbers
+        selectedNumbers = selectedNumbers,
+        localFondocoins = localFondocoins
     )
 }
 
@@ -744,7 +757,8 @@ fun NumberTable(
     onColorSelected: (String?, Boolean) -> Unit,
     selectedEven: Boolean?,
     onEvenOddSelected: (Boolean) -> Unit,
-    selectedChipValue: Int
+    selectedChipValue: Int,
+    localFondocoins: Int
 ) {
     val redNumbers = listOf(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
 
@@ -838,7 +852,7 @@ fun NumberTable(
                                     else -> Color.Black
                                 }
                             )
-                            .clickable(enabled = selectedChipValue > 0) {
+                            .clickable(enabled = selectedChipValue > 0 && localFondocoins >= selectedChipValue) {
                                 val newSelection = if (selectedNumbersCurrentBet.contains(number)) {
                                     selectedNumbersCurrentBet - number
                                 } else {
@@ -914,8 +928,10 @@ fun Chip(
     selected: Boolean,
     onSelected: (Int) -> Unit,
     drawableId: Int,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    availableFunds: Int
 ) {
+    val enabled = value <= availableFunds
     Box(
         modifier = modifier
             .size(40.dp)
@@ -926,6 +942,7 @@ fun Chip(
                 color = if (selected) Color.Yellow else Color.Transparent,
                 shape = CircleShape
             )
+            .alpha(if (enabled) 1f else 0.5f)
     ) {
         Image(
             painter = painterResource(id = drawableId),
