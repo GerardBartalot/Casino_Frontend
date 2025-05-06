@@ -58,6 +58,7 @@ fun HomeScreen(
     onNavigateToSlotMachine: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToScratchCard: () -> Unit,
+    onNavigateToBlackJack: () -> Unit,
 ) {
 
     val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
@@ -215,7 +216,7 @@ fun HomeScreen(
                 enabled = currentLevel >= 5,
                 onClick = onNavigateToRoulette,
                 requiredLevel = 5,
-                isBeta = true
+                isBeta = false
             )
 
             Spacer(modifier = Modifier.height(35.dp))
@@ -224,9 +225,9 @@ fun HomeScreen(
                 text = "",
                 imageRes = R.drawable.black_jack_img,
                 enabled = currentLevel >= 10,
-                onClick = onNavigateToScratchCard,
+                onClick = onNavigateToBlackJack,
                 requiredLevel = 10,
-                isBeta = false
+                isBeta = true
             )
         }
     }

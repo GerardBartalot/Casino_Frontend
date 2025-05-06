@@ -88,18 +88,19 @@ fun RouletteScreen(
     navController: NavController,
     gameViewModel: GameViewModel,
     remoteViewModel: RemoteViewModel,
-)
-{
+) {
     var isSpinning by remember { mutableStateOf(false) }
     var resultNumber by remember { mutableStateOf<Int?>(null) }
     var selectedZero by remember { mutableStateOf(false) }
     val rotationAngle = remember { Animatable(0f) }
     var selectedChipValue by remember { mutableIntStateOf(0) }
     var totalBet by remember { mutableIntStateOf(0) }
-    var selectedNumbers by remember { mutableStateOf<List<Int>>(emptyList()) }
     var selectedNumbersCurrentBet by remember { mutableStateOf<List<Int>>(emptyList()) }
+    var betsOnNumbers by remember { mutableStateOf<Map<Int, Int>>(emptyMap()) }
     var selectedColor by remember { mutableStateOf<String?>(null) }
+    var colorBetAmount by remember { mutableIntStateOf(0) }
     var selectedEven by remember { mutableStateOf<Boolean?>(null) }
+    var evenOddBetAmount by remember { mutableIntStateOf(0) }
     var lastBetType by remember { mutableStateOf<String?>(null) }
     var resultMessage by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
@@ -146,37 +147,24 @@ fun RouletteScreen(
         localExperience = vmExperience
     }
 
-    fun checkBetResult(number: Int, betValue: Int): Int {
+    fun checkBetResult(number: Int): Int {
         var totalWinnings = 0
 
-        // Comprobar apuestas a números (incluyendo el 0)
-        if (selectedNumbers.contains(number) || (selectedZero && number == 0)) {
-            // Calcular cuánto se apostó específicamente a este número
-            val betOnThisNumber = if (selectedNumbers.contains(number)) {
-                // Si el número está en selectedNumbers, calcular su parte
-                val totalNumberSelections = selectedNumbers.size + (if (selectedZero) 1 else 0)
-                betValue / totalNumberSelections
-            } else {
-                // Si es el 0, calcular su parte
-                betValue / (selectedNumbers.size + 1)
-            }
+        if (betsOnNumbers.containsKey(number)) {
+            val betOnThisNumber = betsOnNumbers[number] ?: 0
             totalWinnings += betOnThisNumber * 35
         }
 
-        // Comprobar apuestas a color (se divide la apuesta total)
-        if (selectedColor != null && (
-                    (selectedColor == "Rojo" && number in redNumbers) ||
-                            (selectedColor == "Negro" && number in blackNumbers))
+        if (selectedColor != null && colorBetAmount > 0 && (
+                    (selectedColor == "Rojo" && number in redNumbers) || (selectedColor == "Negro" && number in blackNumbers))
         ) {
-            totalWinnings += betValue * 2
+            totalWinnings += colorBetAmount * 1
         }
 
-        // Comprobar apuestas a par/impar (se divide la apuesta total)
-        if (selectedEven != null && number != 0 && (
-                    (selectedEven == true && number % 2 == 0) ||
-                            (selectedEven == false && number % 2 != 0))
+        if (selectedEven != null && number != 0 && evenOddBetAmount > 0 && (
+                    (selectedEven == true && number % 2 == 0) || (selectedEven == false && number % 2 != 0))
         ) {
-            totalWinnings += betValue * 2
+            totalWinnings += evenOddBetAmount * 1
         }
 
         return totalWinnings
@@ -184,15 +172,13 @@ fun RouletteScreen(
 
     fun spinRoulette() {
         if (!isSpinning) {
-            val betValue = totalBet
-
-            if (localFondocoins < betValue) {
+            if (localFondocoins < totalBet) {
                 resultMessage = "No tienes suficientes fondocoins."
                 return
             }
 
-            if (betValue <= 0 || !gameViewModel.placeBet(betValue) ||
-                (selectedNumbers.isEmpty() && selectedColor == null && selectedEven == null && !selectedZero)) {
+            if (totalBet <= 0 || !gameViewModel.placeBet(totalBet) ||
+                (betsOnNumbers.isEmpty() && selectedColor == null && selectedEven == null)) {
                 resultMessage = "Apuesta inválida."
                 return
             }
@@ -220,12 +206,12 @@ fun RouletteScreen(
                 resultNumber = winningNumber
                 isSpinning = false
 
-                val winnings = checkBetResult(winningNumber, betValue)
+                val winnings = checkBetResult(winningNumber)
                 val hasWon = winnings > 0
                 experienceToAdd = if (hasWon) 500 else 0
 
                 roundsPlayed++
-                fondocoinsSpent += betValue
+                fondocoinsSpent += totalBet
 
                 if (hasWon) {
                     localFondocoins += winnings
@@ -234,9 +220,13 @@ fun RouletteScreen(
                     experienceEarned += experienceToAdd
                 }
 
-                // Generar el mensaje de resultado detallado
-                val redNumbers = listOf(1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
-                val blackNumbers = listOf(2, 4, 6, 8, 10, 11, 13, 15, 17, 20, 22, 24, 26, 28, 29, 31, 33, 35)
+                localExperience += experienceToAdd
+                experienceEarned += experienceToAdd
+
+                userId.toIntOrNull()?.let { id ->
+                    gameViewModel.updateUserFondoCoins(id, localFondocoins)
+                    gameViewModel.updateUserExperience(id, localExperience)
+                }
 
                 val colorResult = when {
                     winningNumber in redNumbers -> "Rojo"
@@ -256,20 +246,19 @@ fun RouletteScreen(
                             "Guanys: +${winnings} fondocoins (+500 XP)"
                 } else {
                     "¡Has perdut! Número: $winningNumber ($colorResult, $evenOddResult)\n" +
-                            "Pèrdues: -${betValue} fondocoins"
+                            "Pèrdues: -${totalBet} fondocoins"
                 }
 
-                // Esperar para mostrar el mensaje y luego reiniciar
                 delay(3000)
 
-                // Reiniciar todos los valores de apuesta
                 totalBet = 0
                 selectedChipValue = 0
-                selectedNumbers = emptyList()
                 selectedNumbersCurrentBet = emptyList()
+                betsOnNumbers = emptyMap()
                 selectedColor = null
+                colorBetAmount = 0
                 selectedEven = null
-                selectedZero = false
+                evenOddBetAmount = 0
                 resultNumber = null
                 resultMessage = ""
                 isWin.value = false
@@ -279,7 +268,7 @@ fun RouletteScreen(
 
     val isBetValid = remember {
         derivedStateOf {
-            totalBet > 0 && (selectedNumbers.isNotEmpty() || selectedColor != null || selectedEven != null || selectedZero)
+            totalBet > 0 && (betsOnNumbers.isNotEmpty() || selectedColor != null || selectedEven != null)
         }
     }
 
@@ -326,10 +315,6 @@ fun RouletteScreen(
                                     popUpTo("slotMachineScreen") { inclusive = true }
                                 }
 
-                                userId.toIntOrNull()?.let { id ->
-                                    gameViewModel.updateUserFondoCoins(id, localFondocoins)
-                                    gameViewModel.updateUserExperience(id, localExperience)
-                                }
                                 if (roundsPlayed > 0) {
                                     saveGameSession()
                                 }
@@ -507,10 +492,9 @@ fun RouletteScreen(
                                     contentPadding = PaddingValues(0.dp),
                                     onClick = {
                                         lastBetType = when {
-                                            selectedNumbers.isNotEmpty() -> "Número"
+                                            betsOnNumbers.isNotEmpty() -> "Número"
                                             selectedColor != null -> "Color"
                                             selectedEven != null -> "ParImpar"
-                                            selectedZero -> "Número"
                                             else -> null
                                         }
                                         spinRoulette()
@@ -531,17 +515,24 @@ fun RouletteScreen(
                                 Button(
                                     onClick = {
                                         if (selectedChipValue > 0) {
-                                            // Solo sumar la apuesta si hay selecciones
                                             if (selectedNumbersCurrentBet.isNotEmpty() || selectedZero ||
                                                 selectedColor != null || selectedEven != null) {
-
-                                                // Para apuestas a números, sumar la ficha por cada número seleccionado
-                                                if (selectedNumbersCurrentBet.isNotEmpty() || selectedZero) {
-                                                    totalBet += selectedChipValue * (selectedNumbersCurrentBet.size + (if (selectedZero) 1 else 0))
-                                                    selectedNumbers = selectedNumbers.plus(selectedNumbersCurrentBet)
+                                                if (selectedNumbersCurrentBet.isNotEmpty()) {
+                                                    selectedNumbersCurrentBet.forEach { number ->
+                                                        betsOnNumbers = betsOnNumbers + (number to (betsOnNumbers[number] ?: 0) + selectedChipValue)
+                                                        totalBet += selectedChipValue
+                                                    }
                                                 }
-                                                // Para apuestas a color o par/impar, sumar la ficha completa
-                                                else {
+                                                if (selectedZero) {
+                                                    betsOnNumbers = betsOnNumbers + (0 to (betsOnNumbers[0] ?: 0) + selectedChipValue)
+                                                    totalBet += selectedChipValue
+                                                }
+                                                if (selectedColor != null) {
+                                                    colorBetAmount += selectedChipValue
+                                                    totalBet += selectedChipValue
+                                                }
+                                                if (selectedEven != null) {
+                                                    evenOddBetAmount += selectedChipValue
                                                     totalBet += selectedChipValue
                                                 }
 
@@ -612,11 +603,12 @@ fun RouletteScreen(
                                     onClick = {
                                         totalBet = 0
                                         selectedChipValue = 0
-                                        selectedNumbers = emptyList()
                                         selectedNumbersCurrentBet = emptyList()
+                                        betsOnNumbers = emptyMap()
                                         selectedColor = null
+                                        colorBetAmount = 0
                                         selectedEven = null
-                                        selectedZero = false
+                                        evenOddBetAmount = 0
                                     },
                                     shape = RoundedCornerShape(4.dp),
                                     colors = ButtonDefaults.buttonColors(
@@ -635,7 +627,7 @@ fun RouletteScreen(
                 }
 
                 if (resultNumber != null) {
-                    val winAmount = checkBetResult(resultNumber!!, totalBet)
+                    val winAmount = checkBetResult(resultNumber!!)
                     val isWin = winAmount > 0
 
                     AnimatedNumberDisplayRoulette(
@@ -680,7 +672,7 @@ fun RouletteScreen(
                         selectedEven = if (selectedEven == even) null else even
                     },
                     selectedChipValue = selectedChipValue,
-                    selectedNumbers = selectedNumbers,
+                    selectedNumbers = betsOnNumbers.keys.toList(),
                     localFondocoins = localFondocoins
                 )
 
@@ -692,17 +684,20 @@ fun RouletteScreen(
                                 title = "💎 APOSTES",
                                 titleColor = Color(0xFF1E88E5),
                                 items = listOf(
-                                    "Fiches de 1, 15, 25 y 50 fondocoins",
-                                    "El premi es calcula sobre la base de la teva aposta",
-                                    "Pots seleccionar una o varies caselles per ficha apostada",
-                                    "Es poden fer diverses apostes amb diferents fiches"
+                                    "Fiches de 1, 5, 25 y 50 fondocoins",
+                                    "Pots apostar a números individuals, colors (vermell/negre) o parell/imparell",
+                                    "El 0 és verd i no compta com a parell ni imparell",
+                                    "Es poden fer múltiples apostes en un mateix gir"
                                 )
                             ),
                             GameRuleSection(
                                 title = "💰 PREMIS",
                                 titleColor = Color(0xFFFFA000),
                                 items = listOf(
-                                    "Si encertes la casella, guanyaràs el valor apostat en la mateixa",
+                                    "Número individual (inclòs 0): 35:1 (aposta × 35)",
+                                    "Vermell o Negre: 1:1 (aposta × 2)",
+                                    "Parell o Senar: 1:1 (aposta × 2)",
+                                    "Si surt 0, perds totes les apostes a color/parell/imparell"
                                 )
                             ),
                             GameRuleSection(
@@ -717,9 +712,11 @@ fun RouletteScreen(
                                 title = "ℹ️ IMPORTANT",
                                 titleColor = Color(0xFFBA68C8),
                                 items = listOf(
-                                    "Abans de seleccionar una casella, has de seleccionar una ficha"
+                                    "Selecciona una ficha abans de fer una aposta",
+                                    "El 0 no té color i no compta com a parell ni imparell",
+                                    "Les apostes es confirmen al clicar 'Afegir'"
                                 )
-                            ),
+                            )
                         ),
                         showDialog = showRulesDialog,
                         onDismiss = { showRulesDialog = false }
@@ -883,7 +880,6 @@ fun NumberTable(
             }
             Spacer(modifier = Modifier.height(4.dp))
         }
-
 
         Row(
             modifier = Modifier.fillMaxWidth(),
