@@ -31,7 +31,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -148,35 +147,45 @@ fun RouletteScreen(
     }
 
     fun checkBetResult(number: Int, betValue: Int): Int {
-        val evenNumbers = (1..36).filter { it % 2 == 0 }
-        val oddNumbers = (1..36).filter { it % 2 != 0 }
+        var totalWinnings = 0
 
-        val selectionCount = selectedNumbers.size +
-                (if (selectedZero) 1 else 0) +
-                (if (selectedColor != null) 1 else 0) +
-                (if (selectedEven != null) 1 else 0)
-
-        val betPerSelection = if (selectionCount > 0) betValue / selectionCount else 0
-
-        val win = when (lastBetType) {
-            "Número" -> selectedNumbers.contains(number) || (selectedZero && number == 0)
-            "Color" -> (selectedColor == "Rojo" && number in redNumbers) || (selectedColor == "Negro" && number in blackNumbers)
-            "ParImpar" -> (selectedEven == true && number in evenNumbers) || (selectedEven == false && number in oddNumbers)
-            else -> false
+        // Comprobar apuestas a números (incluyendo el 0)
+        if (selectedNumbers.contains(number) || (selectedZero && number == 0)) {
+            // Calcular cuánto se apostó específicamente a este número
+            val betOnThisNumber = if (selectedNumbers.contains(number)) {
+                // Si el número está en selectedNumbers, calcular su parte
+                val totalNumberSelections = selectedNumbers.size + (if (selectedZero) 1 else 0)
+                betValue / totalNumberSelections
+            } else {
+                // Si es el 0, calcular su parte
+                betValue / (selectedNumbers.size + 1)
+            }
+            totalWinnings += betOnThisNumber * 35
         }
 
-        return when (lastBetType) {
-            "Número" -> if (win) betPerSelection * 35 else 0
-            "Color", "ParImpar" -> if (win) betPerSelection * 2 else 0
-            else -> 0
+        // Comprobar apuestas a color (se divide la apuesta total)
+        if (selectedColor != null && (
+                    (selectedColor == "Rojo" && number in redNumbers) ||
+                            (selectedColor == "Negro" && number in blackNumbers))
+        ) {
+            totalWinnings += betValue * 2
         }
+
+        // Comprobar apuestas a par/impar (se divide la apuesta total)
+        if (selectedEven != null && number != 0 && (
+                    (selectedEven == true && number % 2 == 0) ||
+                            (selectedEven == false && number % 2 != 0))
+        ) {
+            totalWinnings += betValue * 2
+        }
+
+        return totalWinnings
     }
 
     fun spinRoulette() {
         if (!isSpinning) {
             val betValue = totalBet
 
-            // Verificar si el usuario tiene fondos suficientes
             if (localFondocoins < betValue) {
                 resultMessage = "No tienes suficientes fondocoins."
                 return
@@ -522,14 +531,20 @@ fun RouletteScreen(
                                 Button(
                                     onClick = {
                                         if (selectedChipValue > 0) {
-                                            val selectionCount = selectedNumbersCurrentBet.size +
-                                                    (if (selectedZero) 1 else 0) +
-                                                    (if (selectedColor != null) 1 else 0) +
-                                                    (if (selectedEven != null) 1 else 0)
-                                            if (selectionCount > 0) {
-                                                totalBet += selectedChipValue * selectionCount
-                                                selectedNumbers =
-                                                    selectedNumbers.plus(selectedNumbersCurrentBet)
+                                            // Solo sumar la apuesta si hay selecciones
+                                            if (selectedNumbersCurrentBet.isNotEmpty() || selectedZero ||
+                                                selectedColor != null || selectedEven != null) {
+
+                                                // Para apuestas a números, sumar la ficha por cada número seleccionado
+                                                if (selectedNumbersCurrentBet.isNotEmpty() || selectedZero) {
+                                                    totalBet += selectedChipValue * (selectedNumbersCurrentBet.size + (if (selectedZero) 1 else 0))
+                                                    selectedNumbers = selectedNumbers.plus(selectedNumbersCurrentBet)
+                                                }
+                                                // Para apuestas a color o par/impar, sumar la ficha completa
+                                                else {
+                                                    totalBet += selectedChipValue
+                                                }
+
                                                 selectedNumbersCurrentBet = emptyList()
                                                 selectedChipValue = 0
                                             }
@@ -647,11 +662,6 @@ fun RouletteScreen(
                 BetSelection(
                     selectedNumbersCurrentBet = selectedNumbersCurrentBet,
                     onNumberSelected = { numbers ->
-                        if (numbers.isNotEmpty()) {
-                            selectedColor = null
-                            selectedEven = null
-                            selectedZero = false
-                        }
                         selectedNumbersCurrentBet = numbers
                     },
                     selectedColor = selectedColor,
@@ -799,7 +809,7 @@ fun NumberTable(
                     .height(40.dp)
                     .clip(RoundedCornerShape(4.dp))
                     .background(if (selectedZero) Color(0xFFFFD700) else Color(0xFF2196F3))
-                    .clickable(enabled = selectedChipValue > 0) { onColorSelected(null, !selectedZero) },
+                    .clickable(enabled = selectedChipValue > 0) { onColorSelected(selectedColor, !selectedZero) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
