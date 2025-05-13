@@ -120,16 +120,24 @@ fun RouletteScreen(
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
-            val gameSession = GameSession(
-                user = user,
-                gameName = "Roulette",
-                rounds = roundsPlayed,
-                experienceEarned = experienceEarned,
-                fondocoinsSpent = fondocoinsSpent,
-                fondocoinsEarned = fondocoinsEarned
-            )
-            remoteViewModel.saveGameSession(gameSession) { result ->
-                Log.d("RouletteScreen", "Game session save result: $result")
+            val slotMachineGame = gameViewModel.games.value.find {
+                it.gameName.equals("Ruleta", ignoreCase = true)
+            }
+
+            slotMachineGame?.let { game ->
+                val gameSession = GameSession(
+                    user = user,
+                    game = game,
+                    rounds = roundsPlayed,
+                    experienceEarned = experienceEarned,
+                    fondocoinsSpent = fondocoinsSpent,
+                    fondocoinsEarned = fondocoinsEarned
+                )
+                remoteViewModel.saveGameSession(gameSession) { result ->
+                    Log.d("Ruleta", "Game session save result: $result")
+                }
+            } ?: run {
+                Log.e("Ruleta", "No se pudo encontrar el juego 'Ruleta'")
             }
         }
     }

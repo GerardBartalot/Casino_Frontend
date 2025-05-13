@@ -73,6 +73,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.example.casinoapp.screen.loaders.LoadingScreenEditProfile
 import java.io.ByteArrayOutputStream
 import java.io.IOException
+import androidx.core.graphics.createBitmap
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -379,7 +380,7 @@ fun EditProfileScreenPreview() {
 fun rememberImageFromBase64(base64: String): ImageBitmap {
     val bitmap = remember(base64) {
         try {
-            val imageBytes = Base64.decode(base64, Base64.DEFAULT) // Corregido aquí
+            val imageBytes = Base64.decode(base64, Base64.DEFAULT)
             BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
                 ?.asImageBitmap()
         } catch (e: Exception) {
@@ -387,12 +388,14 @@ fun rememberImageFromBase64(base64: String): ImageBitmap {
         }
     }
 
-    return bitmap ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
+    return bitmap ?: createBitmap(1, 1).asImageBitmap()
 }
 
 private fun uriToBitmap(context: Context, uri: Uri): Bitmap? {
     return try {
-        MediaStore.Images.Media.getBitmap(context.contentResolver, uri)
+        context.contentResolver.openInputStream(uri)?.use { inputStream ->
+            BitmapFactory.decodeStream(inputStream)
+        }
     } catch (e: IOException) {
         e.printStackTrace()
         null

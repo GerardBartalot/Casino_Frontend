@@ -2,7 +2,6 @@ package com.example.casinoapp.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,8 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,25 +28,19 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.casinoapp.R
 import com.example.casinoapp.screen.games.PixelDisplay
+import com.example.casinoapp.screen.profile.rememberImageFromBase64
 import com.example.casinoapp.ui.components.ExperienceProgressBar
+import com.example.casinoapp.ui.components.GameButtonsHome
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import com.example.casinoapp.screen.profile.rememberImageFromBase64
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -64,9 +56,12 @@ fun HomeScreen(
     val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
     val vmFondocoins by gameViewModel.fondocoins.collectAsState()
     val vmExperience by gameViewModel.experience.collectAsState()
-    val profileImage by remember { derivedStateOf {
-        loggedInUser?.profilePicture?.takeIf { it.isNotEmpty() }
-    } }
+    val games by gameViewModel.games.collectAsState()
+    val profileImage by remember {
+        derivedStateOf {
+            loggedInUser?.profilePicture?.takeIf { it.isNotEmpty() }
+        }
+    }
     val profile by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
     val currentLevel = (vmExperience / 1000) + 1
 
@@ -84,6 +79,7 @@ fun HomeScreen(
         loggedInUser?.userId?.let {
             gameViewModel.getUserFondoCoins(it.toInt())
             gameViewModel.getUserExperience(it.toInt())
+            gameViewModel.getAllGames()
         }
     }
 
@@ -189,145 +185,37 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            GameButtonWithBackground(
-                text = "",
-                imageRes = R.drawable.slot_machine_img,
-                enabled = true,
-                onClick = onNavigateToSlotMachine,
-                isBeta = false
-            )
+            games.sortedBy { it.levelUnlock }.forEach { game ->
+                val isEnabled = currentLevel >= game.levelUnlock
+                val onClick = when (game.gameName.lowercase(Locale.ROOT)) {
+                    "escurabutxaques" -> onNavigateToSlotMachine
+                    "rasca i guanya" -> onNavigateToScratchCard
+                    "ruleta" -> onNavigateToRoulette
+                    "blackjack" -> onNavigateToBlackJack
+                    else -> { {} }
+                }
 
-            Spacer(modifier = Modifier.height(35.dp))
+                GameButtonsHome(
+                    imageRes = getImageResourceForGame(game.gameName),
+                    enabled = isEnabled,
+                    onClick = onClick,
+                    requiredLevel = game.levelUnlock,
+                    isBeta = game.gameName.equals("Blackjack", ignoreCase = true)
+                )
 
-            GameButtonWithBackground(
-                text = "",
-                imageRes = R.drawable.scratch_cards_img,
-                enabled = currentLevel >= 2,
-                onClick = onNavigateToScratchCard,
-                requiredLevel = 2,
-                isBeta = false
-            )
+                Spacer(modifier = Modifier.height(35.dp))
+            }
 
-            Spacer(modifier = Modifier.height(35.dp))
-
-            GameButtonWithBackground(
-                text = "",
-                imageRes = R.drawable.roulette_img,
-                enabled = currentLevel >= 5,
-                onClick = onNavigateToRoulette,
-                requiredLevel = 5,
-                isBeta = false
-            )
-
-            Spacer(modifier = Modifier.height(35.dp))
-
-            GameButtonWithBackground(
-                text = "",
-                imageRes = R.drawable.black_jack_img,
-                enabled = currentLevel >= 10,
-                onClick = onNavigateToBlackJack,
-                requiredLevel = 10,
-                isBeta = true
-            )
         }
     }
 }
 
-@Composable
-fun GameButtonWithBackground(
-    text: String,
-    imageRes: Int,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    requiredLevel: Int = 0,
-    isBeta: Boolean = false
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .height(105.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(enabled = enabled) { onClick() }
-            .border(
-                width = 2.dp,
-                color = if (isBeta) Color(0xFFFFA500) else Color.White,
-                shape = RoundedCornerShape(10.dp)
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Image(
-            painter = painterResource(id = imageRes),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxSize()
-                .alpha(if (enabled && !isBeta) 1f else 0.4f),
-            contentScale = ContentScale.Crop
-        )
-
-        if (!enabled || isBeta) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        if (isBeta) Color(0x80FFA500).copy(alpha = 0.3f) else Color.Black.copy(alpha = 0.4f)
-                    )
-            )
-
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(8.dp)
-            ) {
-                if (!enabled) {
-                    Image(
-                        painter = painterResource(id = R.drawable.lock),
-                        contentDescription = "Locked",
-                        modifier = Modifier.size(40.dp)
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Nivell $requiredLevel requerit",
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
-                }
-                if (isBeta) {
-                    Text(
-                        text = "Fase beta",
-                        color = Color.White,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
-                }
-            }
-        }
-
-        if (text.isNotEmpty()) {
-            Text(
-                text = text,
-                color = Color.White,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            )
-        }
-    }
-
-    @Composable
-    fun rememberImageFromBase64(base64: String): ImageBitmap {
-        val bitmap = remember(base64) {
-            try {
-                val imageBytes = Base64.decode(base64, Base64.DEFAULT)
-                BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
-                    ?.asImageBitmap()
-            } catch (e: Exception) {
-                null
-            }
-        }
-
-        return bitmap ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888).asImageBitmap()
+fun getImageResourceForGame(gameName: String): Int {
+    return when (gameName.lowercase(Locale.ROOT)) {
+        "escurabutxaques" -> R.drawable.slot_machine_img
+        "rasca i guanya" -> R.drawable.scratch_cards_img
+        "ruleta" -> R.drawable.roulette_img
+        "blackjack" -> R.drawable.black_jack_img
+        else -> R.drawable.slot_machine_img // default image
     }
 }

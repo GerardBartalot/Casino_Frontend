@@ -55,6 +55,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -192,15 +193,31 @@ fun HistoryScreen(
     }
 }
 
+fun getImageResourceForGame(gameName: String): Int {
+    return when (gameName.lowercase(Locale.ROOT)) {
+        "escurabutxaques" -> R.drawable.slot_machine_img
+        "rasca i guanya" -> R.drawable.scratch_cards_img
+        "ruleta" -> R.drawable.roulette_img
+        "blackjack" -> R.drawable.black_jack_img
+        else -> R.drawable.slot_machine_img // default image
+    }
+}
+
 @Composable
 fun CompactGameSessionItem(gameSession: GameSession) {
-    val imageResId = when (gameSession.gameName) {
-        "Slot Machine" -> R.drawable.slot_machine_img
-        "Scratch Card" -> R.drawable.scratch_cards_img
-        "Roulette" -> R.drawable.roulette_img
-        "Black Jack" -> R.drawable.black_jack_img
-        else -> R.drawable.subtle_texture
+    val gameName = gameSession.game.gameName
+
+    val normalizedGameName = when (gameName) {
+        "Escurabutxaques" -> "escurabutxaques"
+        "Rasca i Guanya" -> "rasca i guanya"
+        "Ruleta" -> "ruleta"
+        "Blackjack" -> "blackjack"
+        else -> gameName.lowercase(Locale.ROOT)
     }
+
+    // Usamos la misma función que en HomeScreen
+    val imageResId = getImageResourceForGame(normalizedGameName)
+
     val diagonalCutShape = GenericShape { size, _ ->
         moveTo(0f, 0f)
         lineTo(size.width * 0.85f, 0f)
@@ -225,7 +242,7 @@ fun CompactGameSessionItem(gameSession: GameSession) {
         ) {
             Image(
                 painter = painterResource(id = imageResId),
-                contentDescription = gameSession.gameName,
+                contentDescription = gameName,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxSize()

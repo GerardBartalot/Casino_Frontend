@@ -3,6 +3,8 @@ package com.example.casinoapp.viewModel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.casinoapp.entity.Game
+import com.example.casinoapp.entity.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -18,6 +20,9 @@ interface RemoteGameInterface {
 
     @GET("/user/{id}/fondocoins")
     suspend fun getUserFondoCoins(@Path("id") id: Int): Response<Int>
+
+    @GET("/games/allGames")
+    suspend fun getAllGames(): List<Game>
 
     @PUT("/user/{id}/fondocoins")
     suspend fun updateUserFondoCoins(
@@ -40,6 +45,8 @@ class GameViewModel : ViewModel() {
     val fondocoins: StateFlow<Int> get() = _fondocoins
     private val _experience = MutableStateFlow(0)
     val experience: StateFlow<Int> get() = _experience
+    private val _games = MutableStateFlow<List<Game>>(emptyList())
+    val games: StateFlow<List<Game>> get() = _games
 
     private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl("http://10.0.2.2:8080")
@@ -113,6 +120,18 @@ class GameViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 Log.e("GameViewModel", "Error actualizando experiencia: ${e.message}", e)
+            }
+        }
+    }
+
+    fun getAllGames() {
+        viewModelScope.launch {
+            try {
+                val gamesList = endpoint.getAllGames()
+                _games.value = gamesList
+            } catch (e: Exception) {
+                Log.e("GameViewModel", "Error obteniendo juegos: ${e.message}", e)
+                _games.value = emptyList()
             }
         }
     }
