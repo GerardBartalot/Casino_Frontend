@@ -122,16 +122,24 @@ fun SlotMachineScreen(
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
-            val gameSession = GameSession(
-                user = user,
-                gameName = "Slot Machine",
-                rounds = roundsPlayed,
-                experienceEarned = totalExperienceEarned,
-                fondocoinsSpent = fondocoinsSpent,
-                fondocoinsEarned = fondocoinsEarned
-            )
-            remoteViewModel.saveGameSession(gameSession) { result ->
-                Log.d("SlotMachineScreen", "Game session save result: $result")
+            val slotMachineGame = gameViewModel.games.value.find {
+                it.gameName.equals("Escurabutxaques", ignoreCase = true)
+            }
+
+            slotMachineGame?.let { game ->
+                val gameSession = GameSession(
+                    user = user,
+                    game = game,
+                    rounds = roundsPlayed,
+                    experienceEarned = totalExperienceEarned,
+                    fondocoinsSpent = fondocoinsSpent,
+                    fondocoinsEarned = fondocoinsEarned
+                )
+                remoteViewModel.saveGameSession(gameSession) { result ->
+                    Log.d("Escurabutxaques", "Game session save result: $result")
+                }
+            } ?: run {
+                Log.e("Escurabutxaques", "No se pudo encontrar el juego 'Escurabutxaques'")
             }
         }
     }

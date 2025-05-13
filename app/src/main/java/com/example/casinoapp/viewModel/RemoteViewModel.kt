@@ -227,7 +227,6 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
-    // Nueva función para obtener el historial de sesiones de juego del usuario
     fun getUserGameHistory(userId: Int, onResult: (String) -> Unit) {
         viewModelScope.launch {
             try {

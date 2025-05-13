@@ -117,16 +117,24 @@ fun ScratchCardScreen(
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
-            val gameSession = GameSession(
-                user = user,
-                gameName = "Scratch Card",
-                rounds = roundsPlayed,
-                experienceEarned = experienceEarned,
-                fondocoinsSpent = fondocoinsSpent,
-                fondocoinsEarned = fondocoinsEarned
-            )
-            remoteViewModel.saveGameSession(gameSession) { result ->
-                Log.d("ScratchCardScreen", "Game session save result: $result")
+            val slotMachineGame = gameViewModel.games.value.find {
+                it.gameName.equals("Rasca i Guanya", ignoreCase = true)
+            }
+
+            slotMachineGame?.let { game ->
+                val gameSession = GameSession(
+                    user = user,
+                    game = game,
+                    rounds = roundsPlayed,
+                    experienceEarned = experienceEarned,
+                    fondocoinsSpent = fondocoinsSpent,
+                    fondocoinsEarned = fondocoinsEarned
+                )
+                remoteViewModel.saveGameSession(gameSession) { result ->
+                    Log.d("Rasca i Guanya", "Game session save result: $result")
+                }
+            } ?: run {
+                Log.e("Rasca i Guanya", "No se pudo encontrar el juego 'Rasca i Guanya'")
             }
         }
     }
