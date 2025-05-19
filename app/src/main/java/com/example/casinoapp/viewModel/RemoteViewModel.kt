@@ -40,9 +40,6 @@ sealed interface RegisterMessageUiState {
 
 interface RemoteUserInterface {
 
-    @GET("/user/index")
-    suspend fun getAllUsers(): List<User>
-
     @FormUrlEncoded
     @POST("/user/login")
     suspend fun loginUser(

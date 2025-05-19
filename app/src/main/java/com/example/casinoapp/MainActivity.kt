@@ -97,7 +97,6 @@ class MainActivity : ComponentActivity() {
                             remoteViewModel = remoteViewModel,
                             navController = navController,
                             onNavigateToEditProfileScreen = { navController.navigate("editProfileScreen") },
-                            onNavigateToHistoryScreen = { navController.navigate("historyScreen") },
                             onNavigateToLoadingHistoryScreen = { navController.navigate("loadingHistoryScreen") },
                         )
                     }

@@ -5,7 +5,10 @@ import android.widget.DatePicker
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -25,6 +28,9 @@ import com.example.casinoapp.entity.User
 import com.example.casinoapp.viewModel.RegisterMessageUiState
 import com.example.casinoapp.viewModel.RemoteViewModel
 import java.text.SimpleDateFormat
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Shadow
 import java.util.*
 
 @Composable
@@ -35,6 +41,7 @@ fun RegisterScreen(
 ) {
     val context = LocalContext.current
     val registerMessageUiState by remoteViewModel.registerMessageUiState.collectAsState()
+    val scrollState = rememberScrollState()
 
     LaunchedEffect(registerMessageUiState) {
         when (registerMessageUiState) {
@@ -76,20 +83,34 @@ fun RegisterScreen(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
         ) {
             Spacer(modifier = Modifier.height(50.dp))
             Image(
                 painter = painterResource(id = R.drawable.logo_splash),
                 contentDescription = "App Logo",
-                modifier = Modifier.size(200.dp)
+                modifier = Modifier.size(190.dp)
             )
-            Spacer(modifier = Modifier.height(25.dp))
+            Spacer(modifier = Modifier.height(10.dp))
+
             Text(
                 text = "Registre",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 50.dp),
-                color = Color.White
+                style = androidx.compose.ui.text.TextStyle(
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 2.sp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(Color(0xFFFFD700), Color(0xFFFFA500))
+                    ),
+                    shadow = Shadow(
+                        color = Color(0xFFFFA500),
+                        offset = Offset(3f, 3f),
+                        blurRadius = 3f
+                    )
+                ),
+                modifier = Modifier.padding(bottom = 50.dp)
             )
 
             // Campo nombre
@@ -137,7 +158,7 @@ fun RegisterScreen(
             // Selector de fecha de nacimiento
             val birthDateText = birthDate?.let {
                 SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it.time)
-            } ?: "Selecciona la teva data de naixement"
+            } ?: "Data de naixement"
 
             Button(
                 onClick = {
@@ -154,42 +175,61 @@ fun RegisterScreen(
                         calendar.get(Calendar.DAY_OF_MONTH)
                     ).show()
                 },
-                modifier = Modifier.fillMaxWidth(0.8f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF333333),
+                    contentColor = Color.White
+                ),
+                modifier = Modifier
+                    .fillMaxWidth(0.8f)
+                    .height(60.dp),
                 shape = RoundedCornerShape(10.dp)
             ) {
-                Text(birthDateText)
+                Icon(
+                    imageVector = Icons.Filled.CalendarMonth,
+                    contentDescription = "Seleccionar data de naixement",
+                    tint = Color(0xFFFFD700),
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = birthDateText,
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            if (errorMessage.isNotEmpty()) {
+            if (errorMessage.isNotEmpty() && errorMessage != "Registre exitós") {
                 Text(text = errorMessage, color = Color(0xFFFF5252))
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             Button(
                 onClick = {
-                    val today = Calendar.getInstance()
-                    val eighteenYearsAgo = Calendar.getInstance().apply {
-                        add(Calendar.YEAR, -18)
-                    }
+                    if (name.isBlank() || username.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
+                        errorMessage = "Tots els camps han d'estar omplerts."
+                    } else if (birthDate == null) {
+                        errorMessage = "Has de seleccionar la data de naixement."
+                    } else {
+                        val minimumDate = Calendar.getInstance().apply {
+                            add(Calendar.YEAR, -18)
+                        }
 
-                    when {
-                        birthDate == null -> {
-                            errorMessage = "Has de seleccionar la data de naixement."
-                        }
-                        birthDate!!.after(eighteenYearsAgo) -> {
+                        val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                        val dateString = outputFormat.format(birthDate!!.time)
+
+                        if (birthDate!!.after(minimumDate)) {
                             errorMessage = "Has de tenir 18 anys o més per registrar-te."
-                        }
-                        password != confirmPassword -> {
+                        } else if (password != confirmPassword) {
                             errorMessage = "Les contrasenyes no coincideixen."
-                        }
-                        else -> {
+                        } else {
                             val user = User(
                                 userId = 0,
                                 name = name,
                                 username = username,
                                 password = password,
+                                dateOfBirth = dateString,
                                 fondocoins = 500,
                                 experiencePoints = 0,
                                 profilePicture = null

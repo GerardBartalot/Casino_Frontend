@@ -11,8 +11,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -74,14 +76,25 @@ fun LoginScreen(
             Image(
                 painter = painterResource(id = R.drawable.logo_splash),
                 contentDescription = "App Logo",
-                modifier = Modifier.size(200.dp)
+                modifier = Modifier.size(190.dp)
             )
-            Spacer(modifier = Modifier.height(25.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
                 text = "Inici de sessió",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 50.dp),
-                color = Color.White
+                style = androidx.compose.ui.text.TextStyle(
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 2.sp,
+                    brush = Brush.linearGradient(
+                        colors = listOf(Color(0xFFFFD700), Color(0xFFFFA500))
+                    ),
+                    shadow = Shadow(
+                        color = Color(0xFFFFA500),
+                        offset = Offset(3f, 3f),
+                        blurRadius = 3f
+                    )
+                ),
+                modifier = Modifier.padding(bottom = 50.dp)
             )
             TextField(
                 value = username,
