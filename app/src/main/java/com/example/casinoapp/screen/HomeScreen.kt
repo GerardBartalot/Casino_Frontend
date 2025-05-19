@@ -19,7 +19,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -38,6 +40,7 @@ import com.example.casinoapp.screen.games.PixelDisplay
 import com.example.casinoapp.screen.profile.rememberImageFromBase64
 import com.example.casinoapp.ui.components.ExperienceProgressBar
 import com.example.casinoapp.ui.components.GameButtonsHome
+import com.example.casinoapp.ui.components.LevelUpPopup
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 import java.util.Locale
@@ -74,6 +77,27 @@ fun HomeScreen(
         startY = 0f,
         endY = 1000f
     )
+
+    var showLevelUpPopup by remember { mutableStateOf(false) }
+    var currentPopupLevel by remember { mutableStateOf(0) }
+    var previousLevel by remember { mutableStateOf(1) }
+
+    LaunchedEffect(vmExperience) {
+        val newLevel = (vmExperience / 1000) + 1
+        if (newLevel > previousLevel) {
+            previousLevel = newLevel
+            currentPopupLevel = newLevel
+            showLevelUpPopup = true
+        }
+    }
+
+    if (showLevelUpPopup) {
+        LevelUpPopup(
+            currentLevel = currentPopupLevel,
+            allGames = games,
+            onDismiss = { showLevelUpPopup = false }
+        )
+    }
 
     LaunchedEffect(loggedInUser) {
         loggedInUser?.userId?.let {
