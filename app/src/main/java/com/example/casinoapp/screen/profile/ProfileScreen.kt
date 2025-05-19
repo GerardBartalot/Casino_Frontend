@@ -31,7 +31,6 @@ fun ProfileScreen(
     remoteViewModel: RemoteViewModel,
     navController: NavController,
     onNavigateToEditProfileScreen: () -> Unit,
-    onNavigateToHistoryScreen: () -> Unit,
     onNavigateToLoadingHistoryScreen: () -> Unit,
 ) {
     val currentUser = remoteViewModel.loggedInUser.collectAsState().value
@@ -145,15 +144,23 @@ fun ProfileScreen(
 
                     Text(
                         text = "Hola, ${user.name}!",
-                        fontSize = 18.sp,
+                        fontSize = 22.sp,
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
 
                     Text(
                         text = "@${user.username}",
-                        fontSize = 14.sp,
-                        color = Color.LightGray
+                        fontSize = 18.sp,
+                        color = Color.LightGray,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+
+                    Text(
+                        text = "Data de naixement: ${user.dateOfBirth}",
+                        fontSize = 18.sp,
+                        color = Color.LightGray,
+                        modifier = Modifier.padding(top = 8.dp)
                     )
 
                     Spacer(modifier = Modifier.height(50.dp))
