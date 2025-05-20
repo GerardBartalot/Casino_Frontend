@@ -119,6 +119,7 @@ fun SlotMachineScreen(
     var showAddFundsMessage by remember { mutableStateOf(false) }
     val goldenGradient = listOf(Color(0xFFFFD700),Color(0xFFFFA500))
     var showNotEnoughFundsMessage by remember { mutableStateOf(false) }
+    var addFundsButtonLocked by remember { mutableStateOf(false) }
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
@@ -528,12 +529,11 @@ fun SlotMachineScreen(
                         Row (
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-
                             Box(
                                 modifier = Modifier
                                     .size(120.dp, 80.dp)
                                     .background(
-                                        brush = if (!buttonsLocked) {
+                                        brush = if (!buttonsLocked && !addFundsButtonLocked) {
                                             Brush.verticalGradient(casinoGreenGradient)
                                         } else {
                                             Brush.verticalGradient(listOf(Color(0xFF616161), Color(0xFF424242)))
@@ -542,7 +542,7 @@ fun SlotMachineScreen(
                                     )
                                     .border(
                                         width = 2.dp,
-                                        brush = if (!buttonsLocked) {
+                                        brush = if (!buttonsLocked && !addFundsButtonLocked) {
                                             Brush.verticalGradient(listOf(Color.Yellow, Color.White))
                                         } else {
                                             Brush.verticalGradient(listOf(Color(0xFF9E9E9E), Color(0xFF757575)))
@@ -550,16 +550,22 @@ fun SlotMachineScreen(
                                         shape = RoundedCornerShape(8.dp)
                                     )
                                     .graphicsLayer {
-                                        alpha = if (!buttonsLocked) 1f else 0.5f
+                                        alpha = if (!buttonsLocked && !addFundsButtonLocked) 1f else 0.5f
                                     }
                                     .clickable(
-                                        enabled = !buttonsLocked,
+                                        enabled = !buttonsLocked && !addFundsButtonLocked,
                                         onClick = {
                                             if (localFondocoins >= 100) {
+                                                addFundsButtonLocked = true
                                                 localFondocoins -= 100
                                                 gameBalance += 100
                                                 userId.toIntOrNull()?.let { id ->
                                                     gameViewModel.updateUserFondoCoins(id, localFondocoins)
+                                                }
+
+                                                CoroutineScope(Dispatchers.Main).launch {
+                                                    delay(500)
+                                                    addFundsButtonLocked = false
                                                 }
                                             } else {
                                                 showNotEnoughFundsMessage = true
