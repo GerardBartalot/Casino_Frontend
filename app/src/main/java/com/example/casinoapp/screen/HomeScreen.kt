@@ -19,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -79,8 +80,8 @@ fun HomeScreen(
     )
 
     var showLevelUpPopup by remember { mutableStateOf(false) }
-    var currentPopupLevel by remember { mutableStateOf(0) }
-    var previousLevel by remember { mutableStateOf(1) }
+    var currentPopupLevel by remember { mutableIntStateOf(0) }
+    var previousLevel by remember { mutableIntStateOf(1) }
 
     LaunchedEffect(vmExperience) {
         val newLevel = (vmExperience / 1000) + 1
