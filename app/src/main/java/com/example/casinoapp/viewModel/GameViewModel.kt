@@ -1,6 +1,9 @@
 package com.example.casinoapp.viewModel
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.casinoapp.entity.Game
@@ -115,6 +118,7 @@ class GameViewModel : ViewModel() {
                 val response = endpoint.updateUserExperience(userId, newExperience)
                 if (response.isSuccessful) {
                     _experience.value = newExperience
+                    checkLevelUp(newExperience)
                 } else {
                     Log.e("GameViewModel", "Error actualizando experiencia: ${response.message()}")
                 }
@@ -135,4 +139,28 @@ class GameViewModel : ViewModel() {
             }
         }
     }
+
+    //Logica LevelUpPopUp
+    var showLevelUpPopup by mutableStateOf(false)
+        private set
+
+    var currentPopupLevel by mutableStateOf(0)
+        private set
+
+    private var previousLevel by mutableStateOf(1)
+
+    fun checkLevelUp(currentExperience: Int) {
+        val newLevel = (currentExperience / 1000) + 1
+        if (newLevel > previousLevel) {
+            previousLevel = newLevel
+            currentPopupLevel = newLevel
+            showLevelUpPopup = true
+        }
+    }
+
+    fun dismissLevelUpPopup() {
+        showLevelUpPopup = false
+    }
+
+
 }

@@ -44,6 +44,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,6 +72,7 @@ import com.example.casinoapp.ui.components.AnimatedNumberDisplayRoulette
 import com.example.casinoapp.ui.components.ExperienceProgressBar
 import com.example.casinoapp.ui.components.GameRuleSection
 import com.example.casinoapp.ui.components.GameRulesDialog
+import com.example.casinoapp.ui.components.LevelUpPopup
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -153,6 +155,23 @@ fun RouletteScreen(
     LaunchedEffect(vmFondocoins, vmExperience) {
         localFondocoins = vmFondocoins
         localExperience = vmExperience
+    }
+
+    //Logica LvlUpPopUp
+    val games by gameViewModel.games.collectAsState()
+// En el efecto donde actualizas la experiencia
+    LaunchedEffect(vmExperience) {
+        localExperience = vmExperience
+        gameViewModel.checkLevelUp(vmExperience)
+    }
+
+// Mostrar popup si corresponde
+    if (gameViewModel.showLevelUpPopup) {
+        LevelUpPopup(
+            currentLevel = gameViewModel.currentPopupLevel,
+            allGames = games,
+            onDismiss = { gameViewModel.dismissLevelUpPopup() }
+        )
     }
 
     fun checkBetResult(number: Int): Int {
@@ -965,14 +984,4 @@ fun Chip(
             contentScale = ContentScale.Fit
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RouletteScreenPreview() {
-    RouletteScreen(
-        navController = rememberNavController(),
-        remoteViewModel = RemoteViewModel(),
-        gameViewModel = GameViewModel()
-    )
 }

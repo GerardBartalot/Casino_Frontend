@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -79,27 +80,6 @@ fun HomeScreen(
         endY = 1000f
     )
 
-    var showLevelUpPopup by remember { mutableStateOf(false) }
-    var currentPopupLevel by remember { mutableIntStateOf(0) }
-    var previousLevel by remember { mutableIntStateOf(1) }
-
-    LaunchedEffect(vmExperience) {
-        val newLevel = (vmExperience / 1000) + 1
-        if (newLevel > previousLevel) {
-            previousLevel = newLevel
-            currentPopupLevel = newLevel
-            showLevelUpPopup = true
-        }
-    }
-
-    if (showLevelUpPopup) {
-        LevelUpPopup(
-            currentLevel = currentPopupLevel,
-            allGames = games,
-            onDismiss = { showLevelUpPopup = false }
-        )
-    }
-
     LaunchedEffect(loggedInUser) {
         loggedInUser?.userId?.let {
             gameViewModel.getUserFondoCoins(it.toInt())
@@ -107,6 +87,7 @@ fun HomeScreen(
             gameViewModel.getAllGames()
         }
     }
+
 
     Box(
         modifier = Modifier

@@ -75,6 +75,7 @@ import com.example.casinoapp.ui.components.AnimatedNumberDisplay
 import com.example.casinoapp.ui.components.ExperienceProgressBar
 import com.example.casinoapp.ui.components.GameRuleSection
 import com.example.casinoapp.ui.components.GameRulesDialog
+import com.example.casinoapp.ui.components.LevelUpPopup
 import com.example.casinoapp.ui.components.WinDisplay
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
@@ -156,6 +157,20 @@ fun SlotMachineScreen(
     LaunchedEffect(vmFondocoins, vmExperience) {
         localFondocoins = vmFondocoins
         localExperience = vmExperience
+    }
+
+    val games by gameViewModel.games.collectAsState()
+
+    LaunchedEffect(vmExperience) {
+        gameViewModel.checkLevelUp(vmExperience)
+    }
+
+    if (gameViewModel.showLevelUpPopup) {
+        LevelUpPopup(
+            currentLevel = gameViewModel.currentPopupLevel,
+            allGames = games,
+            onDismiss = { gameViewModel.dismissLevelUpPopup() }
+        )
     }
 
     val casinoGreenGradient = listOf(
@@ -979,14 +994,4 @@ fun BetButton(
             fontWeight = FontWeight.Bold
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SlotMachineScreenPreview() {
-    SlotMachineScreen(
-        navController = rememberNavController(),
-        remoteViewModel = RemoteViewModel(),
-        gameViewModel = GameViewModel()
-    )
 }
