@@ -7,7 +7,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.casinoapp.entity.Game
-import com.example.casinoapp.entity.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,9 +22,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-
 interface RemoteGameInterface {
-
     @GET("/user/{id}/fondocoins")
     suspend fun getUserFondoCoins(@Path("id") id: Int): Response<Int>
 
@@ -50,7 +47,6 @@ interface RemoteGameInterface {
     @GET("/user/{id}/last-daily-reward")
     suspend fun getLastDailyReward(@Path("id") id: Int): Response<Map<String, String>>
 
-
     @PUT("/user/{id}/daily-reward")
     suspend fun claimDailyReward(@Path("id") id: Int): Response<Map<String, String>>
 }
@@ -69,7 +65,7 @@ class GameViewModel : ViewModel() {
     val lastDailyReward: StateFlow<Long?> get() = _lastDailyReward
 
     private val _canClaimDailyReward = MutableStateFlow(false)
-    val canClaimDailyReward = _canClaimDailyReward.asStateFlow()
+    val canClaimDailyReward: StateFlow<Boolean> = _canClaimDailyReward.asStateFlow()
 
     private val retrofit: Retrofit = Retrofit.Builder()
         .baseUrl("http://10.0.2.2:8080")
@@ -93,11 +89,9 @@ class GameViewModel : ViewModel() {
                 val response = endpoint.getUserFondoCoins(userId)
                 if (response.isSuccessful) {
                     _fondocoins.value = response.body() ?: 0
-                } else {
-                    Log.e("GameViewModel", "Error en la respuesta: ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error obteniendo fondocoins: ${e.message}", e)
+                Log.e("GameViewModel", "Error obteniendo fondocoins", e)
             }
         }
     }
@@ -108,11 +102,9 @@ class GameViewModel : ViewModel() {
                 val response = endpoint.updateUserFondoCoins(userId, newFondoCoins)
                 if (response.isSuccessful) {
                     _fondocoins.value = newFondoCoins
-                } else {
-                    Log.e("GameViewModel", "Error actualizando fondocoins: ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error actualizando fondocoins: ${e.message}", e)
+                Log.e("GameViewModel", "Error actualizando fondocoins", e)
             }
         }
     }
@@ -122,12 +114,12 @@ class GameViewModel : ViewModel() {
             try {
                 val response = endpoint.getUserExperience(userId)
                 if (response.isSuccessful) {
-                    _experience.value = response.body() ?: 0
-                } else {
-                    Log.e("GameViewModel", "Error en la respuesta: ${response.message()}")
+                    val newExperience = response.body() ?: 0
+                    _experience.value = newExperience
+                    checkLevelUp(newExperience)
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error obteniendo experiencia: ${e.message}", e)
+                Log.e("GameViewModel", "Error obteniendo experiencia", e)
             }
         }
     }
@@ -139,11 +131,9 @@ class GameViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     _experience.value = newExperience
                     checkLevelUp(newExperience)
-                } else {
-                    Log.e("GameViewModel", "Error actualizando experiencia: ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error actualizando experiencia: ${e.message}", e)
+                Log.e("GameViewModel", "Error actualizando experiencia", e)
             }
         }
     }
@@ -151,10 +141,9 @@ class GameViewModel : ViewModel() {
     fun getAllGames() {
         viewModelScope.launch {
             try {
-                val gamesList = endpoint.getAllGames()
-                _games.value = gamesList
+                _games.value = endpoint.getAllGames()
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error obteniendo juegos: ${e.message}", e)
+                Log.e("GameViewModel", "Error obteniendo juegos", e)
                 _games.value = emptyList()
             }
         }
@@ -163,14 +152,9 @@ class GameViewModel : ViewModel() {
     fun getLastDailyReward(userId: Int) {
         viewModelScope.launch {
             try {
-
                 val response = endpoint.getLastDailyReward(userId)
                 if (response.isSuccessful) {
-                    val responseMap = response.body()
-                    val dateTimeString = responseMap?.get("lastDailyReward")
-
-                    Log.e("ESTACANPOSIBLEREWAED", "Fecha recibida: $dateTimeString")
-
+                    val dateTimeString = response.body()?.get("lastDailyReward")
                     if (dateTimeString.isNullOrBlank() || dateTimeString == "null") {
                         _lastDailyReward.value = null
                         _canClaimDailyReward.value = true
@@ -178,42 +162,34 @@ class GameViewModel : ViewModel() {
                         try {
                             val rawDate = dateTimeString.substringBefore(".")
                             val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
-                            sdf.timeZone = TimeZone.getTimeZone("UTC")
-                            sdf.timeZone = TimeZone.getTimeZone("UTC")
+                            sdf.timeZone = TimeZone.getTimeZone("Europe/Madrid")
 
                             val date = sdf.parse(rawDate)
-                            val adjustedTime = date?.time?.minus(TimeUnit.HOURS.toMillis(2)) ?: 0L
-                            _lastDailyReward.value = adjustedTime
+                            val millis = date?.time ?: 0L
+                            _lastDailyReward.value = millis
 
-                            val elapsedMillis = System.currentTimeMillis() - (date?.time ?: 0L)
+                            val elapsedMillis = System.currentTimeMillis() - millis
                             _canClaimDailyReward.value = elapsedMillis > TimeUnit.HOURS.toMillis(24)
-
                         } catch (e: Exception) {
-                            Log.e("GameViewModel", "Error parseando fecha: $dateTimeString", e)
+                            Log.e("GameViewModel", "Error parseando fecha", e)
                             _canClaimDailyReward.value = true
                         }
                     }
-                } else {
-                    Log.e("GameViewModel", "Respuesta fallida: ${response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error obteniendo último reward", e)
+                Log.e("GameViewModel", "Error obteniendo recompensa", e)
             }
         }
     }
-
 
     fun claimDailyReward(userId: Int) {
         viewModelScope.launch {
             try {
                 val response = endpoint.claimDailyReward(userId)
                 if (response.isSuccessful) {
-                    // Guardamos la fecha/hora actual como último reclamo
                     _lastDailyReward.value = System.currentTimeMillis()
-                    _canClaimDailyReward.value = false // No podrá reclamar hasta pasadas 24h
-
-                    // Actualizar fondos si es necesario
-                    response.body()?.get("newBalance")?.toString()?.toIntOrNull()?.let {
+                    _canClaimDailyReward.value = false
+                    response.body()?.get("newBalance")?.toIntOrNull()?.let {
                         _fondocoins.value = it
                     }
                 }
@@ -223,7 +199,7 @@ class GameViewModel : ViewModel() {
         }
     }
 
-    //Logica LevelUpPopUp
+    // --- Level Up Popup Logic ---
     var showLevelUpPopup by mutableStateOf(false)
         private set
 
@@ -244,6 +220,4 @@ class GameViewModel : ViewModel() {
     fun dismissLevelUpPopup() {
         showLevelUpPopup = false
     }
-
-
 }

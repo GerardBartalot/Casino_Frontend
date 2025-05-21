@@ -3,23 +3,10 @@ package com.example.casinoapp.screen
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -28,19 +15,22 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import com.airbnb.lottie.compose.LottieAnimation
-import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
-import com.airbnb.lottie.compose.rememberLottieComposition
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.airbnb.lottie.compose.*
 import com.example.casinoapp.R
 import com.example.casinoapp.screen.games.PixelDisplay
 import com.example.casinoapp.screen.profile.rememberImageFromBase64
 import com.example.casinoapp.ui.components.ExperienceProgressBar
 import com.example.casinoapp.ui.components.GameButtonsHome
+import com.example.casinoapp.ui.components.LevelUpPopup
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
-import java.util.Locale
+import kotlinx.coroutines.delay
+import java.util.*
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun HomeScreen(
@@ -52,36 +42,64 @@ fun HomeScreen(
     onNavigateToScratchCard: () -> Unit,
     onNavigateToBlackJack: () -> Unit,
 ) {
+    val loggedInUser by remoteViewModel.loggedInUser.collectAsStateWithLifecycle()
+    val fondocoins by gameViewModel.fondocoins.collectAsStateWithLifecycle()
+    val experience by gameViewModel.experience.collectAsStateWithLifecycle()
+    val games by gameViewModel.games.collectAsStateWithLifecycle()
+    val canClaim by gameViewModel.canClaimDailyReward.collectAsStateWithLifecycle()
+    val lastRewardTime by gameViewModel.lastDailyReward.collectAsStateWithLifecycle()
 
-    val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
-    val vmFondocoins by gameViewModel.fondocoins.collectAsState()
-    val vmExperience by gameViewModel.experience.collectAsState()
-    val games by gameViewModel.games.collectAsState()
     val profileImage by remember {
         derivedStateOf {
             loggedInUser?.profilePicture?.takeIf { it.isNotEmpty() }
         }
     }
-    val profile by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
-    val currentLevel = (vmExperience / 1000) + 1
 
-    val gradientBrush = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF1A1A1A),
-            Color(0xFF2D2D2D),
-            Color(0xFF1A1A1A)
-        ),
-        startY = 0f,
-        endY = 1000f
-    )
+    var timeLeftText by remember { mutableStateOf("") }
 
-    LaunchedEffect(loggedInUser) {
+    val profileAnim by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
+    val rewardAnim by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.daily_reward_anim))
+
+    val currentLevel = (experience / 1000) + 1
+
+    // Solicita datos al entrar
+    LaunchedEffect(loggedInUser?.userId) {
         loggedInUser?.userId?.let {
-            gameViewModel.getUserFondoCoins(it.toInt())
-            gameViewModel.getUserExperience(it.toInt())
+            gameViewModel.getUserFondoCoins(it)
+            gameViewModel.getUserExperience(it)
             gameViewModel.getAllGames()
+            gameViewModel.getLastDailyReward(it)
         }
     }
+
+    // Cuenta regresiva de recompensa diaria
+    LaunchedEffect(lastRewardTime, canClaim) {
+        if (!canClaim && lastRewardTime != null) {
+            while (!canClaim) {
+                val elapsed = System.currentTimeMillis() - lastRewardTime!!
+                val remaining = TimeUnit.HOURS.toMillis(24) - elapsed
+
+                if (remaining > 0) {
+                    val totalSeconds = remaining / 1000
+                    val hours = totalSeconds / 3600
+                    val minutes = (totalSeconds % 3600) / 60
+                    val seconds = totalSeconds % 60
+                    timeLeftText = String.format("%02d:%02d:%02d", hours, minutes, seconds)
+                } else {
+                    timeLeftText = "00:00:00"
+                    break
+                }
+                delay(1000)
+            }
+        } else {
+            timeLeftText = ""
+        }
+    }
+
+    val gradientBrush = Brush.verticalGradient(
+        listOf(Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)),
+        startY = 0f, endY = 1000f
+    )
 
     Box(
         modifier = Modifier
@@ -96,24 +114,63 @@ fun HomeScreen(
                 .alpha(0.1f),
             contentScale = ContentScale.Crop
         )
+
         Box(
             modifier = Modifier
                 .size(300.dp)
                 .align(Alignment.TopEnd)
                 .background(
                     Brush.radialGradient(
-                        colors = listOf(
-                            Color(0x30FFFFFF),
-                            Color(0x00FFFFFF)
-                        ),
+                        colors = listOf(Color(0x30FFFFFF), Color(0x00FFFFFF)),
                         radius = 300f
                     )
                 )
         )
+
+        // Botón de recompensa diaria
+        Box(
+            modifier = Modifier
+                .padding(start = 16.dp, top = 17.dp)
+                .size(100.dp)
+                .clip(CircleShape)
+                .clickable(
+                    enabled = canClaim,
+                    onClick = {
+                        loggedInUser?.userId?.let {
+                            gameViewModel.claimDailyReward(it)
+                        }
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            if (canClaim) {
+                LottieAnimation(
+                    composition = rewardAnim,
+                    iterations = LottieConstants.IterateForever,
+                    modifier = Modifier.size(100.dp)
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .size(45.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF808080)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = timeLeftText,
+                        color = Color.White,
+                        style = TextStyle(fontSize = 10.sp)
+                    )
+                }
+            }
+        }
+
+        // Botón de perfil
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 16.dp, end = 20.dp, bottom = 16.dp, top =45.dp),
+                .padding(top = 45.dp, start = 16.dp, end = 20.dp),
             horizontalArrangement = Arrangement.End
         ) {
             Box(
@@ -121,8 +178,7 @@ fun HomeScreen(
                     .size(60.dp)
                     .clip(CircleShape)
                     .clickable { onNavigateToProfile() }
-            )
-            {
+            ) {
                 if (profileImage != null) {
                     Image(
                         bitmap = rememberImageFromBase64(profileImage!!),
@@ -132,7 +188,7 @@ fun HomeScreen(
                     )
                 } else {
                     LottieAnimation(
-                        composition = profile,
+                        composition = profileAnim,
                         iterations = LottieConstants.IterateForever,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -146,7 +202,6 @@ fun HomeScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Spacer(modifier = Modifier.height(40.dp))
 
             Image(
@@ -156,26 +211,23 @@ fun HomeScreen(
             )
 
             Row(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Fondoscoins
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
-                    PixelDisplay(vmFondocoins)
+                    PixelDisplay(fondocoins)
                 }
 
-                // Barra de experiencia
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                 ) {
                     ExperienceProgressBar(
-                        currentXp = vmExperience,
+                        currentXp = experience,
                         modifier = Modifier
                             .weight(1f)
                             .padding(end = 16.dp)
@@ -187,12 +239,12 @@ fun HomeScreen(
 
             games.sortedBy { it.levelUnlock }.forEach { game ->
                 val isEnabled = currentLevel >= game.levelUnlock
-                val onClick = when (game.gameName.lowercase(Locale.ROOT)) {
+                val onClick: () -> Unit = when (game.gameName.lowercase(Locale.ROOT)) {
                     "escurabutxaques" -> onNavigateToSlotMachine
                     "rasca i guanya" -> onNavigateToScratchCard
                     "ruleta" -> onNavigateToRoulette
                     "blackjack" -> onNavigateToBlackJack
-                    else -> { {} }
+                    else -> ({})
                 }
 
                 GameButtonsHome(
@@ -200,13 +252,22 @@ fun HomeScreen(
                     enabled = isEnabled,
                     onClick = onClick,
                     requiredLevel = game.levelUnlock,
-                    isBeta = game.gameName.equals("Blackjack", ignoreCase = true)
+                    isBeta = game.gameName.equals("blackjack", ignoreCase = true)
                 )
 
                 Spacer(modifier = Modifier.height(35.dp))
             }
-
         }
+
+        // Popup de nivel (si usas uno personalizado)
+        if (gameViewModel.showLevelUpPopup) {
+            LevelUpPopup(
+                currentLevel = gameViewModel.currentPopupLevel,
+                allGames = games,
+                onDismiss = { gameViewModel.dismissLevelUpPopup() }
+            )
+        }
+
     }
 }
 
@@ -216,6 +277,6 @@ fun getImageResourceForGame(gameName: String): Int {
         "rasca i guanya" -> R.drawable.scratch_cards_img
         "ruleta" -> R.drawable.roulette_img
         "blackjack" -> R.drawable.black_jack_img
-        else -> R.drawable.slot_machine_img // default image
+        else -> R.drawable.slot_machine_img
     }
 }
