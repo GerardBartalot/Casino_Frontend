@@ -99,7 +99,8 @@ class RemoteViewModel : ViewModel() {
             _loginMessageUiState.value = LoginMessageUiState.Loading
             try {
                 val connection = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8080")
+                    //.baseUrl("http://10.0.2.2:8080")
+                    .baseUrl("http://192.168.18.84:8080")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                 val endpoint = connection.create(RemoteUserInterface::class.java)
@@ -132,7 +133,8 @@ class RemoteViewModel : ViewModel() {
             _registerMessageUiState.value = RegisterMessageUiState.Loading
             try {
                 val connection = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8080")
+                    //.baseUrl("http://10.0.2.2:8080")
+                    .baseUrl("http://192.168.18.84:8080")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                 val endpoint = connection.create(RemoteUserInterface::class.java)
@@ -176,7 +178,8 @@ class RemoteViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val connection = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8080")
+                    //.baseUrl("http://10.0.2.2:8080")
+                    .baseUrl("http://192.168.18.84:8080")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                 val endpoint = connection.create(RemoteUserInterface::class.java)
@@ -204,7 +207,8 @@ class RemoteViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val connection = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8080")
+                    //.baseUrl("http://10.0.2.2:8080")
+                    .baseUrl("http://192.168.18.84:8080")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                 val endpoint = connection.create(RemoteUserInterface::class.java)
@@ -228,7 +232,8 @@ class RemoteViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val connection = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8080")
+                    //.baseUrl("http://10.0.2.2:8080")
+                    .baseUrl("http://192.168.18.84:8080")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                 val endpoint = connection.create(RemoteUserInterface::class.java)
@@ -253,7 +258,8 @@ class RemoteViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val connection = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8080")
+                    //.baseUrl("http://10.0.2.2:8080")
+                    .baseUrl("http://192.168.18.84:8080")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                 val endpoint = connection.create(RemoteUserInterface::class.java)
@@ -280,7 +286,8 @@ class RemoteViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val connection = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8080")
+                    //.baseUrl("http://10.0.2.2:8080")
+                    .baseUrl("http://192.168.18.84:8080")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                 val endpoint = connection.create(RemoteUserInterface::class.java)
@@ -305,7 +312,8 @@ class RemoteViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val connection = Retrofit.Builder()
-                    .baseUrl("http://10.0.2.2:8080")
+                    //.baseUrl("http://10.0.2.2:8080")
+                    .baseUrl("http://192.168.18.84:8080")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
                 val endpoint = connection.create(RemoteUserInterface::class.java)
