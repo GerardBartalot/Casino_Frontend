@@ -1,9 +1,13 @@
 package com.example.casinoapp.viewModel
 
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.casinoapp.entity.Game
+import com.example.casinoapp.entity.User
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +25,7 @@ import java.util.concurrent.TimeUnit
 
 
 interface RemoteGameInterface {
+
     @GET("/user/{id}/fondocoins")
     suspend fun getUserFondoCoins(@Path("id") id: Int): Response<Int>
 
@@ -88,9 +93,11 @@ class GameViewModel : ViewModel() {
                 val response = endpoint.getUserFondoCoins(userId)
                 if (response.isSuccessful) {
                     _fondocoins.value = response.body() ?: 0
+                } else {
+                    Log.e("GameViewModel", "Error en la respuesta: ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error obteniendo fondocoins", e)
+                Log.e("GameViewModel", "Error obteniendo fondocoins: ${e.message}", e)
             }
         }
     }
@@ -101,9 +108,11 @@ class GameViewModel : ViewModel() {
                 val response = endpoint.updateUserFondoCoins(userId, newFondoCoins)
                 if (response.isSuccessful) {
                     _fondocoins.value = newFondoCoins
+                } else {
+                    Log.e("GameViewModel", "Error actualizando fondocoins: ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error actualizando fondocoins", e)
+                Log.e("GameViewModel", "Error actualizando fondocoins: ${e.message}", e)
             }
         }
     }
@@ -114,9 +123,11 @@ class GameViewModel : ViewModel() {
                 val response = endpoint.getUserExperience(userId)
                 if (response.isSuccessful) {
                     _experience.value = response.body() ?: 0
+                } else {
+                    Log.e("GameViewModel", "Error en la respuesta: ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error obteniendo experiencia", e)
+                Log.e("GameViewModel", "Error obteniendo experiencia: ${e.message}", e)
             }
         }
     }
@@ -127,9 +138,12 @@ class GameViewModel : ViewModel() {
                 val response = endpoint.updateUserExperience(userId, newExperience)
                 if (response.isSuccessful) {
                     _experience.value = newExperience
+                    checkLevelUp(newExperience)
+                } else {
+                    Log.e("GameViewModel", "Error actualizando experiencia: ${response.message()}")
                 }
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error actualizando experiencia", e)
+                Log.e("GameViewModel", "Error actualizando experiencia: ${e.message}", e)
             }
         }
     }
@@ -137,9 +151,10 @@ class GameViewModel : ViewModel() {
     fun getAllGames() {
         viewModelScope.launch {
             try {
-                _games.value = endpoint.getAllGames()
+                val gamesList = endpoint.getAllGames()
+                _games.value = gamesList
             } catch (e: Exception) {
-                Log.e("GameViewModel", "Error obteniendo juegos", e)
+                Log.e("GameViewModel", "Error obteniendo juegos: ${e.message}", e)
                 _games.value = emptyList()
             }
         }
@@ -207,4 +222,28 @@ class GameViewModel : ViewModel() {
             }
         }
     }
+
+    //Logica LevelUpPopUp
+    var showLevelUpPopup by mutableStateOf(false)
+        private set
+
+    var currentPopupLevel by mutableStateOf(0)
+        private set
+
+    private var previousLevel by mutableStateOf(1)
+
+    fun checkLevelUp(currentExperience: Int) {
+        val newLevel = (currentExperience / 1000) + 1
+        if (newLevel > previousLevel) {
+            previousLevel = newLevel
+            currentPopupLevel = newLevel
+            showLevelUpPopup = true
+        }
+    }
+
+    fun dismissLevelUpPopup() {
+        showLevelUpPopup = false
+    }
+
+
 }

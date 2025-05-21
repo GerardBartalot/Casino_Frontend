@@ -67,6 +67,7 @@ import com.example.casinoapp.ui.components.AnimatedNumberDisplay
 import com.example.casinoapp.ui.components.ExperienceProgressBar
 import com.example.casinoapp.ui.components.GameRuleSection
 import com.example.casinoapp.ui.components.GameRulesDialog
+import com.example.casinoapp.ui.components.LevelUpPopup
 import com.example.casinoapp.viewModel.GameViewModel
 import com.example.casinoapp.viewModel.RemoteViewModel
 import kotlinx.coroutines.CoroutineScope
@@ -114,6 +115,19 @@ fun ScratchCardScreen(
         startY = 0f,
         endY = 1000f
     )
+
+    val games by gameViewModel.games.collectAsState()
+    LaunchedEffect(vmExperience) {
+        gameViewModel.checkLevelUp(vmExperience)
+    }
+
+    if (gameViewModel.showLevelUpPopup) {
+        LevelUpPopup(
+            currentLevel = gameViewModel.currentPopupLevel,
+            allGames = games,
+            onDismiss = { gameViewModel.dismissLevelUpPopup() }
+        )
+    }
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
@@ -550,14 +564,4 @@ fun ScratchCardScreen(
             }
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ScratchCardScreenPreview() {
-    ScratchCardScreen(
-        navController = rememberNavController(),
-        remoteViewModel = RemoteViewModel(),
-        gameViewModel = GameViewModel()
-    )
 }
