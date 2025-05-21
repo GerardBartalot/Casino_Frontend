@@ -49,7 +49,8 @@ class GameViewModel : ViewModel() {
     val games: StateFlow<List<Game>> get() = _games
 
     private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:8080")
+        //.baseUrl("http://10.0.2.2:8080")
+        .baseUrl("http://192.168.18.84:8080")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
