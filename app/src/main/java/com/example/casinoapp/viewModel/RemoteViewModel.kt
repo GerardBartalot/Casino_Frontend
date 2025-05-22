@@ -111,19 +111,19 @@ class RemoteViewModel : ViewModel() {
                     if (responseBody != null) {
                         _loggedInUser.value = responseBody
                         _loginMessageUiState.value = LoginMessageUiState.Success(responseBody)
-                        Log.d("RemoteViewModel", "Login exitoso. Datos recibidos: $responseBody")
-                        onResult("Login exitoso")
+                        Log.d("RemoteViewModel", "Login exitós. Dades rebudes: $responseBody")
+                        onResult("Login exitós")
                     } else {
                         _loginMessageUiState.value = LoginMessageUiState.Error
-                        onResult("Error: Datos no recibidos")
+                        onResult("Error: Dades no rebudes")
                     }
                 } else {
                     _loginMessageUiState.value = LoginMessageUiState.Error
-                    onResult("Error: Credenciales incorrectas. Datos recibidos: $response")
+                    onResult("Error: Credencials incorrectes. Dades rebudes: $response")
                 }
             } catch (e: Exception) {
                 _loginMessageUiState.value = LoginMessageUiState.Error
-                onResult("Error: Problema de conexión")
+                onResult("Error: Problema de conexió")
             }
         }
     }
@@ -133,7 +133,6 @@ class RemoteViewModel : ViewModel() {
             _registerMessageUiState.value = RegisterMessageUiState.Loading
             try {
                 val connection = Retrofit.Builder()
-                    //.baseUrl("http://10.0.2.2:8080")
                     .baseUrl("http://192.168.18.84:8080")
                     .addConverterFactory(GsonConverterFactory.create())
                     .build()
@@ -145,19 +144,29 @@ class RemoteViewModel : ViewModel() {
                     if (responseBody != null) {
                         _loggedInUser.value = responseBody
                         _registerMessageUiState.value = RegisterMessageUiState.Success(responseBody)
-                        onResult("Registro exitoso")
+                        onResult("Registre exitós")
                     } else {
                         _registerMessageUiState.value = RegisterMessageUiState.Error
-                        onResult("Error: Respuesta vacía")
+                        onResult("Error: Resposta buida")
                     }
                 } else {
                     _registerMessageUiState.value = RegisterMessageUiState.Error
-                    val errorMessage = response.errorBody()?.string() ?: "Error desconocido"
-                    onResult("Error: $errorMessage")
+                    val errorBody = response.errorBody()?.string()
+                    val errorMessage = if (errorBody != null) {
+                        // Buscar el mensaje de duplicado en el cuerpo del error
+                        if (errorBody.contains("Duplicate entry") && errorBody.contains("users.username")) {
+                            "Aquest nom d'usuari ja existeix"
+                        } else {
+                            "Error: $errorBody"
+                        }
+                    } else {
+                        "Error desconegut"
+                    }
+                    onResult(errorMessage)
                 }
             } catch (e: Exception) {
                 _registerMessageUiState.value = RegisterMessageUiState.Error
-                onResult("Error: Problema de conexión")
+                onResult("Error: Problema de connexió")
             }
         }
     }
@@ -167,9 +176,9 @@ class RemoteViewModel : ViewModel() {
             try {
                 _loggedInUser.value = null
                 _loginMessageUiState.value = LoginMessageUiState.Loading
-                onResult("Sesión cerrada exitosamente")
+                onResult("Sessió tancada exitosament")
             } catch (e: Exception) {
-                onResult("Error al cerrar sesión: ${e.message}")
+                onResult("Error al tancar sessió: ${e.message}")
             }
         }
     }
@@ -188,17 +197,17 @@ class RemoteViewModel : ViewModel() {
                 if (response.isSuccessful) {
                     val responseBody = response.body()
                     if (responseBody != null) {
-                        onResult("Sesión de juego guardada exitosamente")
+                        onResult("Sessió del joc guardada exitósament")
                     } else {
-                        onResult("Error: Respuesta vacía del servidor")
+                        onResult("Error: Resposta buida del servidor")
                     }
                 } else {
-                    val errorMessage = response.errorBody()?.string() ?: "Error desconocido"
+                    val errorMessage = response.errorBody()?.string() ?: "Error desconegut"
                     onResult("Error: $errorMessage")
                 }
             } catch (e: Exception) {
-                Log.e("RemoteViewModel", "Error al guardar la sesión de juego: ${e.message}", e)
-                onResult("Error: Problema de conexión")
+                Log.e("RemoteViewModel", "Error al guardar la sessió del joc: ${e.message}", e)
+                onResult("Error: Problema de conexió")
             }
         }
     }
@@ -217,13 +226,13 @@ class RemoteViewModel : ViewModel() {
                 if(response.isSuccessful) {
                     response.body()?.let {
                         _loggedInUser.value = user
-                        onResult("Perfil actualizado con éxito")
+                        onResult("Perfil actualizat amb éxit")
                     }
                 } else {
-                    onResult("Error al actualizar: ${response.errorBody()?.string()}")
+                    onResult("Error al actualitzar: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                onResult("Error de conexión: ${e.message}")
+                onResult("Error de conexió: ${e.message}")
             }
         }
     }
@@ -241,13 +250,13 @@ class RemoteViewModel : ViewModel() {
 
                 if (response.isNotEmpty()) {
                     _gameHistory.value = response
-                    onResult("Historial de partidas cargado exitosamente")
+                    onResult("Historial de partides carregat exitósament")
                 } else {
-                    onResult("No hay partidas para mostrar")
+                    onResult("No hi ha partides per mostrar")
                 }
             } catch (e: Exception) {
-                Log.e("RemoteViewModel", "Error al obtener el historial de partidas: ${e.message}", e)
-                onResult("Error al cargar el historial de partidas")
+                Log.e("RemoteViewModel", "Error al obtenir el historial de partides: ${e.message}", e)
+                onResult("Error al carregar el historial de partides")
             }
         }
     }
@@ -271,13 +280,13 @@ class RemoteViewModel : ViewModel() {
                         _loggedInUser.value?.let { currentUser ->
                             _loggedInUser.value = currentUser.copy(profilePicture = imageBase64)
                         }
-                        onResult("Foto de perfil actualizada con éxito")
+                        onResult("Foto del perfil actualitzada con éxit")
                     }
                 } else {
-                    onResult("Error al actualizar la foto: ${response.errorBody()?.string()}")
+                    onResult("Error al actualitzar la foto: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                onResult("Error de conexión: ${e.message}")
+                onResult("Error de conexió: ${e.message}")
             }
         }
     }
@@ -302,7 +311,7 @@ class RemoteViewModel : ViewModel() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e("RemoteViewModel", "Error al obtener foto de perfil", e)
+                Log.e("RemoteViewModel", "Error al obtenir la foto de perfil", e)
             }
         }
     }
@@ -328,7 +337,7 @@ class RemoteViewModel : ViewModel() {
                     onResult("Error al eliminar: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                onResult("Error de conexión: ${e.message}")
+                onResult("Error de conexió: ${e.message}")
             }
         }
     }

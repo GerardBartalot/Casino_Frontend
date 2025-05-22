@@ -4,9 +4,11 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.provider.MediaStore
+import android.util.Base64
+import android.widget.DatePicker
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,17 +20,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -50,30 +58,28 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.createBitmap
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.casinoapp.R
-import com.example.casinoapp.viewModel.RemoteViewModel
-import android.util.Base64
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.ui.platform.LocalContext
-import com.example.casinoapp.ui.components.ImagePickerDialog
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.rememberLottieComposition
 import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.example.casinoapp.R
 import com.example.casinoapp.screen.loaders.LoadingScreenEditProfile
+import com.example.casinoapp.ui.components.ImagePickerDialog
+import com.example.casinoapp.viewModel.RemoteViewModel
 import java.io.ByteArrayOutputStream
 import java.io.IOException
-import androidx.core.graphics.createBitmap
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -85,13 +91,15 @@ fun EditProfileScreen(
     var name by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var birthDate by remember { mutableStateOf<Calendar?>(null) }
+    var confirmPassword by remember { mutableStateOf("") }
     var updateMessage by remember { mutableStateOf<String?>(null) }
     var selectedImage by remember { mutableStateOf<String?>(null) }
     var showImagePicker by remember { mutableStateOf(false) }
     val profileAnimation by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
     val context = LocalContext.current
     var showLoading by remember { mutableStateOf(false) }
-    var bitmap by remember { mutableStateOf<Bitmap?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
@@ -104,6 +112,11 @@ fun EditProfileScreen(
         }
     )
 
+    fun String.isValidPassword(): Boolean {
+        val passwordRegex = "^(?=.*[A-Z])(?=.*\\d).{5,}$".toRegex()
+        return passwordRegex.matches(this)
+    }
+
     LaunchedEffect(currentUser) {
         currentUser?.let {
             name = it.name
@@ -115,6 +128,21 @@ fun EditProfileScreen(
             }
         }
     }
+
+    LaunchedEffect(updateMessage) {
+        updateMessage?.let { message ->
+            if (message.startsWith("Error") || message == "Les contrasenyes no coincideixen." || message == "La contrasenya ha de tenir mínim 5 caràcters, una majúscula i un número.") {
+                snackbarHostState.showSnackbar(
+                    message = message,
+                    withDismissAction = true
+                )
+            }
+        }
+    }
+
+    val birthDateText = birthDate?.let {
+        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it.time)
+    } ?: "Data de naixement"
 
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
@@ -131,7 +159,7 @@ fun EditProfileScreen(
         topBar = {
             TopAppBar(
                 modifier = Modifier
-                    .height(100.dp)
+                    .height(70.dp)
                     .background(
                         brush = gradientBrush,
                         alpha = 0.7f
@@ -171,12 +199,27 @@ fun EditProfileScreen(
                     titleContentColor = Color.White
                 )
             )
+        },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                snackbar = { data ->
+                    Snackbar(
+                        containerColor = Color(0xFFFF5252),
+                        contentColor = Color.White,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(data.visuals.message)
+                    }
+                }
+            )
         }
     ) { innerPadding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(gradientBrush)
+                .padding(innerPadding)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.subtle_texture),
@@ -190,15 +233,13 @@ fun EditProfileScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-
                 Box(
                     modifier = Modifier
-                        .size(200.dp)
+                        .size(100.dp)
                         .clip(CircleShape)
                         .background(Color(0xFF333333))
                         .clickable { showImagePicker = true },
@@ -244,27 +285,6 @@ fun EditProfileScreen(
                 Spacer(modifier = Modifier.height(5.dp))
 
                 TextField(
-                    value = username,
-                    onValueChange = { username = it },
-                    label = { Text("Nom d'usuari", color = Color.White) },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color(0xFF333333),
-                        unfocusedContainerColor = Color(0xFF333333),
-                        focusedTextColor = Color.White,
-                        unfocusedTextColor = Color.White,
-                        focusedLabelColor = Color(0xFFFFD700),
-                        unfocusedLabelColor = Color.LightGray,
-                        cursorColor = Color(0xFFFFD700),
-                        focusedIndicatorColor = Color(0xFFFFD700),
-                        unfocusedIndicatorColor = Color.Gray
-                    ),
-                    modifier = Modifier.fillMaxWidth(0.8f),
-                    shape = RoundedCornerShape(10.dp)
-                )
-
-                Spacer(modifier = Modifier.height(5.dp))
-
-                TextField(
                     value = password,
                     onValueChange = { password = it },
                     label = { Text("Nova contrasenya", color = Color.White) },
@@ -285,11 +305,66 @@ fun EditProfileScreen(
                     shape = RoundedCornerShape(10.dp)
                 )
 
-                updateMessage?.let { message ->
+                Spacer(modifier = Modifier.height(5.dp))
+
+                TextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirma la nova contrasenya", color = Color.White) },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF333333),
+                        unfocusedContainerColor = Color(0xFF333333),
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedLabelColor = Color(0xFFFFD700),
+                        unfocusedLabelColor = Color.LightGray,
+                        cursorColor = Color(0xFFFFD700),
+                        focusedIndicatorColor = Color(0xFFFFD700),
+                        unfocusedIndicatorColor = Color.Gray
+                    ),
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth(0.8f),
+                    shape = RoundedCornerShape(10.dp)
+                )
+
+                Spacer(modifier = Modifier.height(5.dp))
+
+                Button(
+                    onClick = {
+                        val calendar = birthDate ?: Calendar.getInstance()
+                        android.app.DatePickerDialog(
+                            context,
+                            { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+                                birthDate = Calendar.getInstance().apply {
+                                    set(year, month, dayOfMonth)
+                                }
+                            },
+                            calendar.get(Calendar.YEAR),
+                            calendar.get(Calendar.MONTH),
+                            calendar.get(Calendar.DAY_OF_MONTH)
+                        ).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF333333),
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(60.dp),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CalendarMonth,
+                        contentDescription = "Seleccionar data de naixement",
+                        tint = Color(0xFFFFD700),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = message,
-                        color = if (message.startsWith("Error")) Color(0xFFFF5252) else Color(0xFF4CAF50),
-                        fontSize = 14.sp
+                        text = birthDateText,
+                        color = Color.White,
+                        fontSize = 16.sp
                     )
                 }
 
@@ -297,27 +372,49 @@ fun EditProfileScreen(
 
                 Button(
                     onClick = {
+                        if (password.isNotEmpty()) {
+                            if (!password.isValidPassword()) {
+                                updateMessage = "La contrasenya ha de tenir mínim 5 caràcters, una majúscula i un número."
+                                return@Button
+                            }
+                            if (password != confirmPassword) {
+                                updateMessage = "Les contrasenyes no coincideixen."
+                                return@Button
+                            }
+                        }
                         showLoading = true
                         currentUser?.let { user ->
+                            val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            val dateString = birthDate?.let { outputFormat.format(it.time) } ?: user.dateOfBirth
                             val updatedUser = user.copy(
                                 name = name,
                                 username = username,
                                 password = if (password.isNotEmpty()) password else user.password,
+                                dateOfBirth = dateString,
                                 profilePicture = selectedImage ?: user.profilePicture
                             )
 
                             remoteViewModel.updateUser(updatedUser) { message ->
-                                if (selectedImage != null && selectedImage != user.profilePicture) {
-                                    remoteViewModel.updateProfilePicture(user.userId, selectedImage!!) {
+                                if (message.startsWith("Error")) {
+                                    updateMessage = message
+                                    showLoading = false
+                                } else {
+                                    if (selectedImage != null && selectedImage != user.profilePicture) {
+                                        remoteViewModel.updateProfilePicture(user.userId, selectedImage!!) { profileMessage ->
+                                            showLoading = false
+                                            if (profileMessage.startsWith("Error")) {
+                                                updateMessage = profileMessage
+                                            } else {
+                                                navController.navigate("profileScreen") {
+                                                    popUpTo("editProfileScreen") { inclusive = true }
+                                                }
+                                            }
+                                        }
+                                    } else {
                                         showLoading = false
                                         navController.navigate("profileScreen") {
                                             popUpTo("editProfileScreen") { inclusive = true }
                                         }
-                                    }
-                                } else {
-                                    showLoading = false
-                                    navController.navigate("profileScreen") {
-                                        popUpTo("editProfileScreen") { inclusive = true }
                                     }
                                 }
                             }
@@ -357,7 +454,9 @@ fun EditProfileScreen(
                         currentUser?.userId?.let { userId ->
                             remoteViewModel.deleteProfilePicture(userId) { message ->
                                 selectedImage = null
-                                updateMessage = message
+                                if (message.startsWith("Error")) {
+                                    updateMessage = message
+                                }
                                 showImagePicker = false
                             }
                         }
@@ -368,14 +467,6 @@ fun EditProfileScreen(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun EditProfileScreenPreview() {
-    EditProfileScreen(
-        navController = rememberNavController(),
-        remoteViewModel = RemoteViewModel(),
-    )
-}
 @Composable
 fun rememberImageFromBase64(base64: String): ImageBitmap {
     val bitmap = remember(base64) {
