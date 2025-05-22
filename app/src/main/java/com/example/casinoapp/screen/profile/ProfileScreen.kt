@@ -24,6 +24,7 @@ import androidx.navigation.NavController
 import com.airbnb.lottie.compose.*
 import com.example.casinoapp.R
 import com.example.casinoapp.viewModel.RemoteViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,34 +40,25 @@ fun ProfileScreen(
         currentUser?.profilePicture?.takeIf { it.isNotEmpty() }
     } }
     val gradientBrush = Brush.verticalGradient(
-        colors = listOf(
-            Color(0xFF1A1A1A),
-            Color(0xFF2D2D2D),
-            Color(0xFF1A1A1A)
-        ),
+        colors = listOf(Color(0xFF1A1A1A), Color(0xFF2D2D2D), Color(0xFF1A1A1A)),
         startY = 0f,
         endY = 1000f
     )
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
-                modifier = Modifier.height(70.dp)
-                    .background(
-                        brush = gradientBrush,
-                        alpha = 0.7f
-                    ),
+                modifier = Modifier
+                    .height(70.dp)
+                    .background(brush = gradientBrush, alpha = 0.7f),
                 title = {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.CenterStart
                     ) {
-                        Text(
-                            text = "Perfil",
-                            color = Color.White,
-                            modifier = Modifier.padding(start = 0.dp)
-                        )
+                        Text("Perfil", color = Color.White)
                     }
                 },
                 navigationIcon = {
@@ -74,13 +66,11 @@ fun ProfileScreen(
                         modifier = Modifier.fillMaxHeight(),
                         contentAlignment = Alignment.Center
                     ) {
-                        IconButton(
-                            onClick = {
-                                navController.navigate("homeScreen") {
-                                    popUpTo("profileScreen") { inclusive = true }
-                                }
+                        IconButton(onClick = {
+                            navController.navigate("homeScreen") {
+                                popUpTo("profileScreen") { inclusive = true }
                             }
-                        ) {
+                        }) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                 contentDescription = "Volver",
@@ -119,10 +109,7 @@ fun ProfileScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 currentUser?.let { user ->
-                    Box(
-                        modifier = Modifier.size(100.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(modifier = Modifier.size(100.dp), contentAlignment = Alignment.Center) {
                         if (profileImage != null) {
                             Image(
                                 bitmap = rememberImageFromBase64(profileImage!!),
@@ -140,34 +127,41 @@ fun ProfileScreen(
                             )
                         }
                     }
+
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    Text(
-                        text = "Hola, ${user.name}!",
-                        fontSize = 22.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Text(
-                        text = "@${user.username}",
-                        fontSize = 18.sp,
-                        color = Color.LightGray,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
-
-                    Text(
-                        text = "Data de naixement: ${user.dateOfBirth}",
-                        fontSize = 18.sp,
-                        color = Color.LightGray,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                    Text("Hola, ${user.name}!", fontSize = 22.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("@${user.username}", fontSize = 18.sp, color = Color.LightGray, modifier = Modifier.padding(top = 8.dp))
+                    Text("Data de naixement: ${user.dateOfBirth}", fontSize = 18.sp, color = Color.LightGray, modifier = Modifier.padding(top = 8.dp))
 
                     Spacer(modifier = Modifier.height(50.dp))
-                    ProfileButton("Historial de partides") {onNavigateToLoadingHistoryScreen()}
+
+                    ProfileButton("Historial de partides") { onNavigateToLoadingHistoryScreen() }
                     Spacer(modifier = Modifier.height(20.dp))
                     ProfileButton("Editar perfil") { onNavigateToEditProfileScreen() }
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = Modifier.height(20.dp))
+
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                remoteViewModel.deleteAccount()
+                                navController.navigate("loginScreen") {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        modifier = Modifier
+                            .fillMaxWidth(0.8f)
+                            .height(50.dp),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Text("Eliminar compte", color = Color.White, fontSize = 16.sp)
+                    }
+
+                    Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
                         onClick = {
@@ -184,15 +178,12 @@ fun ProfileScreen(
                             .height(50.dp),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text(text = "Tancar sessió", color = Color.White, fontSize = 16.sp)
+                        Text("Tancar sessió", color = Color.White, fontSize = 16.sp)
                     }
                 } ?: run {
-                    Text(
-                        text = "No hay usuario logueado",
-                        color = Color.White,
-                        fontSize = 18.sp
-                    )
+                    Text("No hay usuario logueado", color = Color.White, fontSize = 18.sp)
                 }
+
                 Spacer(modifier = Modifier.height(50.dp))
             }
         }
@@ -213,11 +204,6 @@ fun ProfileButton(text: String, onNavigate: () -> Unit) {
             .padding(vertical = 5.dp),
         shape = RoundedCornerShape(10.dp)
     ) {
-        Text(
-            text = text,
-            color = Color.Black,
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold
-        )
+        Text(text = text, fontSize = 18.sp, fontWeight = FontWeight.Bold)
     }
 }

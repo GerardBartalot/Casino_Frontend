@@ -11,14 +11,9 @@ import kotlinx.coroutines.launch
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.Body
-import retrofit2.http.DELETE
-import retrofit2.http.Field
-import retrofit2.http.FormUrlEncoded
-import retrofit2.http.GET
-import retrofit2.http.POST
-import retrofit2.http.PUT
-import retrofit2.http.Path
+import retrofit2.http.*
+
+
 
 sealed interface RemoteMessageUiState {
     data class Success(val remoteMessage: List<User>) : RemoteMessageUiState
@@ -37,6 +32,8 @@ sealed interface RegisterMessageUiState {
     object Loading : RegisterMessageUiState
     object Error : RegisterMessageUiState
 }
+
+
 
 interface RemoteUserInterface {
 
@@ -75,9 +72,21 @@ interface RemoteUserInterface {
 
     @DELETE("/user/{id}/profile-picture")
     suspend fun deleteProfilePicture(@Path("id") id: Int): Response<Map<String, String>>
+
+    @DELETE("/user/delete/{id}")
+    suspend fun deleteUser(@Path("id") id: Int): Response<Map<String, String>>
 }
 
+
+
 class RemoteViewModel : ViewModel() {
+
+    private val baseUrl = "http://10.118.3.201:8080"
+    private val connection = Retrofit.Builder()
+        .baseUrl(baseUrl)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+    private val endpoint = connection.create(RemoteUserInterface::class.java)
 
     private val _remoteMessageUiState = MutableStateFlow<RemoteMessageUiState>(RemoteMessageUiState.Loading)
     val remoteMessageUiState: StateFlow<RemoteMessageUiState> = _remoteMessageUiState
@@ -98,32 +107,24 @@ class RemoteViewModel : ViewModel() {
         viewModelScope.launch {
             _loginMessageUiState.value = LoginMessageUiState.Loading
             try {
-                val connection = Retrofit.Builder()
-                    //.baseUrl("http://10.0.2.2:8080")
-                    .baseUrl("http://192.168.18.84:8080")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                val endpoint = connection.create(RemoteUserInterface::class.java)
                 val response = endpoint.loginUser(username, password)
-
                 if (response.isSuccessful) {
-                    val responseBody = response.body()
-                    if (responseBody != null) {
-                        _loggedInUser.value = responseBody
-                        _loginMessageUiState.value = LoginMessageUiState.Success(responseBody)
-                        Log.d("RemoteViewModel", "Login exitós. Dades rebudes: $responseBody")
+                    response.body()?.let {
+                        _loggedInUser.value = it
+                        _loginMessageUiState.value = LoginMessageUiState.Success(it)
+                        Log.d("RemoteViewModel", "Login exitós. Dades rebudes: $it")
                         onResult("Login exitós")
-                    } else {
+                    } ?: run {
                         _loginMessageUiState.value = LoginMessageUiState.Error
                         onResult("Error: Dades no rebudes")
                     }
                 } else {
                     _loginMessageUiState.value = LoginMessageUiState.Error
-                    onResult("Error: Credencials incorrectes. Dades rebudes: $response")
+                    onResult("Error: Credencials incorrectes")
                 }
             } catch (e: Exception) {
                 _loginMessageUiState.value = LoginMessageUiState.Error
-                onResult("Error: Problema de conexió")
+                onResult("Error: Problema de connexió")
             }
         }
     }
@@ -132,37 +133,26 @@ class RemoteViewModel : ViewModel() {
         viewModelScope.launch {
             _registerMessageUiState.value = RegisterMessageUiState.Loading
             try {
-                val connection = Retrofit.Builder()
-                    .baseUrl("http://192.168.18.84:8080")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                val endpoint = connection.create(RemoteUserInterface::class.java)
                 val response = endpoint.registerUser(user)
-
                 if (response.isSuccessful) {
-                    val responseBody = response.body()
-                    if (responseBody != null) {
-                        _loggedInUser.value = responseBody
-                        _registerMessageUiState.value = RegisterMessageUiState.Success(responseBody)
+                    response.body()?.let {
+                        _loggedInUser.value = it
+                        _registerMessageUiState.value = RegisterMessageUiState.Success(it)
                         onResult("Registre exitós")
-                    } else {
+                    } ?: run {
                         _registerMessageUiState.value = RegisterMessageUiState.Error
                         onResult("Error: Resposta buida")
                     }
                 } else {
                     _registerMessageUiState.value = RegisterMessageUiState.Error
                     val errorBody = response.errorBody()?.string()
-                    val errorMessage = if (errorBody != null) {
-                        // Buscar el mensaje de duplicado en el cuerpo del error
-                        if (errorBody.contains("Duplicate entry") && errorBody.contains("users.username")) {
-                            "Aquest nom d'usuari ja existeix"
-                        } else {
-                            "Error: $errorBody"
-                        }
+                    val errorMessage = if (errorBody?.contains("Duplicate entry") == true &&
+                        errorBody.contains("users.username")) {
+                        "Aquest nom d'usuari ja existeix"
                     } else {
-                        "Error desconegut"
+                        "Error: $errorBody"
                     }
-                    onResult(errorMessage)
+                    onResult(errorMessage ?: "Error desconegut")
                 }
             } catch (e: Exception) {
                 _registerMessageUiState.value = RegisterMessageUiState.Error
@@ -186,19 +176,11 @@ class RemoteViewModel : ViewModel() {
     fun saveGameSession(gameSession: GameSession, onResult: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val connection = Retrofit.Builder()
-                    //.baseUrl("http://10.0.2.2:8080")
-                    .baseUrl("http://192.168.18.84:8080")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                val endpoint = connection.create(RemoteUserInterface::class.java)
                 val response = endpoint.saveGameSession(gameSession)
-
                 if (response.isSuccessful) {
-                    val responseBody = response.body()
-                    if (responseBody != null) {
+                    response.body()?.let {
                         onResult("Sessió del joc guardada exitósament")
-                    } else {
+                    } ?: run {
                         onResult("Error: Resposta buida del servidor")
                     }
                 } else {
@@ -206,8 +188,8 @@ class RemoteViewModel : ViewModel() {
                     onResult("Error: $errorMessage")
                 }
             } catch (e: Exception) {
-                Log.e("RemoteViewModel", "Error al guardar la sessió del joc: ${e.message}", e)
-                onResult("Error: Problema de conexió")
+                Log.e("RemoteViewModel", "Error al guardar la sessió del joc", e)
+                onResult("Error: Problema de connexió")
             }
         }
     }
@@ -215,24 +197,15 @@ class RemoteViewModel : ViewModel() {
     fun updateUser(user: User, onResult: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val connection = Retrofit.Builder()
-                    //.baseUrl("http://10.0.2.2:8080")
-                    .baseUrl("http://192.168.18.84:8080")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                val endpoint = connection.create(RemoteUserInterface::class.java)
                 val response = endpoint.updateUser(user.userId, user)
-
-                if(response.isSuccessful) {
-                    response.body()?.let {
-                        _loggedInUser.value = user
-                        onResult("Perfil actualizat amb éxit")
-                    }
+                if (response.isSuccessful) {
+                    _loggedInUser.value = user
+                    onResult("Perfil actualitzat amb èxit")
                 } else {
                     onResult("Error al actualitzar: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                onResult("Error de conexió: ${e.message}")
+                onResult("Error de connexió: ${e.message}")
             }
         }
     }
@@ -240,14 +213,7 @@ class RemoteViewModel : ViewModel() {
     fun getUserGameHistory(userId: Int, onResult: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val connection = Retrofit.Builder()
-                    //.baseUrl("http://10.0.2.2:8080")
-                    .baseUrl("http://192.168.18.84:8080")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                val endpoint = connection.create(RemoteUserInterface::class.java)
                 val response = endpoint.getUserGameHistory(userId)
-
                 if (response.isNotEmpty()) {
                     _gameHistory.value = response
                     onResult("Historial de partides carregat exitósament")
@@ -255,38 +221,24 @@ class RemoteViewModel : ViewModel() {
                     onResult("No hi ha partides per mostrar")
                 }
             } catch (e: Exception) {
-                Log.e("RemoteViewModel", "Error al obtenir el historial de partides: ${e.message}", e)
-                onResult("Error al carregar el historial de partides")
+                Log.e("RemoteViewModel", "Error al obtenir l’historial", e)
+                onResult("Error al carregar l’historial de partides")
             }
         }
     }
 
-
-
     fun updateProfilePicture(userId: Int, imageBase64: String, onResult: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val connection = Retrofit.Builder()
-                    //.baseUrl("http://10.0.2.2:8080")
-                    .baseUrl("http://192.168.18.84:8080")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                val endpoint = connection.create(RemoteUserInterface::class.java)
                 val response = endpoint.updateProfilePicture(userId, imageBase64)
-
-                if(response.isSuccessful) {
-                    response.body()?.let {
-                        // Actualizar el usuario local con la nueva imagen
-                        _loggedInUser.value?.let { currentUser ->
-                            _loggedInUser.value = currentUser.copy(profilePicture = imageBase64)
-                        }
-                        onResult("Foto del perfil actualitzada con éxit")
-                    }
+                if (response.isSuccessful) {
+                    _loggedInUser.value = _loggedInUser.value?.copy(profilePicture = imageBase64)
+                    onResult("Foto de perfil actualitzada amb èxit")
                 } else {
                     onResult("Error al actualitzar la foto: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                onResult("Error de conexió: ${e.message}")
+                onResult("Error de connexió: ${e.message}")
             }
         }
     }
@@ -294,19 +246,10 @@ class RemoteViewModel : ViewModel() {
     fun getProfilePicture(userId: Int, onResult: (String) -> Unit = {}) {
         viewModelScope.launch {
             try {
-                val connection = Retrofit.Builder()
-                    //.baseUrl("http://10.0.2.2:8080")
-                    .baseUrl("http://192.168.18.84:8080")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                val endpoint = connection.create(RemoteUserInterface::class.java)
                 val response = endpoint.getProfilePicture(userId)
-
-                if(response.isSuccessful) {
+                if (response.isSuccessful) {
                     response.body()?.let { base64Image ->
-                        _loggedInUser.value?.let { currentUser ->
-                            _loggedInUser.value = currentUser.copy(profilePicture = base64Image)
-                        }
+                        _loggedInUser.value = _loggedInUser.value?.copy(profilePicture = base64Image)
                         onResult(base64Image)
                     }
                 }
@@ -316,29 +259,40 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
-
     fun deleteProfilePicture(userId: Int, onResult: (String) -> Unit) {
         viewModelScope.launch {
             try {
-                val connection = Retrofit.Builder()
-                    //.baseUrl("http://10.0.2.2:8080")
-                    .baseUrl("http://192.168.18.84:8080")
-                    .addConverterFactory(GsonConverterFactory.create())
-                    .build()
-                val endpoint = connection.create(RemoteUserInterface::class.java)
                 val response = endpoint.deleteProfilePicture(userId)
-
-                if(response.isSuccessful) {
-                    _loggedInUser.value?.let { currentUser ->
-                        _loggedInUser.value = currentUser.copy(profilePicture = null)
-                    }
+                if (response.isSuccessful) {
+                    _loggedInUser.value = _loggedInUser.value?.copy(profilePicture = null)
                     onResult("Foto de perfil eliminada")
                 } else {
                     onResult("Error al eliminar: ${response.errorBody()?.string()}")
                 }
             } catch (e: Exception) {
-                onResult("Error de conexió: ${e.message}")
+                onResult("Error de connexió: ${e.message}")
             }
+        }
+    }
+
+    fun deleteAccount(onResult: (String) -> Unit = {}) {
+        val userId = _loggedInUser.value?.userId
+        if (userId != null) {
+            viewModelScope.launch {
+                try {
+                    val response = endpoint.deleteUser(userId)
+                    if (response.isSuccessful) {
+                        _loggedInUser.value = null
+                        onResult("Compte eliminat correctament")
+                    } else {
+                        onResult("Error al eliminar: ${response.errorBody()?.string()}")
+                    }
+                } catch (e: Exception) {
+                    onResult("Error de connexió: ${e.message}")
+                }
+            }
+        } else {
+            onResult("No s'ha pogut eliminar: usuari no identificat")
         }
     }
 }
