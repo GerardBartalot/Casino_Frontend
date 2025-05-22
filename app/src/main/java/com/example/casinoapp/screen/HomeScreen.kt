@@ -4,7 +4,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -56,13 +58,12 @@ fun HomeScreen(
     }
 
     var timeLeftText by remember { mutableStateOf("") }
-
+    val scrollState = rememberScrollState()
     val profileAnim by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.profile))
     val rewardAnim by rememberLottieComposition(LottieCompositionSpec.RawRes(R.raw.daily_reward_anim))
 
     val currentLevel = (experience / 1000) + 1
 
-    // Solicita datos al entrar
     LaunchedEffect(loggedInUser?.userId) {
         loggedInUser?.userId?.let {
             gameViewModel.getUserFondoCoins(it)
@@ -72,7 +73,6 @@ fun HomeScreen(
         }
     }
 
-    // Cuenta regresiva de recompensa diaria
     LaunchedEffect(lastRewardTime, canClaim) {
         if (!canClaim && lastRewardTime != null) {
             while (!canClaim) {
@@ -130,7 +130,7 @@ fun HomeScreen(
         // Botón de recompensa diaria
         Box(
             modifier = Modifier
-                .padding(start = 16.dp, top = 17.dp)
+                .padding(start = 16.dp, top = 15.dp)
                 .size(100.dp)
                 .clip(CircleShape)
                 .clickable(
@@ -170,12 +170,12 @@ fun HomeScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 45.dp, start = 16.dp, end = 20.dp),
+                .padding(top = 25.dp, start = 16.dp, end = 20.dp),
             horizontalArrangement = Arrangement.End
         ) {
             Box(
                 modifier = Modifier
-                    .size(60.dp)
+                    .size(50.dp)
                     .clip(CircleShape)
                     .clickable { onNavigateToProfile() }
             ) {
@@ -183,14 +183,17 @@ fun HomeScreen(
                     Image(
                         bitmap = rememberImageFromBase64(profileImage!!),
                         contentDescription = "Foto de perfil",
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .size(30.dp),
                         contentScale = ContentScale.Crop
                     )
                 } else {
                     LottieAnimation(
                         composition = profileAnim,
                         iterations = LottieConstants.IterateForever,
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
                     )
                 }
             }
@@ -202,7 +205,7 @@ fun HomeScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             Image(
                 painter = painterResource(id = R.drawable.logo_splash),
@@ -235,27 +238,33 @@ fun HomeScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(25.dp))
 
-            games.sortedBy { it.levelUnlock }.forEach { game ->
-                val isEnabled = currentLevel >= game.levelUnlock
-                val onClick: () -> Unit = when (game.gameName.lowercase(Locale.ROOT)) {
-                    "escurabutxaques" -> onNavigateToSlotMachine
-                    "rasca i guanya" -> onNavigateToScratchCard
-                    "ruleta" -> onNavigateToRoulette
-                    "blackjack" -> onNavigateToBlackJack
-                    else -> ({})
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(scrollState)
+            ) {
+                games.sortedBy { it.levelUnlock }.forEach { game ->
+                    val isEnabled = currentLevel >= game.levelUnlock && !game.gameName.equals("blackjack", ignoreCase = true)
+                    val onClick: () -> Unit = when (game.gameName.lowercase(Locale.ROOT)) {
+                        "escurabutxaques" -> onNavigateToSlotMachine
+                        "rasca i guanya" -> onNavigateToScratchCard
+                        "ruleta" -> onNavigateToRoulette
+                        "blackjack" -> onNavigateToBlackJack
+                        else -> ({})
+                    }
+
+                    GameButtonsHome(
+                        imageRes = getImageResourceForGame(game.gameName),
+                        enabled = isEnabled,
+                        onClick = onClick,
+                        requiredLevel = game.levelUnlock,
+                        isBeta = game.gameName.equals("blackjack", ignoreCase = true)
+                    )
+
+                    Spacer(modifier = Modifier.height(35.dp))
                 }
-
-                GameButtonsHome(
-                    imageRes = getImageResourceForGame(game.gameName),
-                    enabled = isEnabled,
-                    onClick = onClick,
-                    requiredLevel = game.levelUnlock,
-                    isBeta = game.gameName.equals("blackjack", ignoreCase = true)
-                )
-
-                Spacer(modifier = Modifier.height(35.dp))
             }
         }
 

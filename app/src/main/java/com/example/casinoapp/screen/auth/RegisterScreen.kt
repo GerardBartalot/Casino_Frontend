@@ -42,14 +42,11 @@ fun RegisterScreen(
     val context = LocalContext.current
     val registerMessageUiState by remoteViewModel.registerMessageUiState.collectAsState()
     val scrollState = rememberScrollState()
+    val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(registerMessageUiState) {
-        when (registerMessageUiState) {
-            is RegisterMessageUiState.Success -> {
-                onNavigateToHome()
-            }
-            else -> {}
-        }
+    fun String.isValidPassword(): Boolean {
+        val passwordRegex = "^(?=.*[A-Z])(?=.*\\d).{5,}$".toRegex()
+        return passwordRegex.matches(this)
     }
 
     var username by remember { mutableStateOf("") }
@@ -59,6 +56,29 @@ fun RegisterScreen(
     var birthDate by remember { mutableStateOf<Calendar?>(null) }
     var errorMessage by remember { mutableStateOf("") }
 
+    LaunchedEffect(registerMessageUiState) {
+        when (registerMessageUiState) {
+            is RegisterMessageUiState.Success -> {
+                onNavigateToHome()
+            }
+            is RegisterMessageUiState.Error -> {
+                if (errorMessage.isEmpty()) {
+                    errorMessage = "Error en el registre"
+                }
+            }
+            else -> {}
+        }
+    }
+
+    LaunchedEffect(errorMessage) {
+        if (errorMessage.isNotEmpty() && errorMessage != "Registre exitós") {
+            snackbarHostState.showSnackbar(
+                message = errorMessage,
+                withDismissAction = true
+            )
+        }
+    }
+
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF1A1A1A),
@@ -67,219 +87,236 @@ fun RegisterScreen(
         )
     )
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(gradientBrush)
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.subtle_texture),
-            contentDescription = null,
+    Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                snackbar = { data ->
+                    Snackbar(
+                        containerColor = Color(0xFFFF5252),
+                        contentColor = Color.White,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(data.visuals.message)
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .alpha(0.1f),
-            contentScale = ContentScale.Crop
-        )
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top,
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
+                .background(gradientBrush)
+                .padding(innerPadding)
         ) {
-            Spacer(modifier = Modifier.height(50.dp))
             Image(
-                painter = painterResource(id = R.drawable.logo_splash),
-                contentDescription = "App Logo",
-                modifier = Modifier.size(190.dp)
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Text(
-                text = "Registre",
-                style = androidx.compose.ui.text.TextStyle(
-                    fontSize = 30.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 2.sp,
-                    brush = Brush.linearGradient(
-                        colors = listOf(Color(0xFFFFD700), Color(0xFFFFA500))
-                    ),
-                    shadow = Shadow(
-                        color = Color(0xFFFFA500),
-                        offset = Offset(3f, 3f),
-                        blurRadius = 3f
-                    )
-                ),
-                modifier = Modifier.padding(bottom = 50.dp)
-            )
-
-            // Campo nombre
-            TextField(
-                value = name,
-                onValueChange = { name = it },
-                label = { Text("Nom", color = Color.White) },
-                colors = textFieldColors(),
-                modifier = Modifier.fillMaxWidth(0.8f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Campo usuario
-            TextField(
-                value = username,
-                onValueChange = { username = it },
-                label = { Text("Nom d'usuari", color = Color.White) },
-                colors = textFieldColors(),
-                modifier = Modifier.fillMaxWidth(0.8f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Campo contraseña
-            TextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Contrasenya", color = Color.White) },
-                visualTransformation = PasswordVisualTransformation(),
-                colors = textFieldColors(),
-                modifier = Modifier.fillMaxWidth(0.8f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Campo confirmar contraseña
-            TextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                label = { Text("Confirma la contrasenya", color = Color.White) },
-                visualTransformation = PasswordVisualTransformation(),
-                colors = textFieldColors(),
-                modifier = Modifier.fillMaxWidth(0.8f)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Selector de fecha de nacimiento
-            val birthDateText = birthDate?.let {
-                SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it.time)
-            } ?: "Data de naixement"
-
-            Button(
-                onClick = {
-                    val calendar = Calendar.getInstance()
-                    DatePickerDialog(
-                        context,
-                        { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-                            birthDate = Calendar.getInstance().apply {
-                                set(year, month, dayOfMonth)
-                            }
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)
-                    ).show()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF333333),
-                    contentColor = Color.White
-                ),
+                painter = painterResource(id = R.drawable.subtle_texture),
+                contentDescription = null,
                 modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(60.dp),
-                shape = RoundedCornerShape(10.dp)
+                    .fillMaxSize()
+                    .alpha(0.1f),
+                contentScale = ContentScale.Crop
+            )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
             ) {
-                Icon(
-                    imageVector = Icons.Filled.CalendarMonth,
-                    contentDescription = "Seleccionar data de naixement",
-                    tint = Color(0xFFFFD700),
-                    modifier = Modifier.size(20.dp)
+                Spacer(modifier = Modifier.height(20.dp))
+                Image(
+                    painter = painterResource(id = R.drawable.logo_splash),
+                    contentDescription = "App Logo",
+                    modifier = Modifier.size(170.dp)
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+
                 Text(
-                    text = birthDateText,
-                    color = Color.White,
-                    fontSize = 16.sp
+                    text = "Registre",
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontSize = 25.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 2.sp,
+                        brush = Brush.linearGradient(
+                            colors = listOf(Color(0xFFFFD700), Color(0xFFFFA500))
+                        ),
+                        shadow = Shadow(
+                            color = Color(0xFFFFA500),
+                            offset = Offset(3f, 3f),
+                            blurRadius = 3f
+                        )
+                    ),
+                    modifier = Modifier.padding(bottom = 30.dp)
                 )
-            }
 
-            Spacer(modifier = Modifier.height(32.dp))
+                // Campo nombre
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Nom", color = Color.White) },
+                    colors = textFieldColors(),
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
 
-            if (errorMessage.isNotEmpty() && errorMessage != "Registre exitós") {
-                Text(text = errorMessage, color = Color(0xFFFF5252))
-                Spacer(modifier = Modifier.height(8.dp))
-            }
+                // Campo usuario
+                TextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Nom d'usuari", color = Color.White) },
+                    colors = textFieldColors(),
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = {
-                    if (name.isBlank() || username.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
-                        errorMessage = "Tots els camps han d'estar omplerts."
-                    } else if (birthDate == null) {
-                        errorMessage = "Has de seleccionar la data de naixement."
-                    } else {
-                        val minimumDate = Calendar.getInstance().apply {
-                            add(Calendar.YEAR, -18)
-                        }
+                // Campo contraseña
+                TextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("Contrasenya", color = Color.White) },
+                    visualTransformation = PasswordVisualTransformation(),
+                    colors = textFieldColors(),
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
 
-                        val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        val dateString = outputFormat.format(birthDate!!.time)
+                // Campo confirmar contraseña
+                TextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it },
+                    label = { Text("Confirma la contrasenya", color = Color.White) },
+                    visualTransformation = PasswordVisualTransformation(),
+                    colors = textFieldColors(),
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
 
-                        if (birthDate!!.after(minimumDate)) {
-                            errorMessage = "Has de tenir 18 anys o més per registrar-te."
-                        } else if (password != confirmPassword) {
-                            errorMessage = "Les contrasenyes no coincideixen."
+                // Selector de fecha de nacimiento
+                val birthDateText = birthDate?.let {
+                    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(it.time)
+                } ?: "Data de naixement"
+
+                Button(
+                    onClick = {
+                        val calendar = Calendar.getInstance()
+                        DatePickerDialog(
+                            context,
+                            { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+                                birthDate = Calendar.getInstance().apply {
+                                    set(year, month, dayOfMonth)
+                                }
+                            },
+                            calendar.get(Calendar.YEAR),
+                            calendar.get(Calendar.MONTH),
+                            calendar.get(Calendar.DAY_OF_MONTH)
+                        ).show()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF333333),
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(60.dp),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CalendarMonth,
+                        contentDescription = "Seleccionar data de naixement",
+                        tint = Color(0xFFFFD700),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = birthDateText,
+                        color = Color.White,
+                        fontSize = 16.sp
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Button(
+                    onClick = {
+                        if (name.isBlank() || username.isBlank() || password.isBlank() || confirmPassword.isBlank()) {
+                            errorMessage = "Tots els camps han d'estar omplerts."
+                        } else if (birthDate == null) {
+                            errorMessage = "Has de seleccionar la data de naixement."
                         } else {
-                            val user = User(
-                                userId = 0,
-                                name = name,
-                                username = username,
-                                password = password,
-                                dateOfBirth = dateString,
-                                fondocoins = 500,
-                                experiencePoints = 0,
-                                profilePicture = null
-                            )
-                            remoteViewModel.register(user) { resultMessage ->
-                                if (resultMessage == "Registre exitós") {
-                                    onNavigateToHome()
-                                } else {
-                                    errorMessage = resultMessage
+                            val minimumDate = Calendar.getInstance().apply {
+                                add(Calendar.YEAR, -18)
+                            }
+
+                            val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+                            val dateString = outputFormat.format(birthDate!!.time)
+
+                            if (birthDate!!.after(minimumDate)) {
+                                errorMessage = "Has de tenir 18 anys o més per registrar-te."
+                            } else if (password != confirmPassword) {
+                                errorMessage = "Les contrasenyes no coincideixen."
+                            } else if (!password.isValidPassword()) {
+                                errorMessage = "La contrasenya ha de tenir mínim 5 caràcters, una majúscula i un número."
+                            } else {
+                                val user = User(
+                                    userId = 0,
+                                    name = name,
+                                    username = username,
+                                    password = password,
+                                    dateOfBirth = dateString,
+                                    fondocoins = 500,
+                                    experiencePoints = 0,
+                                    profilePicture = null
+                                )
+                                remoteViewModel.register(user) { resultMessage ->
+                                    if (resultMessage == "Registre exitós") {
+                                        onNavigateToHome()
+                                    } else {
+                                        errorMessage = resultMessage
+                                    }
                                 }
                             }
                         }
-                    }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFFD700),
-                    contentColor = Color.Black
-                ),
-                modifier = Modifier
-                    .fillMaxWidth(0.8f)
-                    .height(60.dp)
-                    .padding(vertical = 5.dp),
-                shape = RoundedCornerShape(10.dp)
-            ) {
-                Text(
-                    "Registrar",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
-                )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    "Ja tens un compte?",
-                    fontSize = 15.sp,
-                    color = Color.White
-                )
-                TextButton(onClick = onNavigateToLogin) {
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFD700),
+                        contentColor = Color.Black
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(60.dp)
+                        .padding(vertical = 5.dp),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
                     Text(
-                        text = "Inicia sessió ara!",
+                        "Registrar",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = Color(0xFFFFD700)
+                        fontSize = 18.sp,
                     )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 30.dp)
+                ) {
+                    Text(
+                        "Ja tens un compte?",
+                        fontSize = 15.sp,
+                        color = Color.White
+                    )
+                    TextButton(onClick = onNavigateToLogin) {
+                        Text(
+                            text = "Inicia sessió ara!",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = Color(0xFFFFD700)
+                        )
+                    }
                 }
             }
         }

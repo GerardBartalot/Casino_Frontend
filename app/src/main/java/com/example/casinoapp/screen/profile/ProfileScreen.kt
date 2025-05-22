@@ -52,7 +52,7 @@ fun ProfileScreen(
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
-                modifier = Modifier.height(100.dp)
+                modifier = Modifier.height(70.dp)
                     .background(
                         brush = gradientBrush,
                         alpha = 0.7f
@@ -120,7 +120,7 @@ fun ProfileScreen(
             ) {
                 currentUser?.let { user ->
                     Box(
-                        modifier = Modifier.size(200.dp),
+                        modifier = Modifier.size(100.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         if (profileImage != null) {
@@ -172,7 +172,11 @@ fun ProfileScreen(
                     Button(
                         onClick = {
                             remoteViewModel.logout()
-                            navController.navigate("loginScreen")
+                            navController.navigate("loginScreen") {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = true
+                                }
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA52A2A)),
                         modifier = Modifier

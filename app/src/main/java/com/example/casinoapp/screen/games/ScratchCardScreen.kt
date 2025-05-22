@@ -256,7 +256,7 @@ fun ScratchCardScreen(
         topBar = {
             TopAppBar(
                 modifier = Modifier
-                    .height(100.dp)
+                    .height(70.dp)
                     .background(
                         brush = gradientBrush,
                         alpha = 0.7f
@@ -353,7 +353,7 @@ fun ScratchCardScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Spacer(modifier = Modifier.height(80.dp))
+                Spacer(modifier = Modifier.height(40.dp))
 
                 Row(
                     modifier = Modifier

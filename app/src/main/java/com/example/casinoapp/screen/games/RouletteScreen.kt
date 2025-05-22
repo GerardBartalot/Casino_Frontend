@@ -314,7 +314,7 @@ fun RouletteScreen(
         topBar = {
             TopAppBar(
                 modifier = Modifier
-                    .height(100.dp)
+                    .height(70.dp)
                     .background(
                         brush = gradientBrush,
                         alpha = 0.7f
@@ -412,7 +412,7 @@ fun RouletteScreen(
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Spacer(modifier = Modifier.height(100.dp))
+                Spacer(modifier = Modifier.height(60.dp))
 
                 Row(
                     modifier = Modifier
@@ -447,7 +447,7 @@ fun RouletteScreen(
                         painter = painterResource(id = R.drawable.roulette),
                         contentDescription = "Ruleta",
                         modifier = Modifier
-                            .size(250.dp)
+                            .size(230.dp)
                             .graphicsLayer(rotationZ = rotationAngle.value % 360)
                     )
                 }

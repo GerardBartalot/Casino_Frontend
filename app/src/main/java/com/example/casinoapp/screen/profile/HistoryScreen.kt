@@ -87,7 +87,7 @@ fun HistoryScreen(
         topBar = {
             TopAppBar(
                 modifier = Modifier
-                    .height(100.dp)
+                    .height(70.dp)
                     .background(
                         brush = gradientBrush,
                         alpha = 0.7f
