@@ -124,8 +124,8 @@ fun LoginScreen(
                             blurRadius = 3f
                         )
                     ),
+                    modifier = Modifier.padding(bottom = 100.dp)
                 )
-                Spacer(modifier = Modifier.weight(1f))
                 TextField(
                     value = username,
                     onValueChange = { username = it },
@@ -162,7 +162,7 @@ fun LoginScreen(
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth(0.8f)
                 )
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(180.dp))
                 Button(
                     onClick = {
                         remoteViewModel.login(username, password) { resultMessage ->
