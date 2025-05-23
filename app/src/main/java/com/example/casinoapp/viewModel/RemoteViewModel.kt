@@ -275,6 +275,7 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
+
     fun deleteAccount(onResult: (String) -> Unit = {}) {
         val userId = _loggedInUser.value?.userId
         if (userId != null) {

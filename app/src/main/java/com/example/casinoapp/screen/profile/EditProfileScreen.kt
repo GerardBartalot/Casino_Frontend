@@ -573,6 +573,7 @@ fun ConfirmDeleteDialog(
                     color = Color.White
                 )
             },
+
             confirmButton = {
                 Button(
                     onClick = {

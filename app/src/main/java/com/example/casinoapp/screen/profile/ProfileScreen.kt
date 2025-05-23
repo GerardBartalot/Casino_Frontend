@@ -129,6 +129,7 @@ fun ProfileScreen(
                         }
                     }
 
+
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Text("Hola, ${user.name}!", fontSize = 22.sp, color = Color.White, fontWeight = FontWeight.Bold)
