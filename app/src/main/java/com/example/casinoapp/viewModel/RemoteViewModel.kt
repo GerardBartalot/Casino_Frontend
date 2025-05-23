@@ -275,6 +275,7 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
+
     fun deleteAccount(onResult: (String) -> Unit = {}) {
         val userId = _loggedInUser.value?.userId
         if (userId != null) {
@@ -292,8 +293,6 @@ class RemoteViewModel : ViewModel() {
                 } catch (e: Exception) {
                     onResult("Error de connexió: ${e.message}")
                 }
-            } catch (e: Exception) {
-                onResult("Error: ${e.message}")
             }
         }
     }

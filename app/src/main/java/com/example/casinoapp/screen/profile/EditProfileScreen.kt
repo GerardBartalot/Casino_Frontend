@@ -550,3 +550,55 @@ private fun bitmapToBase64(bitmap: Bitmap): String {
     val byteArray = byteArrayOutputStream.toByteArray()
     return Base64.encodeToString(byteArray, Base64.DEFAULT)
 }
+
+@Composable
+fun ConfirmDeleteDialog(
+    showDialog: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = "Eliminar compte",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Estàs segur que vols eliminar el teu compte de manera permanent? Aquesta acció no es pot desfer.",
+                    color = Color.White
+                )
+            },
+
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onConfirm()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFA52A2A)
+                    )
+                ) {
+                    Text("Eliminar", color = Color.White)
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFD700)
+                    )
+                ) {
+                    Text("Cancel·lar", color = Color.White)
+                }
+            },
+            containerColor = Color(0xFF333333),
+            titleContentColor = Color.White,
+            textContentColor = Color.White
+        )
+    }
+}
