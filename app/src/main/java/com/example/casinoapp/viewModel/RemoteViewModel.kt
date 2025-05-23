@@ -292,9 +292,9 @@ class RemoteViewModel : ViewModel() {
                 } catch (e: Exception) {
                     onResult("Error de connexió: ${e.message}")
                 }
+            } catch (e: Exception) {
+                onResult("Error: ${e.message}")
             }
-        } else {
-            onResult("No s'ha pogut eliminar: usuari no identificat")
         }
     }
 }

@@ -45,6 +45,7 @@ fun ProfileScreen(
         endY = 1000f
     )
     val coroutineScope = rememberCoroutineScope()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.Black,
@@ -139,7 +140,6 @@ fun ProfileScreen(
                     ProfileButton("Historial de partides") { onNavigateToLoadingHistoryScreen() }
                     Spacer(modifier = Modifier.height(20.dp))
                     ProfileButton("Editar perfil") { onNavigateToEditProfileScreen() }
-                    Spacer(modifier = Modifier.height(20.dp))
 
                     Spacer(modifier = Modifier.weight(1f))
 
@@ -160,6 +160,24 @@ fun ProfileScreen(
                     ) {
                         Text("Tancar sessió", color = Color.White, fontSize = 16.sp)
                     }
+                    ConfirmDeleteDialog(
+                        showDialog = showDeleteDialog,
+                        onConfirm = {
+                            coroutineScope.launch {
+                                remoteViewModel.deleteAccount(user.userId) { result ->
+                                    if (result.contains("èxit")) {
+                                        remoteViewModel.logout()
+                                        navController.navigate("loginScreen") {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                inclusive = true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        onDismiss = { showDeleteDialog = false }
+                    )
                 } ?: run {
                     Text("No hay usuario logueado", color = Color.White, fontSize = 18.sp)
                 }

@@ -36,7 +36,6 @@ fun LevelUpPopup(
     allGames: List<Game>,
     onDismiss: () -> Unit
 ) {
-    // Filtramos los juegos que se acaban de desbloquear con este nivel
     val unlockedGames = allGames.filter { it.levelUnlock == currentLevel }
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
