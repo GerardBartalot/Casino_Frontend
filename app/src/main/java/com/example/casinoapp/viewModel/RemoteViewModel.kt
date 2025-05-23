@@ -275,24 +275,23 @@ class RemoteViewModel : ViewModel() {
         }
     }
 
-    fun deleteAccount(onResult: (String) -> Unit = {}) {
-        val userId = _loggedInUser.value?.userId
-        if (userId != null) {
-            viewModelScope.launch {
-                try {
-                    val response = endpoint.deleteUser(userId)
-                    if (response.isSuccessful) {
-                        _loggedInUser.value = null
-                        onResult("Compte eliminat correctament")
-                    } else {
-                        onResult("Error al eliminar: ${response.errorBody()?.string()}")
-                    }
-                } catch (e: Exception) {
-                    onResult("Error de connexió: ${e.message}")
+    fun deleteAccount(userId: Int, onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            try {
+                Log.d("DeleteAccount", "Intentando eliminar cuenta para userId: $userId")
+                val response = endpoint.deleteUser(userId)
+
+                if (response.isSuccessful) {
+                    Log.d("DeleteAccount", "Eliminación exitosa: ${response.body()}")
+                    onResult("Compte eliminat amb èxit")
+                } else {
+                    Log.e("DeleteAccount", "Error en la respuesta: ${response.errorBody()?.string()}")
+                    onResult("Error: ${response.errorBody()?.string()}")
                 }
+            } catch (e: Exception) {
+                Log.e("DeleteAccount", "Excepción al eliminar cuenta", e)
+                onResult("Error: ${e.message}")
             }
-        } else {
-            onResult("No s'ha pogut eliminar: usuari no identificat")
         }
     }
 }

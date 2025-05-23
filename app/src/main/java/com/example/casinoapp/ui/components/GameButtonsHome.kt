@@ -34,7 +34,7 @@ fun GameButtonsHome(
     enabled: Boolean,
     onClick: () -> Unit,
     requiredLevel: Int = 0,
-    isBeta: Boolean = false
+    isBeta: Boolean = false,
 ) {
     Box(
         modifier = Modifier
@@ -89,7 +89,7 @@ fun GameButtonsHome(
                 }
                 if (isBeta) {
                     Text(
-                        text = "Fase beta",
+                        text = "Properament...",
                         color = Color.White,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,

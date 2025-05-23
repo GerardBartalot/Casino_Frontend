@@ -45,6 +45,7 @@ fun ProfileScreen(
         endY = 1000f
     )
     val coroutineScope = rememberCoroutineScope()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = Color.Black,
@@ -142,16 +143,7 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.height(20.dp))
 
                     Button(
-                        onClick = {
-                            coroutineScope.launch {
-                                remoteViewModel.deleteAccount()
-                                navController.navigate("loginScreen") {
-                                    popUpTo(navController.graph.startDestinationId) {
-                                        inclusive = true
-                                    }
-                                }
-                            }
-                        },
+                        onClick = { showDeleteDialog = true },
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                         modifier = Modifier
                             .fillMaxWidth(0.8f)
@@ -180,6 +172,24 @@ fun ProfileScreen(
                     ) {
                         Text("Tancar sessió", color = Color.White, fontSize = 16.sp)
                     }
+                    ConfirmDeleteDialog(
+                        showDialog = showDeleteDialog,
+                        onConfirm = {
+                            coroutineScope.launch {
+                                remoteViewModel.deleteAccount(user.userId) { result ->
+                                    if (result.contains("èxit")) {
+                                        remoteViewModel.logout()
+                                        navController.navigate("loginScreen") {
+                                            popUpTo(navController.graph.startDestinationId) {
+                                                inclusive = true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        onDismiss = { showDeleteDialog = false }
+                    )
                 } ?: run {
                     Text("No hay usuario logueado", color = Color.White, fontSize = 18.sp)
                 }
@@ -205,5 +215,57 @@ fun ProfileButton(text: String, onNavigate: () -> Unit) {
         shape = RoundedCornerShape(10.dp)
     ) {
         Text(text = text, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+
+@Composable
+fun ConfirmDeleteDialog(
+    showDialog: Boolean,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = "Eliminar compte",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = "Estàs segur que vols eliminar el teu compte de manera permanent? Aquesta acció no es pot desfer.",
+                    color = Color.White
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onConfirm()
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFA52A2A)
+                    )
+                ) {
+                    Text("Eliminar", color = Color.White)
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFFD700)
+                    )
+                ) {
+                    Text("Cancel·lar", color = Color.White)
+                }
+            },
+            containerColor = Color(0xFF333333),
+            titleContentColor = Color.White,
+            textContentColor = Color.White
+        )
     }
 }
