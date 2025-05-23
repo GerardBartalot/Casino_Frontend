@@ -283,6 +283,8 @@ class RemoteViewModel : ViewModel() {
                     val response = endpoint.deleteUser(userId)
                     if (response.isSuccessful) {
                         _loggedInUser.value = null
+                        _loginMessageUiState.value = LoginMessageUiState.Loading
+                        _registerMessageUiState.value = RegisterMessageUiState.Loading
                         onResult("Compte eliminat correctament")
                     } else {
                         onResult("Error al eliminar: ${response.errorBody()?.string()}")

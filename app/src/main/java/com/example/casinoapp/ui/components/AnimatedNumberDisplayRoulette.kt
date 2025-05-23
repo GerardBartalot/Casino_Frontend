@@ -49,13 +49,13 @@ fun AnimatedNumberDisplayRoulette(
 ) {
     val animatedFondocoins by animateIntAsState(
         targetValue = fondocoins,
-        animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
+        animationSpec = tween(durationMillis = 3000, easing = LinearEasing),
         label = "fondocoinsAnimation"
     )
 
     val animatedExperience by animateIntAsState(
         targetValue = experience,
-        animationSpec = tween(durationMillis = 1000, easing = LinearEasing),
+        animationSpec = tween(durationMillis = 3000, easing = LinearEasing),
         label = "experienceAnimation"
     )
 
@@ -113,7 +113,7 @@ fun AnimatedNumberDisplayRoulette(
                         fontSize = 60.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.SansSerif,
-                        color = Color.Yellow, // Fallback to solid color
+                        color = Color.Yellow,
                         shadow = Shadow(
                             color = Color.Yellow,
                             offset = Offset(2f, 2f),

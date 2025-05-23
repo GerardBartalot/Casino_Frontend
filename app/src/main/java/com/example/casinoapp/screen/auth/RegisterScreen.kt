@@ -43,7 +43,7 @@ fun RegisterScreen(
     val registerMessageUiState by remoteViewModel.registerMessageUiState.collectAsState()
     val scrollState = rememberScrollState()
     val snackbarHostState = remember { SnackbarHostState() }
-
+    val loggedInUser by remoteViewModel.loggedInUser.collectAsState()
     fun String.isValidPassword(): Boolean {
         val passwordRegex = "^(?=.*[A-Z])(?=.*\\d).{5,}$".toRegex()
         return passwordRegex.matches(this)
@@ -59,7 +59,9 @@ fun RegisterScreen(
     LaunchedEffect(registerMessageUiState) {
         when (registerMessageUiState) {
             is RegisterMessageUiState.Success -> {
-                onNavigateToHome()
+                if (loggedInUser != null) {
+                    onNavigateToHome()
+                }
             }
             is RegisterMessageUiState.Error -> {
                 if (errorMessage.isEmpty()) {

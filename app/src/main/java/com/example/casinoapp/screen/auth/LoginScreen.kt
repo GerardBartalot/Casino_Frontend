@@ -39,7 +39,7 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
 
     LaunchedEffect(loggedInUser) {
-        loggedInUser?.let {
+        if (loggedInUser != null) {
             onNavigateToHome()
         }
     }

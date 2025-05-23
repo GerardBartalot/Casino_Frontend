@@ -32,6 +32,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -119,6 +122,7 @@ fun RouletteScreen(
     var fondocoinsEarned by remember { mutableIntStateOf(0) }
     var experienceEarned by remember { mutableIntStateOf(0) }
     var showRulesDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
@@ -159,13 +163,14 @@ fun RouletteScreen(
 
     //Logica LvlUpPopUp
     val games by gameViewModel.games.collectAsState()
-// En el efecto donde actualizas la experiencia
+
+    // En el efecto donde actualizas la experiencia
     LaunchedEffect(vmExperience) {
         localExperience = vmExperience
         gameViewModel.checkLevelUp(vmExperience)
     }
 
-// Mostrar popup si corresponde
+    // Mostrar popup si corresponde
     if (gameViewModel.showLevelUpPopup) {
         LevelUpPopup(
             currentLevel = gameViewModel.currentPopupLevel,
@@ -200,13 +205,17 @@ fun RouletteScreen(
     fun spinRoulette() {
         if (!isSpinning) {
             if (localFondocoins < totalBet) {
-                resultMessage = "No tienes suficientes fondocoins."
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("No tens fondocoins suficients.")
+                }
                 return
             }
 
             if (totalBet <= 0 || !gameViewModel.placeBet(totalBet) ||
                 (betsOnNumbers.isEmpty() && selectedColor == null && selectedEven == null)) {
-                resultMessage = "Apuesta inválida."
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("Aposta invàlida.")
+                }
                 return
             }
 
@@ -298,7 +307,6 @@ fun RouletteScreen(
             totalBet > 0 && (betsOnNumbers.isNotEmpty() || selectedColor != null || selectedEven != null)
         }
     }
-
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF1E8449),
@@ -310,6 +318,20 @@ fun RouletteScreen(
     )
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                snackbar = { data ->
+                    Snackbar(
+                        containerColor = Color(0xFFFF5252),
+                        contentColor = Color.White,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(data.visuals.message)
+                    }
+                }
+            )
+        },
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
