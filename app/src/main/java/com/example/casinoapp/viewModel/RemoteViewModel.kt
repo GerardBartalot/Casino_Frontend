@@ -81,7 +81,7 @@ interface RemoteUserInterface {
 
 class RemoteViewModel : ViewModel() {
 
-    private val baseUrl = "http://10.118.3.201:8080"
+    private val baseUrl = "http://10.0.2.2:8080"
     private val connection = Retrofit.Builder()
         .baseUrl(baseUrl)
         .addConverterFactory(GsonConverterFactory.create())

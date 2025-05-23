@@ -68,7 +68,7 @@ class GameViewModel : ViewModel() {
     val canClaimDailyReward: StateFlow<Boolean> = _canClaimDailyReward.asStateFlow()
 
     private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl("http://10.118.3.201:8080")
+        .baseUrl("http://10.0.2.2:8080")
         //.baseUrl("http://192.168.18.84:8080")
         .addConverterFactory(GsonConverterFactory.create())
         .build()
