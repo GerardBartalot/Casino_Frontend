@@ -144,7 +144,7 @@ fun ProfileScreen(
 
                     Button(
                         onClick = { showDeleteDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA52A2A)),
                         modifier = Modifier
                             .fillMaxWidth(0.8f)
                             .height(50.dp),
@@ -153,7 +153,7 @@ fun ProfileScreen(
                         Text("Eliminar compte", color = Color.White, fontSize = 16.sp)
                     }
 
-                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.weight(1f))
 
                     Button(
                         onClick = {
