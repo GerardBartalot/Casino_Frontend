@@ -38,6 +38,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -121,6 +124,9 @@ fun SlotMachineScreen(
     val goldenGradient = listOf(Color(0xFFFFD700),Color(0xFFFFA500))
     var showNotEnoughFundsMessage by remember { mutableStateOf(false) }
     var addFundsButtonLocked by remember { mutableStateOf(false) }
+    var showWinPopup by remember { mutableStateOf(false) }
+    var popupFondocoins by remember { mutableIntStateOf(0) }
+    var popupExperience by remember { mutableIntStateOf(0) }
 
     fun saveGameSession() {
         loggedInUser?.let { user ->
@@ -186,8 +192,23 @@ fun SlotMachineScreen(
         startY = 0f,
         endY = 1000f
     )
+    val snackbarHostState = remember { SnackbarHostState() }
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                snackbar = { data ->
+                    Snackbar(
+                        containerColor = Color(0xFFFF5252),
+                        contentColor = Color.White,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(data.visuals.message)
+                    }
+                }
+            )
+        },
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
@@ -405,47 +426,24 @@ fun SlotMachineScreen(
                             }
                         }
 
-                        if (showAddFundsMessage) {
-                            Spacer(modifier = Modifier.height(25.dp))
-                            LaunchedEffect(Unit) {
-                                delay(3000)
-                                showAddFundsMessage = false
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    .padding(8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Afegeix fondocoins a la màquina escurabutxaques per jugar",
-                                    color = Color.Red,
-                                    fontSize = 16.sp,
-                                    textAlign = TextAlign.Center
+                        // Reemplazar todos los showAddFundsMessage y showNotEnoughFundsMessage por:
+                        LaunchedEffect(showAddFundsMessage) {
+                            if (showAddFundsMessage) {
+                                snackbarHostState.showSnackbar(
+                                    message = "Afegeix fondocoins a la màquina escurabutxaques per jugar",
+                                    withDismissAction = true
                                 )
+                                showAddFundsMessage = false
                             }
                         }
 
-                        if (showNotEnoughFundsMessage) {
-                            Spacer(modifier = Modifier.height(25.dp))
-                            LaunchedEffect(Unit) {
-                                delay(3000)
+                        LaunchedEffect(showNotEnoughFundsMessage) {
+                            if (showNotEnoughFundsMessage) {
+                                snackbarHostState.showSnackbar(
+                                    message = "No tens fondocoins suficients en el teu balanç",
+                                    withDismissAction = true
+                                )
                                 showNotEnoughFundsMessage = false
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                                    .padding(8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "No tens fondocoins suficients en el teu balanç",
-                                    color = Color.Red,
-                                    fontSize = 16.sp,
-                                    textAlign = TextAlign.Center
-                                    )
                             }
                         }
 
@@ -797,6 +795,9 @@ fun SlotMachineScreen(
             }
 
             if (winMultiplier > 0) {
+                popupFondocoins = winAmount
+                popupExperience = currentRoundXp
+                showWinPopup = true
                 isWin.value = true
                 delay(5000)
                 isWin.value = false

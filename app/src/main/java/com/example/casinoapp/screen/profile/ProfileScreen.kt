@@ -140,18 +140,6 @@ fun ProfileScreen(
                     ProfileButton("Historial de partides") { onNavigateToLoadingHistoryScreen() }
                     Spacer(modifier = Modifier.height(20.dp))
                     ProfileButton("Editar perfil") { onNavigateToEditProfileScreen() }
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    Button(
-                        onClick = { showDeleteDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFA52A2A)),
-                        modifier = Modifier
-                            .fillMaxWidth(0.8f)
-                            .height(50.dp),
-                        shape = RoundedCornerShape(10.dp)
-                    ) {
-                        Text("Eliminar compte", color = Color.White, fontSize = 16.sp)
-                    }
 
                     Spacer(modifier = Modifier.weight(1f))
 
@@ -194,7 +182,7 @@ fun ProfileScreen(
                     Text("No hay usuario logueado", color = Color.White, fontSize = 18.sp)
                 }
 
-                Spacer(modifier = Modifier.height(50.dp))
+                Spacer(modifier = Modifier.height(25.dp))
             }
         }
     }
@@ -217,7 +205,6 @@ fun ProfileButton(text: String, onNavigate: () -> Unit) {
         Text(text = text, fontSize = 18.sp, fontWeight = FontWeight.Bold)
     }
 }
-
 
 @Composable
 fun ConfirmDeleteDialog(

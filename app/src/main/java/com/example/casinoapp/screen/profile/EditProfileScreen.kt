@@ -28,6 +28,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -38,6 +39,7 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -48,6 +50,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +78,8 @@ import com.example.casinoapp.R
 import com.example.casinoapp.screen.loaders.LoadingScreenEditProfile
 import com.example.casinoapp.ui.components.ImagePickerDialog
 import com.example.casinoapp.viewModel.RemoteViewModel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -100,6 +105,8 @@ fun EditProfileScreen(
     val context = LocalContext.current
     var showLoading by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent(),
         onResult = { uri ->
@@ -374,7 +381,8 @@ fun EditProfileScreen(
                     onClick = {
                         if (password.isNotEmpty()) {
                             if (!password.isValidPassword()) {
-                                updateMessage = "La contrasenya ha de tenir mínim 5 caràcters, una majúscula i un número."
+                                updateMessage =
+                                    "La contrasenya ha de tenir mínim 5 caràcters, una majúscula i un número."
                                 return@Button
                             }
                             if (password != confirmPassword) {
@@ -385,7 +393,8 @@ fun EditProfileScreen(
                         showLoading = true
                         currentUser?.let { user ->
                             val outputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                            val dateString = birthDate?.let { outputFormat.format(it.time) } ?: user.dateOfBirth
+                            val dateString =
+                                birthDate?.let { outputFormat.format(it.time) } ?: user.dateOfBirth
                             val updatedUser = user.copy(
                                 name = name,
                                 username = username,
@@ -400,13 +409,18 @@ fun EditProfileScreen(
                                     showLoading = false
                                 } else {
                                     if (selectedImage != null && selectedImage != user.profilePicture) {
-                                        remoteViewModel.updateProfilePicture(user.userId, selectedImage!!) { profileMessage ->
+                                        remoteViewModel.updateProfilePicture(
+                                            user.userId,
+                                            selectedImage!!
+                                        ) { profileMessage ->
                                             showLoading = false
                                             if (profileMessage.startsWith("Error")) {
                                                 updateMessage = profileMessage
                                             } else {
                                                 navController.navigate("profileScreen") {
-                                                    popUpTo("editProfileScreen") { inclusive = true }
+                                                    popUpTo("editProfileScreen") {
+                                                        inclusive = true
+                                                    }
                                                 }
                                             }
                                         }
@@ -437,7 +451,44 @@ fun EditProfileScreen(
                         fontWeight = FontWeight.Bold
                     )
                 }
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Button(
+                    onClick = { showDeleteDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .height(50.dp),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text("Eliminar compte", color = Color.White, fontSize = 16.sp)
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                ConfirmDeleteDialog(
+                    showDialog = showDeleteDialog,
+                    onConfirm = {
+                        showDeleteDialog = false
+                        coroutineScope.launch {
+                            remoteViewModel.deleteAccount { result ->
+                                if (result.contains("Compte eliminat correctament")) {
+                                    navController.navigate("registerScreen") {
+                                        popUpTo(navController.graph.startDestinationId) {
+                                            inclusive = true
+                                        }
+                                    }
+                                } else {
+                                    updateMessage = result
+                                }
+                            }
+                        }
+                    },
+                    onDismiss = { showDeleteDialog = false }
+                )
             }
+
             if (showLoading) {
                 LoadingScreenEditProfile(
                     modifier = Modifier.matchParentSize()

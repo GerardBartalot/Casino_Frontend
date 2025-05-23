@@ -24,6 +24,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -32,6 +33,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -44,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -105,6 +110,8 @@ fun ScratchCardScreen(
     var revealedSymbol by remember { mutableStateOf<String?>(null) }
     var hasWon by remember { mutableStateOf(false) }
     var showRulesDialog by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     val gradientBrush = Brush.verticalGradient(
         colors = listOf(
@@ -171,42 +178,58 @@ fun ScratchCardScreen(
     fun playGame(index: Int) {
         try {
             val bet = betAmount.toIntOrNull() ?: run {
-                resultMessage = "Ingressa una aposta vàlida."
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("Ingressa una aposta vàlida.")
+                }
                 return
             }
 
             if (!isGameActive) {
-                resultMessage = "El joc no està actiu."
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("El joc no està actiu.")
+                }
                 return
             }
 
             if (bet <= 0) {
-                resultMessage = "L'aposta ha de ser major a zero."
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("L'aposta ha de ser major a zero.")
+                }
                 return
             }
 
             if (bet > localFondocoins) {
-                resultMessage = "Fons insuficients."
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("Fons insuficients.")
+                }
                 return
             }
 
             if (selectedSymbol == null) {
-                resultMessage = "Selecciona un símbol."
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("Selecciona un símbol.")
+                }
                 return
             }
 
             if (revealedIndex != null) {
-                resultMessage = "Ja has revelat una posició."
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("Ja has revelat una posició.")
+                }
                 return
             }
 
             if (index !in generatedSymbols.indices) {
-                resultMessage = "Posició invàlida."
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("Posició invàlida.")
+                }
                 return
             }
 
             if (!gameViewModel.placeBet(bet)) {
-                resultMessage = "No s'ha pogut processar la aposta."
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("No s'ha pogut processar la aposta.")
+                }
                 return
             }
 
@@ -237,7 +260,9 @@ fun ScratchCardScreen(
             isGameActive = false
         } catch (e: Exception) {
             Log.e("ScratchCardScreen", "Error en playGame: ${e.message}")
-            resultMessage = "Error del joc. Intenta-ho novament."
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("Error del joc. Intenta-ho novament.")
+            }
         }
     }
 
@@ -249,9 +274,26 @@ fun ScratchCardScreen(
         resultMessage = ""
         isGameActive = true
         experienceWon = 0
+        coroutineScope.launch {
+            snackbarHostState.showSnackbar("Joc reiniciat. Pots jugar de nou!")
+        }
     }
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                snackbar = { data ->
+                    Snackbar(
+                        containerColor = Color(0xFFFF5252),
+                        contentColor = Color.White,
+                        modifier = Modifier.padding(16.dp)
+                    ) {
+                        Text(data.visuals.message)
+                    }
+                }
+            )
+        },
         containerColor = Color.Black,
         topBar = {
             TopAppBar(
@@ -349,6 +391,8 @@ fun ScratchCardScreen(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(innerPadding)
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -528,7 +572,7 @@ fun ScratchCardScreen(
                                 titleColor = Color(0xFFFFA000),
                                 items = listOf(
                                     "Si encertas la casella: Aposta x5",
-                                    "Si no encertes la casella: Sense premi"
+                                    "Si no encertas la casella: Sense premi"
                                 )
                             ),
                             GameRuleSection(
@@ -561,6 +605,7 @@ fun ScratchCardScreen(
                         onDismiss = { showRulesDialog = false }
                     )
                 }
+                Spacer(modifier = Modifier.height(16.dp))
             }
         }
     }
